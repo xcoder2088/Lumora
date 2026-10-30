@@ -453,7 +453,8 @@ function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.fl
 function makeJelly(d) {
   // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
   const q = rnd();
-  const sz = d.giant ? lerp(0.18, 0.26, rnd()) : q < 0.4 ? lerp(0.022, 0.034, rnd()) : q < 0.8 ? lerp(0.04, 0.06, rnd()) : lerp(0.07, 0.1, rnd());
+  // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
+  const sz = d.giant ? lerp(0.18, 0.26, rnd()) : 0.02 * Math.pow(6, Math.pow(hash1(d.k * 1.713 + 0.37), 1.15));
   const z = d.giant ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
   const nThin = 16, nArm = 4;
@@ -704,9 +705,12 @@ function updateButterfly(c, dt, el) {
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
   const X = (lerp(c.x0, c.far ? lerp(c.x1, 0.5, 0.45) : c.x1, u) + wx * (c.far ? lerp(1, 0.3, u) : 1)) * W;
   const Y = c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
-  if (!c.init) { c.X = X; c.Y = Y; c.init = true; }
-  const vx = (X - c.X) / Math.max(dt, 1e-3), vy = (Y - c.Y) / Math.max(dt, 1e-3);
-  c.X = X; c.Y = Y;
+  // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
+  const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.22 + Math.sin(T * 1.9 + c.ph * 3) * 0.12) * c.S * calm;
+  const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.3 + Math.sin(T * 1.4 + c.ph) * 0.15) * c.S * calm;
+  if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
+  const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
+  c.px = Xp; c.py = Yp;
   if (Math.hypot(vx, vy) > 6) {
     const tgt = Math.atan2(vx, -vy);
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -715,10 +719,12 @@ function updateButterfly(c, dt, el) {
   // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
-  const rate = Math.max(1.1, c.fl * 1.5 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb));
+  const rate = Math.max(1.1, c.fl * 1.5 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb + 0.18 * Math.sin(T * 1.1 + c.ph * 7) + 0.1 * Math.sin(T * 2.7 + c.ph * 2)));
   c.fph += dt * TAU * rate;
   const amp = 0.85 + 0.15 * Math.sin(T * 0.11 + c.ph * 5);
-  c.sx = 0.2 + 0.8 * amp * (0.5 + 0.5 * Math.cos(c.fph));
+  const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
+  c.sx = 0.2 + 0.8 * amp * (0.5 + 0.5 * Math.cos(p));
+  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.12;   // le corps monte un peu à chaque battement
 }
 
 function wingPaths(S, tail) {
@@ -939,7 +945,7 @@ function build() {
   const D = S.dur, T0 = travelBase();
   const r = mulberry(Math.floor(Math.random() * 1e9));
   const runSeed = Math.floor(r() * 1e6) * 1000;
-  const lo = S.scene === 'jelly' ? 7 : 4, hiN = S.scene === 'jelly' ? 24 : 13;
+  const lo = S.scene === 'jelly' ? 4 : 4, hiN = S.scene === 'jelly' ? 15 : 13;
   const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
   const dens = t => {
     const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
