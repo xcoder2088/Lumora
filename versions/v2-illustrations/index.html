@@ -747,12 +747,16 @@ function drawJelly(c) {
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = a;
   // halo
-  const hr = R * 2.8, hy = Y - R * 0.5;
-  let g = ctx.createRadialGradient(X, hy, 0, X, hy, hr);
-  g.addColorStop(0, rgba(col, 0.17 + 0.06 * b));
+  const hr = R * 1.45, hy = Y - R * 0.4;   // halo resserré autour de l'ombrelle, un peu aplati comme elle
+  let g = ctx.createRadialGradient(0, 0, 0, 0, 0, hr);
+  g.addColorStop(0, rgba(col, 0.13 + 0.05 * b));
+  g.addColorStop(0.5, rgba(col, 0.05 + 0.02 * b));
   g.addColorStop(1, rgba(col, 0));
+  ctx.save();
+  ctx.translate(X, hy); ctx.rotate(c.tilt); ctx.scale(1, 0.8);
   ctx.fillStyle = g;
-  ctx.fillRect(X - hr, hy - hr, hr * 2, hr * 2);
+  ctx.fillRect(-hr, -hr, hr * 2, hr * 2);
+  ctx.restore();
   // tentacules
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -942,7 +946,7 @@ function build() {
   const D = S.dur, T0 = travelBase();
   const r = mulberry(Math.floor(Math.random() * 1e9));
   const runSeed = Math.floor(r() * 1e6) * 1000;
-  const lo = S.scene === 'jelly' ? 4 : 4, hiN = S.scene === 'jelly' ? 15 : 13;
+  const lo = S.scene === 'jelly' ? 4 : 7, hiN = S.scene === 'jelly' ? 15 : 19;
   const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
   const dens = t => {
     const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
