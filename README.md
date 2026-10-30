@@ -17,7 +17,7 @@ L'éducateur n'a que quatre choses à faire : choisir le **décor** (méduses ou
 - **Papillons :** inspirés d'espèces réelles (monarque, morpho bleu, azuré commun, machaon, papillon de lune). Quelques lucioles discrètes s'allument de temps en temps, en vert, jaune-vert ou jaune.
 - **Son (désactivé par défaut) :** ambiance enregistrée du décor, en boucle. Le bouton « Tester le son » joue un aperçu de l'ambiance, puis du carillon de fin.
 - **Pendant le minuteur :** les contrôles (pause, recommencer, temps restant, son, plein écran, réglages) s'effacent après 3,5 secondes sans toucher. Un toucher ou un mouvement de souris les ramène. La barre d'espace met en pause. L'écran reste allumé.
-- **Méduses (aquarium) :** l'écran est un aquarium : les méduses nagent librement et n'en sortent pas. Pendant les dernières minutes, une seule sort par minute, et la dernière sort à zéro. Il y en a au plus 9, et autant que de minutes de la durée choisie si elle est courte.
+- **Méduses (aquarium) :** l'écran est un aquarium : les méduses nagent librement et n'en sortent pas. Pendant les dernières minutes, une seule sort par minute, et la dernière sort à zéro. Il y en a autant que de minutes choisies (5 minutes : 5 méduses ; 20 minutes : 20), avec un maximum de 20.
 - **Papillons :** ils traversent l'écran de côté, s'éloignent au loin ou montent vers le ciel. De temps en temps, une étoile filante passe dans le ciel.
 - **Fin du temps :** la dernière créature sort de l'écran à l'instant où le temps tombe à zéro. La scène s'éclaircit lentement, sans alarme. Un carillon très doux, une nappe de quelques notes graves, est joué si le son est activé.
 
