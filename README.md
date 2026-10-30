@@ -42,11 +42,19 @@ index.html           la version courante de l'application (HTML, CSS et JavaScri
 audio/               les trois boucles sonores (MP3)
 assets/              illustrations (méduses, papillons, décors), voir assets/LISEZMOI.md
 versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
+versions/v2-illustrations/  version 2 : le même fonctionnement, avec les illustrations de assets/
 tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
 LICENSE              licence : utilisation libre, modification sur autorisation
 ```
 
-**La version 1 est conservée comme référence** dans le dossier `versions/v1-canvas/`. C'est une copie figée et autonome (elle a sa propre copie des sons) : on peut l'ouvrir et la comparer à tout moment avec la version courante. Les nouveaux éléments (images, nouvelle version de la page) s'ajoutent à côté sans la remplacer.
+**La version 1 est conservée comme référence** dans le dossier `versions/v1-canvas/`. C'est une copie figée et autonome (elle a sa propre copie des sons) : on peut l'ouvrir et la comparer à tout moment avec les autres versions.
+
+**La version 2** (`versions/v2-illustrations/`) a exactement le même fonctionnement que la version 1 (quantité aléatoire, mouvements, couleurs qui changent, lucioles, sons, fin du temps). Seul le dessin change : les méduses, les papillons et les décors sont les illustrations du dossier `assets/` au lieu d'être dessinés par le code. Elle utilise les images en WebP (environ 5 Mo) et les sons du dossier `audio/`.
+
+Pour comparer, servir le dépôt par un serveur web (voir « Lancer le projet »), puis ouvrir :
+
+- `/versions/v1-canvas/` : version 1, dessinée par le code ;
+- `/versions/v2-illustrations/` : version 2, avec les illustrations.
 
 ## Sons et crédits
 
