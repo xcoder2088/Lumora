@@ -91,6 +91,28 @@ Les scripts doivent être lancés depuis la racine du dépôt.
 - Version installable hors ligne.
 - Un enregistrement de cloche douce pour le carillon final.
 
-## Licence
+## Licence et droits
 
-Le code est publié sous la licence **GNU General Public License v3.0** (voir `LICENSE`). Les sons sont dans le domaine public (CC0), voir ci-dessus.
+*Ceci est une explication en mots simples, pas un avis juridique. Le texte qui fait foi est celui du fichier `LICENSE`.*
+
+**Droit d'auteur.** Copyright (C) 2026 Xcoder. Le code de Lumora (`index.html` et les scripts du dossier `tools/`) est publié sous la licence **GNU General Public License version 3 uniquement** (identifiant SPDX : `GPL-3.0-only`). Le texte complet est dans le fichier `LICENSE`.
+
+**Ce que la licence permet à tout le monde :** utiliser Lumora gratuitement (à la maison, en garderie, à l'école), l'étudier, le modifier et le redistribuer, y compris en le vendant ou en l'offrant comme service.
+
+**Ce qu'elle exige de celui qui distribue Lumora ou une version modifiée :** garder la mention de l'auteur d'origine, garder la même licence GPL v3 et rendre son code source disponible. Personne ne peut reprendre Lumora pour en faire un produit fermé.
+
+**Ce que l'auteur garde.** Publier sous la GPL ne fait pas perdre le droit d'auteur. L'auteur reste titulaire de ses droits : il peut continuer à publier, offrir ou vendre Lumora comme il l'entend. Tant qu'il est seul titulaire des droits sur le code, il peut aussi le proposer sous d'autres conditions à quelqu'un d'autre, par exemple une licence payante ou une version commerciale fermée.
+
+**Le nom.** Le nom « Lumora » (et tout logo éventuel) n'est pas couvert par la licence. Quelqu'un qui publie sa propre version modifiée doit lui donner un autre nom et ne pas la faire passer pour l'application officielle.
+
+**Sons.** Les trois enregistrements du dossier `audio/` sont dans le domaine public (CC0), voir « Sons et crédits ». Ils ne sont pas soumis à la GPL.
+
+**Illustrations.** Les images du dossier `assets/` (en préparation) auront leur propre licence, à préciser dans `assets/LISEZMOI.md` à leur arrivée. Elle peut être différente de celle du code.
+
+**Polices.** Cormorant Garamond et Jost sont publiées sous licence SIL Open Font License. Elles ne sont pas incluses dans le dépôt : la page les charge depuis Google Fonts.
+
+**Aucune garantie.** Lumora est fourni « tel quel », sans garantie d'aucune sorte (voir les articles 15 et 16 de la licence). C'est un outil d'ambiance : il **ne remplace en aucun cas la surveillance des enfants**, et l'adulte responsable reste seul juge de la durée de la sieste et de la sécurité du groupe.
+
+**Vie privée.** Lumora ne demande aucun compte, ne collecte aucune donnée personnelle et n'utilise aucun suivi ni statistique. Les seuls réglages mémorisés (décor et durée) restent dans le navigateur de l'appareil. Seule exception : le chargement des polices depuis Google Fonts transmet l'adresse IP du visiteur à Google. Pour s'en passer, il faudra inclure les polices dans le dépôt (prévu).
+
+**Contributions.** Toute contribution envoyée à ce dépôt est acceptée sous la même licence que le projet (GPL v3).

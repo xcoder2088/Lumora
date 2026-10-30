@@ -28,4 +28,4 @@ Réaliste doux, translucide, lumineux. Pas de dessin animé, pas de contours noi
 
 ## Licence
 
-Créations originales, sans personnage ni œuvre protégée, utilisables dans un projet public sous licence GPL-3.0 (usage commercial permis). Idéal : CC0.
+Créations originales, sans personnage ni œuvre protégée, que l'auteur du projet a le droit d'utiliser et de publier dans ce dépôt public (sous licence GPL-3.0 pour le code, avec une licence à préciser pour les images). Indiquer dans le commit l'outil utilisé pour générer chaque image. La licence des images sera précisée ici une fois qu'elles seront déposées.

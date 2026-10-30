@@ -1,4 +1,16 @@
-<!-- Lumora. Copyright (C) 2026 Xcoder. Licence GNU GPL version 3 (voir le fichier LICENSE). -->
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Lumora : minuteur visuel et relaxant.
+  Copyright (C) 2026 Xcoder
+  SPDX-License-Identifier: GPL-3.0-only
+  Ce programme est un logiciel libre : vous pouvez le redistribuer et le modifier selon les termes de la
+  licence GNU General Public License version 3 (voir le fichier LICENSE). Il est fourni sans aucune garantie.
+  Le nom « Lumora » n'est pas couvert par cette licence.
+-->
 <title>Lumora</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -191,7 +203,14 @@ body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opac
   #setup, #hud, #end { transition-duration: 0.01s; transition-delay: 0s; }
 }
 </style>
-
+<style>
+/* Base commune (la page est autonome) */
+:root { color-scheme: dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
 <canvas id="scene" aria-hidden="true"></canvas>
 
 <main id="setup" aria-label="Réglages du minuteur">
@@ -1230,3 +1249,5 @@ fade = 0;
 requestAnimationFrame(frame);
 })();
 </script>
+</body>
+</html>
