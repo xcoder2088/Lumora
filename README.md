@@ -6,22 +6,20 @@ Au lieu d'un compte à rebours qui sonne, des créatures montent doucement à tr
 
 C'est une page web unique, sans bibliothèque externe ni compte, qui fonctionne dans un navigateur sur ordinateur, tablette ou téléphone.
 
-> État : premier prototype, en cours de validation auprès d'éducateurs.
+> État : prototype (version 1, dessinée par le code), en cours de validation auprès d'éducateurs. Des illustrations plus réalistes sont en préparation (voir `assets/`).
 
 ## Fonctionnement
 
-- **Décor :** méduses (mer) ou papillons (nuit à la campagne).
-- **Durée :** 5, 10, 15, 20, 30 ou 45 minutes, plus un essai de 30 secondes.
-- **Rythme :** vitesse à laquelle les créatures traversent l'écran (très calme, calme, vif).
-- **Créatures à l'écran :** combien sont visibles en même temps. Elles arrivent en continu jusqu'à la fin du temps.
-- **Son (désactivé par défaut) :** ambiance enregistrée du décor, en boucle, et un carillon final. Le bouton « Tester le son » joue un aperçu.
-- **Pendant le minuteur :** les contrôles (pause, recommencer, temps restant, son, plein écran, réglages) s'effacent après 3,5 secondes sans toucher. Un toucher ou un mouvement de souris les ramène. La barre d'espace met en pause. L'écran reste allumé.
-- **Décors :**
-  - Méduses : petites, moyennes et grandes, et de temps en temps une méduse géante qui traverse l'écran d'un côté à l'autre.
-  - Papillons inspirés d'espèces réelles : monarque, morpho bleu, azuré commun, machaon, papillon de lune. Quelques lucioles discrètes s'allument de temps en temps, en vert, jaune-vert ou jaune.
-- **Fin du temps :** la scène s'éclaircit lentement, sans alarme. Un carillon doux est joué si le son est activé.
+L'éducateur n'a que quatre choses à faire : choisir le **décor** (méduses ou papillons), la **durée** (5, 10, 15, 20, 30 ou 45 minutes, plus un essai de 30 secondes), activer ou non le **son**, puis appuyer sur « Commencer ». Tout le reste est automatique et change au fil du temps.
 
-Les créatures et les décors sont dessinés par le code (canvas 2D), donc la page est légère et rien ne se répète exactement. Les réglages sont mémorisés dans le navigateur.
+- **Quantité aléatoire :** le nombre de créatures à l'écran monte et descend par vagues lentes, tirées au hasard à chaque lancement. Les créatures arrivent en continu jusqu'à la fin du temps.
+- **Méduses :** petites, moyennes et grandes, plus de temps en temps une méduse géante qui traverse l'écran d'un côté à l'autre. Chacune change d'allure (nage régulière, sur place, plané, rafale), s'incline, suit un courant partagé et change de couleur pendant son trajet (bleu, puis mauve, parfois blanc). Le fond de l'eau dérive aussi lentement d'une teinte à l'autre.
+- **Papillons :** inspirés d'espèces réelles (monarque, morpho bleu, azuré commun, machaon, papillon de lune). Quelques lucioles discrètes s'allument de temps en temps, en vert, jaune-vert ou jaune.
+- **Son (désactivé par défaut) :** ambiance enregistrée du décor, en boucle. Le bouton « Tester le son » joue un aperçu de l'ambiance, puis du carillon de fin.
+- **Pendant le minuteur :** les contrôles (pause, recommencer, temps restant, son, plein écran, réglages) s'effacent après 3,5 secondes sans toucher. Un toucher ou un mouvement de souris les ramène. La barre d'espace met en pause. L'écran reste allumé.
+- **Fin du temps :** la dernière créature sort de l'écran à l'instant où le temps tombe à zéro. La scène s'éclaircit lentement, sans alarme. Un carillon très doux, une nappe de quelques notes graves, est joué si le son est activé.
+
+Dans la version 1, les créatures et les décors sont dessinés par le code (canvas 2D), donc la page est légère et rien ne se répète exactement. Les choix de décor et de durée sont mémorisés dans le navigateur.
 
 ## Lancer le projet
 
@@ -37,14 +35,23 @@ Puis ouvrir <http://localhost:8000>.
 
 **En ligne, avec GitHub Pages (gratuit) :** dans le dépôt, aller dans *Settings*, puis *Pages*, choisir la branche `main` et le dossier `/ (root)`. La page est alors publiée à l'adresse `https://<compte>.github.io/Lumora/`.
 
-## Structure
+## Structure et versions
 
 ```
-index.html         l'application complète (HTML, CSS et JavaScript)
-audio/             les trois boucles sonores (MP3)
-tools/             scripts utilisés pour préparer les sons (voir ci-dessous)
-LICENSE            texte de la licence GNU GPL v3
+index.html           la version courante de l'application (HTML, CSS et JavaScript)
+audio/               les trois boucles sonores (MP3)
+assets/              images produites par Codex (méduses, papillons, décors), voir assets/LISEZMOI.md
+versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
+tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
+LICENSE              texte de la licence GNU GPL v3
 ```
+
+**La version 1 est conservée comme référence.** Elle est gardée à deux endroits :
+
+- dans le dossier `versions/v1-canvas/`, qui fonctionne seul (il a sa propre copie des sons) : on peut l'ouvrir et la comparer à tout moment avec la version courante ;
+- dans l'étiquette Git `v1-canvas`, qui marque l'état exact du dépôt à ce moment-là. Pour revenir à cette version : `git checkout v1-canvas`.
+
+Les nouveaux éléments (images, nouvelle version de la page) s'ajoutent à côté sans remplacer ce dossier.
 
 ## Sons et crédits
 

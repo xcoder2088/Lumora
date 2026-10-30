@@ -1,0 +1,1233 @@
+<!-- Lumora. Copyright (C) 2026 Xcoder. Licence GNU GPL version 3 (voir le fichier LICENSE). -->
+<title>Lumora</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: plein écran. Le décor animé occupe tout l'écran; un panneau de réglages en verre dépoli
+   (bas-gauche, pleine largeur sur téléphone) puis une barre de contrôles qui s'efface seule. */
+:root {
+  color-scheme: dark;
+  --deep: #04101a;
+  --ink: #e9f5f7;
+  --ink-dim: #9dbcc5;
+  --glass: rgba(5, 20, 30, 0.66);
+  --line: rgba(190, 235, 245, 0.2);
+  --glow: #86e6ef;
+  --glow-ink: #031219;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui: "Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--deep);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.45;
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: var(--deep); }
+body.idle { cursor: none; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+
+/* ---------- Réglages ---------- */
+#setup {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  max-width: 440px;
+  max-height: calc(100% - 32px - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  transition: opacity 0.9s ease, transform 0.9s ease, visibility 0.9s;
+}
+body:not([data-phase="setup"]) #setup { opacity: 0; transform: translateY(16px); visibility: hidden; pointer-events: none; }
+#setup h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+#setup .lede { margin: 0; color: var(--ink-dim); font-size: 15px; max-width: 38ch; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 15px;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.chip:hover { border-color: rgba(190, 235, 245, 0.5); }
+.chip[aria-pressed="true"] { background: var(--glow); border-color: var(--glow); color: var(--glow-ink); font-weight: 500; }
+.switch { display: flex; align-items: center; gap: 12px; font-size: 15px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 44px; height: 26px; border-radius: 999px; border: 1px solid var(--line); position: relative; flex: none; transition: background 0.25s; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); transition: transform 0.25s, background 0.25s; }
+.switch input:checked + .track { background: var(--glow); border-color: var(--glow); }
+.switch input:checked + .track::after { transform: translateX(18px); background: var(--glow-ink); }
+.switch input:focus-visible + .track { outline: 2px solid var(--glow); outline-offset: 3px; }
+.credits { margin: 0; font-size: 12px; line-height: 1.4; color: var(--ink-dim); opacity: 0.8; }
+.soundrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: -8px; }
+#soundState { font-size: 14px; color: var(--ink-dim); flex: 1 1 200px; min-width: 0; }
+#start {
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--glow);
+  color: var(--glow-ink);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s, filter 0.2s;
+}
+#start:hover { filter: brightness(1.08); }
+#start:active { transform: scale(0.98); }
+
+/* ---------- Barre de contrôles ---------- */
+#hud {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+body[data-phase="running"] #hud, body[data-phase="paused"] #hud, body[data-phase="done"] #hud { opacity: 1; visibility: visible; pointer-events: auto; }
+body.idle #hud { opacity: 0; pointer-events: none; }
+.ib {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: 50%;
+  transition: background 0.2s;
+}
+.ib:hover { background: rgba(190, 235, 245, 0.12); }
+.ib:disabled { opacity: 0.35; cursor: default; background: transparent; }
+.ib svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ib .solid { fill: currentColor; stroke: none; }
+.ib[aria-pressed="false"] .on, .ib[aria-pressed="true"] .off { display: none; }
+#remain {
+  min-width: 78px;
+  padding: 0 8px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0.02em;
+}
+#bar { position: fixed; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(233, 245, 247, 0.35); transform-origin: left; transform: scaleX(0); pointer-events: none; }
+
+/* ---------- Fin ---------- */
+#end {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 24px 16px 96px;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 2.5s ease 3s, visibility 0s linear 5.5s;
+  color: #f6fbfc;
+}
+body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opacity 3s ease 4s, visibility 0s linear 4s; }
+#end h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: clamp(34px, 7vw, 64px); line-height: 1.1; text-wrap: balance; text-shadow: 0 2px 28px rgba(5, 20, 40, 0.6); }
+#end p { margin: 0; font-size: 16px; letter-spacing: 0.04em; opacity: 0.8; }
+
+@media (max-width: 520px) {
+  #setup { padding: 20px 18px 18px; }
+  #setup h1 { font-size: 40px; }
+  #remain { min-width: 64px; font-size: 26px; }
+  .ib { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #setup, #hud, #end { transition-duration: 0.01s; transition-delay: 0s; }
+}
+</style>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<main id="setup" aria-label="Réglages du minuteur">
+  <div>
+    <h1>Lumora</h1>
+    <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
+  </div>
+  <fieldset>
+    <legend>Décor</legend>
+    <div class="chips" id="chipScene"></div>
+  </fieldset>
+  <fieldset>
+    <legend>Durée</legend>
+    <div class="chips" id="chipDur"></div>
+  </fieldset>
+  <label class="switch" for="soundBox">
+    <input type="checkbox" id="soundBox">
+    <span class="track"></span>
+    <span>Ambiance sonore du décor et carillon final</span>
+  </label>
+  <div class="soundrow">
+    <button class="chip" id="soundTest" type="button">Tester le son</button>
+    <span id="soundState" aria-live="polite"></span>
+  </div>
+  <button id="start" type="button">Commencer</button>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (vagues, grillons) et cynicmusic, OpenGameArt (profondeurs).</p>
+</main>
+
+<div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
+  <button class="ib" id="btnPause" type="button" aria-label="Mettre en pause" title="Pause (barre d'espace)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><g class="pauseIcon"><rect class="solid" x="6" y="5" width="4" height="14" rx="1"/><rect class="solid" x="14" y="5" width="4" height="14" rx="1"/></g><path class="solid playIcon" d="M8 5.5v13l11-6.5z" style="display:none"/></svg>
+  </button>
+  <button class="ib" id="btnRestart" type="button" aria-label="Recommencer le minuteur" title="Recommencer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 4.5v4.5H9"/></svg>
+  </button>
+  <div id="remain" role="timer" aria-label="Temps restant">00:00</div>
+  <button class="ib" id="btnSound" type="button" aria-pressed="false" aria-label="Son" title="Son">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3.5l4.5 3.5v-11L7.5 10z"/><g class="on"><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></g><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+  </button>
+  <button class="ib" id="btnFull" type="button" aria-label="Plein écran" title="Plein écran">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+  </button>
+  <button class="ib" id="btnSettings" type="button" aria-label="Retour aux réglages" title="Réglages">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+  </button>
+</div>
+
+<div id="end" aria-live="polite">
+  <h2>Doucement, c'est l'heure.</h2>
+  <p>Le temps est écoulé.</p>
+</div>
+<div id="bar"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= Utilitaires ================= */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const rgba = (c, a) => 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
+function mulberry(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rnd = mulberry(1);
+const $ = id => document.getElementById(id);
+const fmtDur = s => {
+  s = Math.round(s);
+  if (s < 60) return s + ' s';
+  const m = Math.floor(s / 60), r = s % 60;
+  return m + ' min' + (r ? ' ' + r + ' s' : '');
+};
+const fmtClock = s => {
+  s = Math.max(0, Math.ceil(s));
+  const m = Math.floor(s / 60), r = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+};
+
+/* ================= État ================= */
+const DURS = [30, 300, 600, 900, 1200, 1800, 2700];
+const SCENES = [['jelly', 'Méduses'], ['butterfly', 'Papillons']];
+const S = { scene: 'jelly', dur: 1200, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
+try {
+  const saved = JSON.parse(localStorage.getItem('lumora.v1') || 'null');
+  if (saved) {
+    if (SCENES.some(s => s[0] === saved.scene)) S.scene = saved.scene;
+    if (DURS.includes(saved.dur)) S.dur = saved.dur;
+  }
+} catch (e) {}
+const persist = () => { try { localStorage.setItem('lumora.v1', JSON.stringify({ scene: S.scene, dur: S.dur })); } catch (e) {} };
+
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOT = reduceMotion ? 0.5 : 1;
+
+function elapsed() {
+  if (S.phase === 'running') return S.accum + (performance.now() - S.startTs) / 1000;
+  if (S.phase === 'setup') return 0;
+  return S.accum;
+}
+function wakeAmount() {
+  if (S.phase !== 'done') return 0;
+  return clamp((performance.now() - S.doneAt) / 1000 / 40, 0, 1) * 0.85;
+}
+
+/* ================= Canvas ================= */
+const cv = $('scene');
+const ctx = cv.getContext('2d');
+let W = 800, H = 600;
+function resize() {
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+}
+const minWH = () => Math.min(W, H);
+
+/* ================= Fonds ================= */
+const BG = {
+  jelly: {
+    off: [0, 0.5, 1],
+    a: [hex('#0d4257'), hex('#08232f'), hex('#030b13')],
+    alt: [hex('#1a2f66'), hex('#0d1d44'), hex('#060a20')],
+    b: [hex('#a9dcdc'), hex('#5da3b5'), hex('#1e4d66')]
+  },
+  butterfly: {
+    off: [0, 0.5, 0.78, 1],
+    a: [hex('#121838'), hex('#3a3268'), hex('#bd8089'), hex('#e3a67c')],
+    alt: [hex('#1a1c4c'), hex('#48326e'), hex('#d49a72'), hex('#efb46c')],
+    b: [hex('#88bbe3'), hex('#c9ddef'), hex('#f6e3c8'), hex('#fbe6c4')]
+  }
+};
+const skyTint = () => 0.5 + 0.5 * Math.sin(T * 0.045 + 1.3); // va-et-vient très lent (environ 2 minutes)
+function drawBackground(w) {
+  const def = BG[S.scene], tint = skyTint() * 0.8;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  for (let i = 0; i < def.off.length; i++) g.addColorStop(def.off[i], rgba(mixc(mixc(def.a[i], def.alt[i], tint), def.b[i], w), 1));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+function drawVignette(w) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, minWH() * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6);
+  g.addColorStop(0, 'rgba(2,6,12,0)');
+  g.addColorStop(1, 'rgba(2,6,12,' + (0.55 * (1 - 0.75 * w)).toFixed(3) + ')');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/* ================= Éléments d'ambiance (fractions de l'écran) ================= */
+let snow = [], rays = [], stars = [], grass = [], flies = [], bokeh = [];
+function buildAmbient() {
+  const r = mulberry(99);
+  snow = Array.from({ length: 150 }, () => ({ x: r(), y: r(), s: lerp(0.6, 1.9, r()), v: lerp(0.004, 0.016, r()), ph: r() * TAU, z: r() }));
+  rays = Array.from({ length: 6 }, (_, i) => ({ x: lerp(-0.1, 0.95, i / 5) + (r() - 0.5) * 0.1, w: lerp(0.04, 0.1, r()), slant: lerp(-0.12, 0.2, r()), ph: r() * TAU, a: lerp(0.5, 1, r()) }));
+  stars = Array.from({ length: 80 }, () => ({ x: r(), y: r() * 0.5, s: lerp(0.5, 1.5, r()), ph: r() * TAU }));
+  grass = Array.from({ length: 360 }, (_, i) => {
+    const layer = i % 3 === 0 ? 1 : 0;
+    return { x: r() * 1.04 - 0.02, h: layer ? lerp(0.1, 0.22, r()) : lerp(0.05, 0.13, r()), w: layer ? lerp(1.6, 3, r()) : lerp(1, 2, r()), lean: (r() - 0.5) * 0.5, ph: r() * TAU, layer };
+  });
+  flies = Array.from({ length: 14 }, () => ({ seed: r() * 100, per: lerp(5, 10, r()), dur: lerp(1.2, 2.2, r()), off: r() * 20, tint: r(), z: r() }));
+  bokeh = Array.from({ length: 9 }, () => ({ x: r(), y: lerp(0.05, 0.6, r()), r: lerp(0.04, 0.11, r()), ph: r() * TAU }));
+}
+
+let T = 0; // temps d'animation (s)
+
+function drawSnow(near) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of snow) {
+    if ((p.z > 0.55) !== near) continue;
+    const x = ((p.x + Math.sin(T * 0.15 + p.ph) * 0.01) % 1 + 1) % 1 * W;
+    const y = p.y * H;
+    const tw = 0.5 + 0.5 * Math.sin(T * 0.8 + p.ph * 3);
+    ctx.fillStyle = 'rgba(190,240,255,' + (0.12 + 0.3 * tw * p.z).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(x, y, p.s * (0.6 + p.z * 0.7), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function updateSnow(dt) { for (const p of snow) { p.y += p.v * dt * (0.5 + p.z); if (p.y > 1.02) { p.y = -0.02; } } }
+
+function drawRays(w) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const r of rays) {
+    const x0 = (r.x + Math.sin(T * 0.05 + r.ph) * 0.04) * W, wd = r.w * W, dx = r.slant * H;
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.95);
+    const rc = mixc([150, 232, 242], [185, 180, 255], skyTint());
+    g.addColorStop(0, rgba(rc, ((0.075 + 0.12 * w) * r.a).toFixed(3)));
+    g.addColorStop(1, rgba(rc, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x0, -10); ctx.lineTo(x0 + wd, -10);
+    ctx.lineTo(x0 + dx + wd * 2.2, H * 0.95); ctx.lineTo(x0 + dx, H * 0.95);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ================= Méduses ================= */
+const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222]];
+const JWHITE = [236, 246, 255];
+function pathColor(cols, u) { // couleur le long du trajet : bleue au départ, mauve au milieu, parfois blanche à la fin
+  const x = u * (cols.length - 1), i = Math.min(cols.length - 2, Math.floor(x));
+  return mixc(cols[i], cols[i + 1], smooth(x - i));
+}
+const KSEG = 12;
+
+function placeHomes(n, y0, y1) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    let best = null, bd = -1;
+    for (let k = 0; k < 40; k++) {
+      const p = { x: lerp(0.1, 0.9, rnd()), y: lerp(y0, y1, rnd()) };
+      let d = 1e9;
+      for (const q of pts) d = Math.min(d, Math.hypot((p.x - q.x) * 1.6, (p.y - q.y)));
+      if (d > bd) { bd = d; best = p; }
+    }
+    pts.push(best);
+  }
+  return pts;
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function makeJelly(d) {
+  // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
+  const q = rnd();
+  const sz = d.giant ? lerp(0.18, 0.26, rnd()) : q < 0.4 ? lerp(0.022, 0.034, rnd()) : q < 0.8 ? lerp(0.04, 0.06, rnd()) : lerp(0.07, 0.1, rnd());
+  const z = d.giant ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
+  const tents = [];
+  const nThin = 16, nArm = 4;
+  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(2.0, 3.6, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  const c0 = Math.floor(rnd() * JPAL.length);
+  const c1 = (c0 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
+  const c2 = rnd() < 0.35 ? -1 : (c1 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
+  const cols = [JPAL[c0], JPAL[c1], c2 < 0 ? JWHITE : JPAL[c2]];
+  return {
+    kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols,
+    rf: sz, period: d.giant ? lerp(5, 7, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
+    fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
+    giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
+    modeT: Math.random() * 3, thrustK: 1, perK: 1, pulsing: true, tiltT: 0,
+    x: null, y: 0, vx: 0, vy: 0, tilt: 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
+  };
+}
+
+function updateJelly(c, dt, el) {
+  const R = c.R = c.rf * minWH();
+  // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
+  const u = clamp((el - c.s) / c.T, 0, 1);
+  let tx, ty;
+  if (c.giant) {
+    // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
+    const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
+    tx = lerp(xa, xb, u);
+    ty = lerp(c.y0f, c.y1f, u) * H;
+  } else {
+    tx = lerp(c.x0, c.x1, u) * W;
+    ty = lerp(H + R * 1.8, -R * 4.4, u);
+  }
+  if (c.x === null) { c.x = tx; c.y = ty; }
+  // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
+  c.modeT -= dt;
+  if (c.modeT <= 0) {
+    const r = Math.random();
+    if (c.giant) {
+      if (r < 0.6) { c.thrustK = 0.8; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
+      else if (r < 0.85) { c.thrustK = 0.4; c.perK = 1.2; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
+      else { c.pulsing = false; c.modeT = lerp(4, 8, Math.random()); }
+    } else if (r < 0.4) { c.thrustK = 1; c.perK = 1; c.pulsing = true; c.modeT = lerp(6, 16, Math.random()); }          // nage régulière
+    else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
+    else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
+    else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
+    c.tiltT = (Math.random() - 0.5) * 1.5;   // la poussée suit l'inclinaison : elle part en diagonale
+  }
+  if (c.pulsing || c.pp > 0) {
+    c.pp += dt / (c.period * c.perK);
+    if (c.pp >= 1) c.pp = c.pulsing ? c.pp - 1 : 0;   // au repos, l'ombrelle finit son cycle puis reste détendue
+  }
+  const s = c.pp;
+  const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
+  const db = b - c.b; c.b = b;
+  if (db > 0) {
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK;
+    c.vx += Math.sin(c.tilt) * f;
+    c.vy -= Math.cos(c.tilt) * f;
+  }
+  // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
+  const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
+  // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
+  const guide = smooth((u - 0.8) / 0.2);
+  const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
+  const kx = lerp((c.giant ? 0.6 : 0.12) * (0.5 + 0.5 * loose), 2.2, guide), ky = lerp((c.giant ? 0.8 : 0.3) * loose, 2.5, guide);
+  const sink = minWH() * 0.014;   // elle coule doucement quand elle ne pousse pas
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * 1.1) * dt;
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * 1.1) * dt;
+  c.x += c.vx * dt; c.y += c.vy * dt;
+  c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.9);
+  c.X = c.x; c.Y = c.y;
+  c.col = pathColor(c.cols, u);
+  // tentacules : suiveurs de chaîne
+  const w = R * (1 - 0.22 * b);
+  const seg0 = R / KSEG;
+  for (const t of c.tents) {
+    const ca = Math.cos(c.tilt), sa = Math.sin(c.tilt);
+    const lx = t.u * w, ly = R * 0.08;
+    const ax = c.X + lx * ca - ly * sa, ay = c.Y + lx * sa + ly * ca;
+    const seg = t.len * seg0, q = t.pts;
+    if (!t.init) {
+      for (let k = 0; k <= KSEG; k++) { q[2 * k] = ax; q[2 * k + 1] = ay + seg * k; }
+      t.init = true;
+    }
+    q[0] = ax; q[1] = ay;
+    for (let k = 1; k <= KSEG; k++) {
+      const sw = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * seg * (1 + k * 0.12) * (t.arm ? 1.4 : 1);
+      const tgx = q[2 * k - 2] + sw, tgy = q[2 * k - 1] + seg * (1 - 0.25 * b);
+      const f = 1 - Math.exp(-dt * (16 - k * 0.9));
+      const nx = q[2 * k] + (tgx - q[2 * k]) * f, ny = q[2 * k + 1] + (tgy - q[2 * k + 1]) * f;
+      const dx = nx - q[2 * k - 2], dy = ny - q[2 * k - 1];
+      const dd = Math.hypot(dx, dy) || 1;
+      q[2 * k] = q[2 * k - 2] + dx / dd * seg;
+      q[2 * k + 1] = q[2 * k - 1] + dy / dd * seg;
+    }
+  }
+}
+
+function chainPath(p) {
+  ctx.moveTo(p[0], p[1]);
+  for (let k = 1; k < KSEG; k++) {
+    ctx.quadraticCurveTo(p[2 * k], p[2 * k + 1], (p[2 * k] + p[2 * k + 2]) / 2, (p[2 * k + 1] + p[2 * k + 3]) / 2);
+  }
+  ctx.lineTo(p[2 * KSEG], p[2 * KSEG + 1]);
+}
+function bellPath(w, h, R, b) {
+  ctx.beginPath();
+  ctx.moveTo(-w, 0);
+  ctx.bezierCurveTo(-w * 1.02, -h, -w * 0.58, -h * 1.32, 0, -h * 1.32);
+  ctx.bezierCurveTo(w * 0.58, -h * 1.32, w * 1.02, -h, w, 0);
+  const n = 8, ld = R * (0.16 - 0.06 * b);
+  for (let i = 0; i < n; i++) {
+    const x0 = w - 2 * w * i / n, x1 = w - 2 * w * (i + 1) / n;
+    ctx.quadraticCurveTo((x0 + x1) / 2, ld * 2, x1, 0);
+  }
+  ctx.closePath();
+}
+
+function drawJelly(c) {
+  const a = c.alpha * lerp(0.5, 1, c.z);
+  if (a <= 0.003) return;
+  const R = c.R, X = c.X, Y = c.Y, col = c.col, b = c.b;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = a;
+  // halo
+  const hr = R * 2.8, hy = Y - R * 0.5;
+  let g = ctx.createRadialGradient(X, hy, 0, X, hy, hr);
+  g.addColorStop(0, rgba(col, 0.17 + 0.06 * b));
+  g.addColorStop(1, rgba(col, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(X - hr, hy - hr, hr * 2, hr * 2);
+  // tentacules
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const gt = ctx.createLinearGradient(0, Y, 0, Y + R * 3.8);
+  gt.addColorStop(0, rgba(col, 0.6)); gt.addColorStop(1, rgba(col, 0));
+  const ga = ctx.createLinearGradient(0, Y, 0, Y + R * 2.2);
+  ga.addColorStop(0, rgba(col, 0.3)); ga.addColorStop(1, rgba(col, 0));
+  ctx.strokeStyle = gt; ctx.lineWidth = Math.max(0.7, R * 0.02);
+  ctx.beginPath();
+  for (const t of c.tents) if (!t.arm) chainPath(t.pts);
+  ctx.stroke();
+  ctx.strokeStyle = ga; ctx.lineWidth = R * 0.11;
+  ctx.beginPath();
+  for (const t of c.tents) if (t.arm) chainPath(t.pts);
+  ctx.stroke();
+  ctx.lineWidth = R * 0.03; ctx.strokeStyle = gt;
+  ctx.beginPath();
+  for (const t of c.tents) if (t.arm) chainPath(t.pts);
+  ctx.stroke();
+  // ombrelle
+  ctx.translate(X, Y);
+  ctx.rotate(c.tilt);
+  const w = R * (1 - 0.22 * b), h = R * (0.85 + 0.2 * b);
+  bellPath(w, h, R, b);
+  g = ctx.createRadialGradient(0, -h * 0.35, 0, 0, -h * 0.35, w * 1.35);
+  g.addColorStop(0, rgba(col, 0.08)); g.addColorStop(0.55, rgba(col, 0.17));
+  g.addColorStop(0.9, rgba(col, 0.42)); g.addColorStop(1, rgba(col, 0.6));
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = rgba(mixc(col, [255, 255, 255], 0.5), 0.5);
+  ctx.stroke();
+  // nervures
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = rgba(col, 0.15);
+  ctx.beginPath();
+  for (let i = 1; i < 8; i++) {
+    const xr = w - 2 * w * i / 8;
+    ctx.moveTo(0, -h * 1.3);
+    ctx.quadraticCurveTo(xr * 0.95, -h * 0.75, xr, 0);
+  }
+  ctx.stroke();
+  // gonades (trèfle lumineux)
+  const passes = [[R * 0.09, 0.07], [R * 0.04, 0.2], [R * 0.014, 0.5]];
+  for (const [lw, al] of passes) {
+    ctx.lineWidth = lw; ctx.strokeStyle = rgba(mixc(col, [255, 255, 255], 0.35), al);
+    ctx.beginPath();
+    for (let k = 0; k < 4; k++) {
+      const ang = k * TAU / 4 + 0.4;
+      ctx.moveTo(Math.cos(ang) * w * 0.28 + w * 0.2, -h * 0.5 + Math.sin(ang) * h * 0.12);
+      ctx.ellipse(Math.cos(ang) * w * 0.28, -h * 0.5 + Math.sin(ang) * h * 0.12, w * 0.2, h * 0.16, ang, 0, TAU * 0.8);
+    }
+    ctx.stroke();
+  }
+  // reflet
+  ctx.fillStyle = 'rgba(255,255,255,0.16)';
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.38, -h * 0.95, w * 0.16, h * 0.07, -0.6, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ================= Papillons (inspirés d'espèces réelles) ================= */
+/* Monarque, Morpho bleu, Azuré commun, Machaon, Papillon de lune (Actias luna). */
+const SPECIES = [
+  { id: 'monarque', w: 3, size: 1.0, flap: 0.9, a: [232, 108, 18], b: [250, 152, 44], border: [16, 11, 10], bw: 0.085,
+    vein: { w: 0.03, a: 0.95, col: [16, 11, 10] }, dots: { col: 'rgba(255,255,255,0.92)', k: 1 }, tail: 0, body: '#0b0a0c' },
+  { id: 'morpho', w: 2, size: 1.2, flap: 0.8, a: [8, 36, 170], b: [34, 120, 240], hi: [150, 230, 255], border: [6, 9, 28], bw: 0.05,
+    vein: { w: 0.01, a: 0.25, col: [4, 8, 40] }, tail: 0, shimmer: true, body: '#0a0c18' },
+  { id: 'azure', w: 2, size: 0.62, flap: 1.5, a: [92, 108, 214], b: [156, 176, 248], border: [46, 46, 84], bw: 0.02,
+    vein: { w: 0.008, a: 0.2, col: [40, 40, 90] }, fringe: true, tail: 0, body: '#15172a' },
+  { id: 'machaon', w: 2, size: 1.05, flap: 1.0, a: [244, 212, 56], b: [253, 238, 140], border: [14, 12, 10], bw: 0.1,
+    vein: { w: 0.022, a: 0.92, col: [14, 12, 10] }, dots: { col: 'rgba(250,226,96,0.95)', k: 1.2 }, band: true, eye: 'machaon', tail: 0.55, body: '#0c0a08' },
+  { id: 'lune', w: 1, size: 1.1, flap: 0.65, a: [158, 222, 168], b: [208, 246, 208], border: [150, 122, 156], bw: 0.03,
+    vein: { w: 0.01, a: 0.3, col: [90, 130, 90] }, eye: 'lune', tail: 1.0, body: '#eceee2' }
+];
+const SPECIES_TOTAL = SPECIES.reduce((n, s) => n + s.w, 0);
+function pickSpecies() {
+  let r = rnd() * SPECIES_TOTAL;
+  for (const s of SPECIES) { r -= s.w; if (r <= 0) return s; }
+  return SPECIES[0];
+}
+const FORE_DOTS = [[1.03, -0.72, 0.05], [1.13, -0.52, 0.04], [1.04, -0.34, 0.035], [0.9, -0.2, 0.03]];
+const HIND_DOTS = [[0.88, 0.5, 0.04], [0.76, 0.7, 0.04], [0.6, 0.82, 0.035], [0.92, 0.3, 0.03]];
+const FORE_VEINS = [[1.1, -0.85], [1.18, -0.55], [1.0, -0.3], [0.72, -0.1]];
+const HIND_VEINS = [[0.5, 0.3, 0.7, 0.72], [0.6, 0.12, 0.9, 0.3], [0.2, 0.4, 0.3, 0.8]];
+
+function makeButterfly(d) {
+  const sp = pickSpecies();
+  const z = lerp(0.5, 1, rnd());
+  return {
+    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.04, 0.058, z),
+    ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
+    ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
+    X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
+  };
+}
+
+function updateButterfly(c, dt, el) {
+  const Sz = c.S = c.sf * minWH() * c.sp.size;
+  // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
+  const u = clamp((el - c.s) / c.T, 0, 1);
+  const calm = 1 - smooth((u - 0.85) / 0.15);
+  const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
+  const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
+  const X = (lerp(c.x0, c.x1, u) + wx) * W;
+  const Y = lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
+  if (!c.init) { c.X = X; c.Y = Y; c.init = true; }
+  const vx = (X - c.X) / Math.max(dt, 1e-3), vy = (Y - c.Y) / Math.max(dt, 1e-3);
+  c.X = X; c.Y = Y;
+  if (Math.hypot(vx, vy) > 6) {
+    const tgt = Math.atan2(vx, -vy);
+    let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    c.head += d * Math.min(1, dt * 3);
+  }
+  const glide = smooth((Math.sin(T * 0.2 + c.ph) - 0.75) / 0.2);
+  c.fph += dt * TAU * c.fl * (1 - 0.7 * glide);
+  const open = 0.22 + 0.78 * (0.5 + 0.5 * Math.cos(c.fph));
+  c.sx = lerp(open, 0.9, glide);
+}
+
+function wingPaths(S, tail) {
+  const f = new Path2D(), h = new Path2D();
+  f.moveTo(0.05 * S, -0.08 * S);
+  f.bezierCurveTo(0.3 * S, -0.95 * S, 0.95 * S, -1.15 * S, 1.2 * S, -0.8 * S);
+  f.bezierCurveTo(1.32 * S, -0.5 * S, 1.1 * S, -0.22 * S, 0.9 * S, -0.12 * S);
+  f.bezierCurveTo(0.6 * S, -0.02 * S, 0.3 * S, 0.02 * S, 0.05 * S, 0.04 * S);
+  f.closePath();
+  h.moveTo(0.05 * S, 0);
+  h.bezierCurveTo(0.4 * S, -0.05 * S, 0.9 * S, 0.02 * S, 0.95 * S, 0.35 * S);
+  if (tail > 0) {
+    const ty = 1.0 + tail;
+    h.bezierCurveTo(1.0 * S, 0.65 * S, 0.9 * S, 0.9 * S, 0.76 * S, 1.0 * S);
+    h.bezierCurveTo(0.84 * S, (1.0 + tail * 0.4) * S, 0.84 * S, (1.0 + tail * 0.8) * S, 0.76 * S, ty * S);
+    h.bezierCurveTo(0.66 * S, (1.0 + tail * 0.7) * S, 0.58 * S, (1.0 + tail * 0.3) * S, 0.5 * S, 0.86 * S);
+    h.bezierCurveTo(0.3 * S, 0.8 * S, 0.1 * S, 0.5 * S, 0.05 * S, 0.25 * S);
+  } else {
+    h.bezierCurveTo(1.0 * S, 0.75 * S, 0.6 * S, 1.0 * S, 0.4 * S, 0.85 * S);
+    h.bezierCurveTo(0.2 * S, 0.7 * S, 0.1 * S, 0.45 * S, 0.05 * S, 0.25 * S);
+  }
+  h.closePath();
+  return [f, h];
+}
+
+function paintWing(path, fore, sp, S, g) {
+  if (sp.fringe) { ctx.lineWidth = S * 0.055; ctx.strokeStyle = 'rgba(245,246,255,0.95)'; ctx.stroke(path); }
+  ctx.fillStyle = g;
+  ctx.fill(path);
+  ctx.save();
+  ctx.clip(path);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = S * sp.bw * 2;
+  ctx.strokeStyle = rgba(sp.border, 0.96);
+  ctx.stroke(path);
+  ctx.lineWidth = Math.max(0.6, S * sp.vein.w);
+  ctx.strokeStyle = rgba(sp.vein.col, sp.vein.a);
+  ctx.beginPath();
+  if (fore) FORE_VEINS.forEach(([ex, ey]) => { ctx.moveTo(0.08 * S, -0.05 * S); ctx.quadraticCurveTo(ex * 0.45 * S, ey * 0.9 * S, ex * S, ey * S); });
+  else HIND_VEINS.forEach(([cx, cy, ex, ey]) => { ctx.moveTo(0.08 * S, 0.05 * S); ctx.quadraticCurveTo(cx * S, cy * S, ex * S, ey * S); });
+  ctx.stroke();
+  ctx.restore();
+}
+function dotList(list, col, k, S) {
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  list.forEach(([x, y, r]) => { ctx.moveTo((x + r * k) * S, y * S); ctx.arc(x * S, y * S, r * k * S, 0, TAU); });
+  ctx.fill();
+}
+function eyeSpot(x, y, r, S, rings) {
+  rings.forEach(([m, col]) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x * S, y * S, r * m * S, 0, TAU); ctx.fill(); });
+}
+
+function drawButterfly(c, w) {
+  const sp = c.sp, S = c.S;
+  const a = lerp(0.65, 1, c.z);
+  ctx.save();
+  ctx.translate(c.X, c.Y);
+  ctx.rotate(c.head);
+  // halo doux
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = a * 0.5;
+  const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, S * 1.9);
+  hg.addColorStop(0, rgba(sp.b, 0.15 * (1 - w))); hg.addColorStop(1, rgba(sp.b, 0));
+  ctx.fillStyle = hg;
+  ctx.fillRect(-S * 2, -S * 2, S * 4, S * 4);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = a;
+  const [fw, hw] = wingPaths(S, sp.tail);
+  const shim = sp.shimmer ? 1 - c.sx : 0;
+  const ca = sp.hi ? mixc(sp.a, sp.hi, shim * 0.7) : sp.a;
+  const cb = sp.hi ? mixc(sp.b, sp.hi, shim * 0.6) : sp.b;
+  const g = ctx.createRadialGradient(0.1 * S, -0.1 * S, 0, 0.1 * S, -0.1 * S, 1.45 * S);
+  g.addColorStop(0, rgba(mixc(sp.border, ca, 0.4), 0.97));
+  g.addColorStop(0.4, rgba(ca, 0.95));
+  g.addColorStop(0.85, rgba(cb, 0.93));
+  g.addColorStop(1, rgba(mixc(cb, sp.border, 0.5), 0.95));
+  for (const side of [1, -1]) {
+    ctx.save();
+    ctx.scale(side * c.sx, 1);
+    paintWing(hw, false, sp, S, g);
+    paintWing(fw, true, sp, S, g);
+    if (sp.dots) { dotList(FORE_DOTS, sp.dots.col, sp.dots.k, S); dotList(HIND_DOTS, sp.dots.col, sp.dots.k, S); }
+    if (sp.band) {
+      ctx.fillStyle = 'rgba(70,120,232,0.85)';
+      ctx.beginPath();
+      [[0.72, 0.5], [0.58, 0.64], [0.44, 0.72]].forEach(([x, y]) => { ctx.moveTo(x * S + 0.07 * S, y * S); ctx.ellipse(x * S, y * S, 0.07 * S, 0.045 * S, 0.6, 0, TAU); });
+      ctx.fill();
+    }
+    if (sp.eye === 'machaon') eyeSpot(0.3, 0.8, 0.07, S, [[1, 'rgba(228,70,32,0.95)'], [0.45, 'rgba(12,10,10,0.95)']]);
+    if (sp.eye === 'lune') {
+      eyeSpot(0.62, -0.4, 0.11, S, [[1, 'rgba(236,204,92,0.95)'], [0.72, 'rgba(112,50,128,0.95)'], [0.32, 'rgba(214,240,222,0.9)']]);
+      eyeSpot(0.46, 0.4, 0.1, S, [[1, 'rgba(236,204,92,0.95)'], [0.72, 'rgba(112,50,128,0.95)'], [0.32, 'rgba(214,240,222,0.9)']]);
+    }
+    ctx.restore();
+  }
+  // corps
+  ctx.fillStyle = sp.body;
+  ctx.beginPath(); ctx.ellipse(0, 0.18 * S, 0.055 * S, 0.5 * S, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -0.3 * S, 0.075 * S, 0, TAU); ctx.fill();
+  ctx.lineWidth = Math.max(1, S * 0.02);
+  ctx.strokeStyle = 'rgba(10,12,24,0.9)';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-0.02 * S, -0.35 * S); ctx.quadraticCurveTo(-0.2 * S, -0.8 * S, -0.3 * S, -0.95 * S);
+  ctx.moveTo(0.02 * S, -0.35 * S); ctx.quadraticCurveTo(0.2 * S, -0.8 * S, 0.3 * S, -0.95 * S);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ---- Prairie du soir ---- */
+function drawStars(w) {
+  const k = 1 - w * 1.2;
+  if (k <= 0) return;
+  for (const s of stars) {
+    const tw = 0.5 + 0.5 * Math.sin(T * 0.6 + s.ph);
+    ctx.fillStyle = 'rgba(235,240,255,' + ((0.15 + 0.5 * tw) * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.s, 0, TAU); ctx.fill();
+  }
+}
+function drawBokeh(w) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const b of bokeh) {
+    const x = (b.x + Math.sin(T * 0.03 + b.ph) * 0.02) * W, y = b.y * H, r = b.r * minWH();
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(255,200,150,' + (0.05 + 0.04 * w) + ')'); g.addColorStop(1, 'rgba(255,200,150,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawHill(baseF, amp, freq, ph, col) {
+  ctx.fillStyle = rgba(col, 1);
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 12; x += 12) {
+    ctx.lineTo(x, H * baseF + Math.sin(x / W * TAU * freq + ph) * amp * H + Math.sin(x / W * TAU * freq * 2.7 + ph * 2) * amp * H * 0.3);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+}
+function drawHills(w) {
+  drawHill(0.80, 0.025, 1.2, 0.5, mixc(hex('#241f4a'), hex('#8fa8b8'), w));
+  drawHill(0.86, 0.02, 1.7, 2.1, mixc(hex('#151833'), hex('#6f8f78'), w));
+}
+function drawGrass(layer, w) {
+  const col = layer ? mixc(hex('#070916'), hex('#2f4a30'), w) : mixc(hex('#11142c'), hex('#4e6b4a'), w);
+  ctx.strokeStyle = rgba(col, 1);
+  ctx.lineCap = 'round';
+  const baseY = H * (layer ? 1.01 : 0.97);
+  for (const g of grass) {
+    if (g.layer !== layer) continue;
+    const x = g.x * W, h = g.h * H;
+    const sway = Math.sin(T * 0.7 + g.ph + x * 0.01) * h * 0.12;
+    ctx.lineWidth = g.w;
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.quadraticCurveTo(x + g.lean * h * 0.3 + sway * 0.4, baseY - h * 0.55, x + g.lean * h + sway, baseY - h);
+    ctx.stroke();
+  }
+}
+function hash1(n) { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); }
+function drawFlies(w) {
+  // Quelques lucioles seulement : chacune s'allume doucement une à deux secondes,
+  // puis disparaît plusieurs secondes et se rallume ailleurs.
+  const k = 1 - w * 1.3;
+  if (k <= 0) return;
+  const sc = clamp(minWH() / 760, 0.7, 1.6);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const f of flies) {
+    const u = (T + f.off) / f.per, idx = Math.floor(u), ph = (u - idx) * f.per;
+    if (ph > f.dur) continue;
+    const q = ph / f.dur;
+    const bl = Math.pow(Math.sin(Math.PI * q), 2) * k;
+    if (bl < 0.02) continue;
+    const hx = hash1(idx * 7.31 + f.seed), hy = hash1(idx * 3.17 + f.seed * 1.7);
+    const x = (lerp(0.06, 0.94, hx) + q * 0.015 * (hx < 0.5 ? 1 : -1)) * W;
+    const y = (lerp(0.42, 0.9, hy) - q * 0.02) * H;
+    const r = lerp(5, 9, f.z) * sc;
+    const hc = hash1(idx * 5.13 + f.seed * 2.3);
+    const col = hc < 0.4 ? [100, 255, 120] : hc < 0.75 ? [195, 255, 85] : [255, 218, 70]; // vert, jaune-vert ou jaune
+    let g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.6);
+    g.addColorStop(0, rgba(col, 0.42 * bl));
+    g.addColorStop(0.3, rgba(col, 0.16 * bl));
+    g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r * 2.6, y - r * 2.6, r * 5.2, r * 5.2);
+    g = ctx.createRadialGradient(x, y, 0, x, y, r * 0.45);
+    g.addColorStop(0, rgba(mixc(col, [255, 255, 255], 0.45), 0.9 * bl));
+    g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r * 0.45, y - r * 0.45, r * 0.9, r * 0.9);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawSun(w) {
+  if (w <= 0) return;
+  ctx.globalCompositeOperation = 'lighter';
+  const x = W * 0.5, y = H * 0.8, r = Math.max(W, H) * 0.7;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, 'rgba(255,214,150,' + (0.5 * w).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,214,150,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ================= Flux de créatures ================= */
+/* Les créatures arrivent en continu pendant toute la durée. Chacune met T secondes à traverser l'écran
+   de bas en haut; la dernière sort par le haut à l'instant exact D (temps = 0). */
+const TRAVEL = { jelly: 90, butterfly: 70 }; // secondes pour traverser l'écran (vitesse de base)
+const frac = x => x - Math.floor(x);
+let sched = [], live = [], hi = 0;
+let fade = 0;
+function travelBase() { return Math.min(TRAVEL[S.scene] * 0.7, S.dur); }
+function build() {
+  // Rien à régler : le nombre de créatures varie tout seul, par vagues lentes (parfois beaucoup, parfois très peu).
+  // Le calendrier est tiré au hasard à chaque lancement. La dernière créature sort toujours à l'instant D.
+  const D = S.dur, T0 = travelBase();
+  const r = mulberry(Math.floor(Math.random() * 1e9));
+  const runSeed = Math.floor(r() * 1e6) * 1000;
+  const lo = S.scene === 'jelly' ? 3 : 2, hiN = S.scene === 'jelly' ? 18 : 9;
+  const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
+  const dens = t => {
+    const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
+    return lerp(lo, hiN, smooth((n - 0.5) * 1.5 + 0.5)); // nombre visé à l'écran à cet instant
+  };
+  sched = [];
+  let e = D;
+  for (let k = 0; e > 0 && k < 5000; k++) {
+    const Tk = T0 * lerp(0.85, 1.25, r());
+    const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
+    const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
+    sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1 });
+    e -= T0 / dens(e) * lerp(0.7, 1.3, r());
+  }
+  if (S.scene === 'jelly') {
+    // De temps en temps, une très grande méduse entre par un côté de l'écran et le traverse lentement.
+    const Tg = Math.min(T0 * 1.6, D), gs = Math.floor(Math.random() * 1e6);
+    let e = D - Tg * lerp(0.1, 0.6, Math.random()), m = 0;
+    while (e > 0) {
+      const Tk = Tg * lerp(0.9, 1.15, Math.random());
+      sched.push({ k: 100000 + gs + m, e, T: Tk, s: e - Tk, giant: true, side: Math.random() < 0.5 ? -1 : 1,
+                   y0f: lerp(0.3, 0.7, Math.random()), y1f: lerp(0.15, 0.55, Math.random()) });
+      e -= lerp(70, 150, Math.random());
+      m++;
+    }
+  }
+  sched.sort((a, b) => a.s - b.s);
+  live = []; hi = 0;
+  fade = 0;
+}
+function resetStream() { live = []; hi = 0; }
+function streamUpdate(el) {
+  while (hi < sched.length && sched[hi].s <= el) {
+    const d = sched[hi++];
+    if (d.e > el) {
+      rnd = mulberry(500 + (d.seed !== undefined ? d.seed : d.k) * 7919 + (S.scene === 'jelly' ? 131 : 262));
+      live.push(S.scene === 'jelly' ? makeJelly(d) : makeButterfly(d));
+    }
+  }
+  live = live.filter(c => el < c.e);
+}
+
+/* ================= Boucle ================= */
+let last = performance.now();
+function frame(now) {
+  const rdt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+  last = now;
+  const dt = rdt * MOT;
+  T += dt;
+  updateSnow(dt);
+  fade = Math.min(1, fade + rdt / 0.9);
+
+  const D = S.dur;
+  let el = elapsed();
+  if (S.phase === 'running' && el >= D) finish();
+  el = S.phase === 'done' ? D : el;
+  const w = wakeAmount();
+
+  streamUpdate(el);
+  for (const c of live) {
+    if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
+    else updateButterfly(c, Math.max(dt, 1e-4), el);
+  }
+  const sorted = live.slice().sort((a, b) => a.z - b.z);
+
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  drawBackground(w);
+  if (S.scene === 'jelly') {
+    drawRays(w);
+    drawSnow(false);
+    for (const c of sorted) drawJelly(c);
+    drawSnow(true);
+  } else {
+    drawStars(w);
+    drawBokeh(w);
+    drawSun(w);
+    drawHills(w);
+    drawGrass(0, w);
+    drawFlies(w);
+    for (const c of sorted) drawButterfly(c, w);
+    drawGrass(1, w);
+  }
+  drawVignette(w);
+  if (fade < 1) { ctx.fillStyle = 'rgba(3,8,14,' + (1 - fade).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+
+  // interface
+  if (S.phase === 'running' || S.phase === 'paused' || S.phase === 'done') {
+    $('remain').textContent = fmtClock(D - el);
+    $('bar').style.transform = 'scaleX(' + clamp(el / D, 0, 1).toFixed(5) + ')';
+  } else {
+    $('bar').style.transform = 'scaleX(0)';
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ================= Phases ================= */
+function setPhase(p) {
+  S.phase = p;
+  document.body.dataset.phase = p;
+  const pauseBtn = $('btnPause');
+  const paused = p === 'paused';
+  pauseBtn.querySelector('.pauseIcon').style.display = paused ? 'none' : '';
+  pauseBtn.querySelector('.playIcon').style.display = paused ? '' : 'none';
+  pauseBtn.setAttribute('aria-label', paused ? 'Reprendre' : 'Mettre en pause');
+  pauseBtn.disabled = p === 'done';
+  if (p === 'setup' || p === 'paused') document.body.classList.remove('idle');
+  audioSync();
+  syncWake();
+  poke();
+}
+function start() {
+  resetStream();
+  S.accum = 0;
+  S.startTs = performance.now();
+  if (S.sound) prepareAudio();
+  setPhase('running');
+}
+function togglePause() {
+  if (S.phase === 'running') { S.accum = elapsed(); setPhase('paused'); }
+  else if (S.phase === 'paused') { S.startTs = performance.now(); setPhase('running'); }
+}
+function finish() {
+  S.accum = S.dur;
+  S.doneAt = performance.now();
+  setPhase('done');
+  chime();
+}
+function backToSetup() { S.accum = 0; setPhase('setup'); }
+
+/* ================= Réglages (puces) ================= */
+function buildChips(host, items, isOn, onPick) {
+  host.innerHTML = '';
+  items.forEach(([val, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(isOn(val)));
+    b.addEventListener('click', () => { onPick(val); refreshSetup(); });
+    host.appendChild(b);
+  });
+}
+function refreshSetup() {
+  buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; build(); audioSync(); } persist(); });
+  buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? 'Essai 30 s' : (d / 60) + ' min']), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
+}
+
+/* ================= Son ================= */
+let ac = null, master = null, previewTimer = 0;
+const layers = {};
+/* Enregistrements libres de droits (CC0), mis en boucle sans coupure. Chaque calque a son volume. */
+const LAYERS = {
+  jelly: [
+    { id: 'mer', url: 'audio/mer.mp3', gain: 1 },
+    { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6 }
+  ],
+  butterfly: [
+    { id: 'nuit', url: 'audio/nuit.mp3', gain: 1 }
+  ]
+};
+function audioInit() {
+  if (ac) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  try {
+    ac = new AC();
+    master = ac.createGain(); master.gain.value = 0.9;
+    master.connect(ac.destination);
+  } catch (e) { ac = null; }
+}
+function loadLayer(def) {
+  if (layers[def.id]) return;
+  const g = ac.createGain(); g.gain.value = 0; g.connect(master);
+  const L = layers[def.id] = { g, state: 'loading' };
+  fetch(def.url)
+    .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.arrayBuffer(); })
+    .then(b => new Promise((ok, no) => ac.decodeAudioData(b, ok, no)))
+    .then(buf => {
+      const src = ac.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      src.connect(g);
+      src.start(0, Math.random() * buf.duration);
+      L.state = 'ready';
+      audioSync();
+    })
+    .catch(() => { L.state = 'error'; soundStatus('Impossible de charger le son « ' + def.id + ' ».'); });
+}
+function audioSync() {
+  $('btnSound').setAttribute('aria-pressed', String(S.sound));
+  $('btnSound').setAttribute('aria-label', S.sound ? 'Couper le son' : 'Activer le son');
+  $('soundBox').checked = S.sound;
+  if (!ac) return;
+  const live = S.sound && (S.phase === 'running' || S.phase === 'paused' || S.preview);
+  const t = ac.currentTime;
+  for (const [scene, defs] of Object.entries(LAYERS)) {
+    for (const def of defs) {
+      const want = live && scene === S.scene;
+      if (want && !layers[def.id]) loadLayer(def);
+      const L = layers[def.id];
+      if (L) L.g.gain.setTargetAtTime(want ? def.gain : 0, t, want ? 1.2 : (S.phase === 'done' ? 4 : 0.8));
+    }
+  }
+  if (S.sound && ac.state === 'suspended') ac.resume();
+}
+function previewAmbience(ms) {
+  S.preview = true;
+  audioSync();
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => { S.preview = false; audioSync(); }, ms || 9000);
+}
+/* Fin du temps : une nappe très douce qui monte lentement comme un souffle, sans attaque, sans cloche.
+   Quatre notes graves et arrondies entrent l'une après l'autre, puis s'éteignent doucement (environ 15 s). */
+function chime() {
+  if (!ac || !S.sound) return;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+  lp.connect(ac.destination);
+  const t0 = ac.currentTime + 0.3;
+  [[220, 0.016, 0], [329.63, 0.014, 1.5], [440, 0.009, 3], [554.37, 0.005, 4.5]].forEach(([f, vol, delay]) => {
+    const o = ac.createOscillator(), g = ac.createGain(), t = t0 + delay;
+    o.type = 'sine'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 6;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 11);
+    o.connect(g); g.connect(lp);
+    o.start(t); o.stop(t + 11.2);
+  });
+}
+/* Sur iPhone/iPad, le mode silencieux coupe le son des pages web, sauf si la page joue un média.
+   On joue donc un silence en boucle et on demande à Safari la catégorie « lecture ». */
+let keep = null;
+function silentWav() {
+  const n = 4000, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, n, true);
+  b.fill(128, 44);
+  let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+function unlockAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  try {
+    if (!keep) { keep = new Audio(silentWav()); keep.loop = true; }
+    const pr = keep.play();
+    if (pr && pr.catch) pr.catch(() => {});
+  } catch (e) {}
+}
+function soundStatus(msg) { $('soundState').textContent = msg; }
+function prepareAudio() {
+  audioInit();
+  if (!ac) { soundStatus('Ce navigateur ne permet pas de jouer du son.'); return Promise.resolve(false); }
+  unlockAudio();
+  return Promise.resolve(ac.resume()).catch(() => {}).then(() => {
+    const ok = ac.state === 'running';
+    soundStatus(ok ? 'Son actif. Si vous n\'entendez rien, vérifiez le volume, le mode silencieux et que l\'onglet n\'est pas en sourdine.' : 'Le navigateur bloque le son. Touchez « Tester le son ».');
+    return ok;
+  });
+}
+function setSound(on) {
+  S.sound = on;
+  if (on) {
+    prepareAudio().then(ok => { if (ok) previewAmbience(); }); // aperçu de l'ambiance du décor
+  } else {
+    soundStatus('');
+  }
+  audioSync();
+}
+function testSound() {
+  S.sound = true;
+  prepareAudio().then(ok => { if (ok) { previewAmbience(16000); setTimeout(chime, 2000); } }); // ambiance, puis le carillon de fin
+  audioSync();
+}
+
+/* ================= Écran maintenu allumé, plein écran, masquage ================= */
+let wl = null;
+async function syncWake() {
+  const need = S.phase === 'running' || S.phase === 'paused';
+  try {
+    if (need && !wl && navigator.wakeLock && document.visibilityState === 'visible') {
+      wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => { wl = null; });
+    } else if (!need && wl) { await wl.release(); wl = null; }
+  } catch (e) { wl = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncWake(); });
+
+function toggleFull() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  } catch (e) {}
+}
+let idleTimer = 0;
+function poke() {
+  document.body.classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (S.phase === 'running' || S.phase === 'done') document.body.classList.add('idle');
+  }, 3500);
+}
+
+/* ================= Branchements ================= */
+$('start').addEventListener('click', start);
+$('btnPause').addEventListener('click', togglePause);
+$('btnRestart').addEventListener('click', start);
+$('btnSettings').addEventListener('click', backToSetup);
+$('soundTest').addEventListener('click', testSound);
+$('btnSound').addEventListener('click', () => setSound(!S.sound));
+$('soundBox').addEventListener('change', e => setSound(e.target.checked));
+$('btnFull').addEventListener('click', toggleFull);
+if (!document.fullscreenEnabled) $('btnFull').hidden = true;
+['pointermove', 'pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, poke, { passive: true }));
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && (S.phase === 'running' || S.phase === 'paused') && !/^(BUTTON|INPUT)$/.test(e.target.tagName)) {
+    e.preventDefault(); togglePause();
+  }
+});
+window.addEventListener('resize', resize);
+
+resize();
+buildAmbient();
+build();
+refreshSetup();
+setPhase('setup');
+fade = 0;
+requestAnimationFrame(frame);
+})();
+</script>
