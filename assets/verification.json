@@ -1,0 +1,10 @@
+{
+  "assets": 41,
+  "allChecksPassed": true,
+  "waterThemeBytes": 2867400,
+  "meadowThemeBytes": 2593328,
+  "totalWebpBytes": 5460728,
+  "totalPngBytes": 26758070,
+  "animationPreview": "apercus/controle-pulsation.webp",
+  "repositoryDelivery": "Les 41 PNG et 41 WebP sont déposés individuellement; les ZIP et générations brutes ne sont pas dupliqués dans Git."
+}

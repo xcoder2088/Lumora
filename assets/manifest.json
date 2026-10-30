@@ -1,0 +1,720 @@
+{
+  "version": 1,
+  "status": "validation visuelle requise avant intégration",
+  "colorSpace": "sRGB",
+  "alpha": "straight / non prémultiplié",
+  "pulseOrder": [
+    1,
+    2,
+    3,
+    4,
+    3,
+    2
+  ],
+  "filament": "étirable ; pas de garantie de raccord de texture répété",
+  "totalsBytes": {
+    "png": 26758070,
+    "webp": 5460728
+  },
+  "assets": [
+    {
+      "name": "decor-eau-profonde",
+      "png": "decors/decor-eau-profonde.png",
+      "webp": "decors/decor-eau-profonde.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2172863,
+      "webpBytes": 31924,
+      "transparentPixels": 0,
+      "partialAlphaPixels": 0,
+      "pngSha256": "a459fe3b49cbdc86b8d001e0947d4bf11e5eddf514bd7ea553294e6511be2038",
+      "webpSha256": "8ee5908b3aad37bfee92c5e78606e030db2d36371c69f736ff6a48cbb047c2d9"
+    },
+    {
+      "name": "decor-prairie-ciel",
+      "png": "decors/decor-prairie-ciel.png",
+      "webp": "decors/decor-prairie-ciel.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2793337,
+      "webpBytes": 47998,
+      "transparentPixels": 0,
+      "partialAlphaPixels": 0,
+      "pngSha256": "d824c018f8ced7388659e22b932b4adbb61985268a7ba88c9bd603ad227be136",
+      "webpSha256": "e104da760f24783f82254e591b7dcd1305ab6bf0ab3c19603a6b8d1f5738f4f1"
+    },
+    {
+      "name": "decor-prairie-collines",
+      "png": "decors/decor-prairie-collines.png",
+      "webp": "decors/decor-prairie-collines.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 1259565,
+      "webpBytes": 130640,
+      "transparentPixels": 2581380,
+      "partialAlphaPixels": 1104907,
+      "pngSha256": "0704f956536724d3319ebdd39303fb2623cd29577c740805fb64de2da66cb433",
+      "webpSha256": "08915bef10edbcfb71365f415850ab304788643300bd5093cc3587a3497c46e0"
+    },
+    {
+      "name": "decor-prairie-herbes",
+      "png": "decors/decor-prairie-herbes.png",
+      "webp": "decors/decor-prairie-herbes.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2093312,
+      "webpBytes": 532994,
+      "transparentPixels": 2518440,
+      "partialAlphaPixels": 1167960,
+      "pngSha256": "0b33de8dcf4194e41cf89da6c4ae8c932867718c8ddadef88e67eda8e3621fc7",
+      "webpSha256": "f86a2b59b137bf422b26ab334d1729237ebde1ee825555a0d782e6303388e5fc"
+    },
+    {
+      "name": "meduse-fantomatique-bras-oraux",
+      "png": "meduses/meduse-fantomatique-bras-oraux.png",
+      "webp": "meduses/meduse-fantomatique-bras-oraux.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 232906,
+      "webpBytes": 107362,
+      "transparentPixels": 942177,
+      "partialAlphaPixels": 106399,
+      "pngSha256": "ced46e7967aa6c03fa8285b48214c76ffc8dd5b4dfa05c96d99ef3475678d75b",
+      "webpSha256": "304b4322561bfac4997532d1baf63f8448a23e058084bad7b5cd5b94e86f7489"
+    },
+    {
+      "name": "meduse-fantomatique-lueur-interne",
+      "png": "meduses/meduse-fantomatique-lueur-interne.png",
+      "webp": "meduses/meduse-fantomatique-lueur-interne.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 173450,
+      "webpBytes": 83230,
+      "transparentPixels": 945040,
+      "partialAlphaPixels": 103536,
+      "pngSha256": "9878ad48763f565d03b14a30ca3fa7b8bccd285b618590b0fa268c87b15fed36",
+      "webpSha256": "695ff97bdf342049e9f4f1f0f44419b1c49640020b53bb66f4375da344b2cc13"
+    },
+    {
+      "name": "meduse-fantomatique-ombrelle-01",
+      "png": "meduses/meduse-fantomatique-ombrelle-01.png",
+      "webp": "meduses/meduse-fantomatique-ombrelle-01.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 1,
+      "pngBytes": 220271,
+      "webpBytes": 118780,
+      "transparentPixels": 882642,
+      "partialAlphaPixels": 165934,
+      "pngSha256": "f626134509984c491fce5390176e47d55853ee8c2d587e4532a40061a3bf075d",
+      "webpSha256": "93208a301400606a3f18445b4e6843f9b90d07b2b3ac611ed2f31213c104233b"
+    },
+    {
+      "name": "meduse-fantomatique-ombrelle-02",
+      "png": "meduses/meduse-fantomatique-ombrelle-02.png",
+      "webp": "meduses/meduse-fantomatique-ombrelle-02.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 2,
+      "pngBytes": 163878,
+      "webpBytes": 81038,
+      "transparentPixels": 893328,
+      "partialAlphaPixels": 155248,
+      "pngSha256": "ab50067499b1f7a7866e13fd8db2ddd98a192774982e41111526471fc1fc7de7",
+      "webpSha256": "d66c022438d0ccf12bf6107dc36966ec8d141dbd881e31e5a18ff9b0b580ad78"
+    },
+    {
+      "name": "meduse-fantomatique-ombrelle-03",
+      "png": "meduses/meduse-fantomatique-ombrelle-03.png",
+      "webp": "meduses/meduse-fantomatique-ombrelle-03.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 3,
+      "pngBytes": 167612,
+      "webpBytes": 80936,
+      "transparentPixels": 881398,
+      "partialAlphaPixels": 167178,
+      "pngSha256": "b748fafdc50db3b6d7a4332a06252aee331a5d3ea71d2517e175650d75a39f13",
+      "webpSha256": "7ac9e5eaa321b35d14ac5528e944f277828242d86777f57d9a8cd3a76ff7da1a"
+    },
+    {
+      "name": "meduse-fantomatique-ombrelle-04",
+      "png": "meduses/meduse-fantomatique-ombrelle-04.png",
+      "webp": "meduses/meduse-fantomatique-ombrelle-04.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 4,
+      "pngBytes": 166718,
+      "webpBytes": 80274,
+      "transparentPixels": 886247,
+      "partialAlphaPixels": 162329,
+      "pngSha256": "799caef0d1cc22934efb3227bc523b24c80dfd6bad1d1c997d6568f9d6e95e3b",
+      "webpSha256": "1db6871b60cfd1fdbb93272dc883d3e4e0b7e74a2f4c47615e7acb25038b585f"
+    },
+    {
+      "name": "meduse-haute-bras-oraux",
+      "png": "meduses/meduse-haute-bras-oraux.png",
+      "webp": "meduses/meduse-haute-bras-oraux.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 357661,
+      "webpBytes": 172306,
+      "transparentPixels": 822531,
+      "partialAlphaPixels": 226045,
+      "pngSha256": "440f8778628eb92ad41af44c31d1bfd3d8ad2dd660a07e8243392eb984411049",
+      "webpSha256": "61102646965917dd765b07170c9317dd46ff37a301a15ad50383f02313206edc"
+    },
+    {
+      "name": "meduse-haute-lueur-interne",
+      "png": "meduses/meduse-haute-lueur-interne.png",
+      "webp": "meduses/meduse-haute-lueur-interne.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 291366,
+      "webpBytes": 139974,
+      "transparentPixels": 857061,
+      "partialAlphaPixels": 191515,
+      "pngSha256": "2d657a8b9bd82ba7246920a542232f18ccdf2143a49a9d8ac5df4914838dfb6f",
+      "webpSha256": "659e91fc963e257062e5889a6c00ba0c0fa883d688f02dc252878031dde525ba"
+    },
+    {
+      "name": "meduse-haute-ombrelle-01",
+      "png": "meduses/meduse-haute-ombrelle-01.png",
+      "webp": "meduses/meduse-haute-ombrelle-01.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 1,
+      "pngBytes": 385775,
+      "webpBytes": 203868,
+      "transparentPixels": 717700,
+      "partialAlphaPixels": 330876,
+      "pngSha256": "843c9e44b935543e215c853b8a812faad14b344b2e98c8f481524ec48f3f96f1",
+      "webpSha256": "53fd52b36eabd18960ed200a1ec8059ea3139677042ac0f2b9cf60b273406732"
+    },
+    {
+      "name": "meduse-haute-ombrelle-02",
+      "png": "meduses/meduse-haute-ombrelle-02.png",
+      "webp": "meduses/meduse-haute-ombrelle-02.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 2,
+      "pngBytes": 337065,
+      "webpBytes": 171038,
+      "transparentPixels": 733675,
+      "partialAlphaPixels": 314901,
+      "pngSha256": "1f4c8bb83b93e05b54d3c356d3cd489ee2aa5aae0128449994c1bdd5f194fae7",
+      "webpSha256": "f273c7d6e5fc7a3f9f182a24cef2b910888810ee48ca5cae87c866856e3c09f7"
+    },
+    {
+      "name": "meduse-haute-ombrelle-03",
+      "png": "meduses/meduse-haute-ombrelle-03.png",
+      "webp": "meduses/meduse-haute-ombrelle-03.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 3,
+      "pngBytes": 359347,
+      "webpBytes": 182914,
+      "transparentPixels": 728229,
+      "partialAlphaPixels": 320347,
+      "pngSha256": "231265887fa56c704b95fdaa1e4d014b107a57a84f2f865b7469a0289491c5a4",
+      "webpSha256": "c20a72bdc5e0762b05f71dc26bc7143f3b91d0bfdf22d2774d880c1eccc5e2e0"
+    },
+    {
+      "name": "meduse-haute-ombrelle-04",
+      "png": "meduses/meduse-haute-ombrelle-04.png",
+      "webp": "meduses/meduse-haute-ombrelle-04.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 4,
+      "pngBytes": 339574,
+      "webpBytes": 174258,
+      "transparentPixels": 730009,
+      "partialAlphaPixels": 318567,
+      "pngSha256": "46fe4ea68c1091493638740bb9d3e05642880221b9fa4933d47013f64c9410cc",
+      "webpSha256": "de135b988db4cf6d3c014ebf46364f8a8beedeb2b3bd960c102497c56d18ca07"
+    },
+    {
+      "name": "meduse-lune-bras-oraux",
+      "png": "meduses/meduse-lune-bras-oraux.png",
+      "webp": "meduses/meduse-lune-bras-oraux.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 368730,
+      "webpBytes": 182320,
+      "transparentPixels": 792783,
+      "partialAlphaPixels": 255793,
+      "pngSha256": "1e620bcbdfd193c4a86049515fb8a8ae69eb05c87a84cf084783c37c0f12354b",
+      "webpSha256": "5310b7cbe347d16d8c1122f8368b7c31e892b10022a50496d4034dda6e45520c"
+    },
+    {
+      "name": "meduse-lune-lueur-interne",
+      "png": "meduses/meduse-lune-lueur-interne.png",
+      "webp": "meduses/meduse-lune-lueur-interne.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 287068,
+      "webpBytes": 147250,
+      "transparentPixels": 784043,
+      "partialAlphaPixels": 264533,
+      "pngSha256": "c75a0711175266243a485e38f1135677b223b1b54eebeaa1c3dc818110c71e8c",
+      "webpSha256": "1a4d8541c2b9e4b309c161f0c37a2373024c4e5a6b78a7567cd49458a761a27f"
+    },
+    {
+      "name": "meduse-lune-ombrelle-01",
+      "png": "meduses/meduse-lune-ombrelle-01.png",
+      "webp": "meduses/meduse-lune-ombrelle-01.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 1,
+      "pngBytes": 320648,
+      "webpBytes": 167334,
+      "transparentPixels": 788369,
+      "partialAlphaPixels": 260207,
+      "pngSha256": "8b6e9da65d6906ff1a88ecbd874d511c3333f2a96145d205153d2d02f28d77e7",
+      "webpSha256": "e9e71bb48eed712e3aff2c017268cf03d42a7960c2554e99f2d816a37fa7a08c"
+    },
+    {
+      "name": "meduse-lune-ombrelle-02",
+      "png": "meduses/meduse-lune-ombrelle-02.png",
+      "webp": "meduses/meduse-lune-ombrelle-02.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 2,
+      "pngBytes": 292572,
+      "webpBytes": 146150,
+      "transparentPixels": 801783,
+      "partialAlphaPixels": 246793,
+      "pngSha256": "94596725d03b1116b6a57de49d7b6d150eebaa7fdc32fb80aab1f81c89f93944",
+      "webpSha256": "5c69fb7aa1f490dddee90fa03a752f6bea2b01d247a4c14e6726a7d1f2176f3d"
+    },
+    {
+      "name": "meduse-lune-ombrelle-03",
+      "png": "meduses/meduse-lune-ombrelle-03.png",
+      "webp": "meduses/meduse-lune-ombrelle-03.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 3,
+      "pngBytes": 300073,
+      "webpBytes": 151928,
+      "transparentPixels": 780765,
+      "partialAlphaPixels": 267811,
+      "pngSha256": "ac75ece14fa56515c7f456d3609f64029eaff6481cc83def832a4ad5d5daa223",
+      "webpSha256": "ee44dcd8c769ab2663bf357ca31068b9f72f2ee1cced9a1eaf13061db8eb5eac"
+    },
+    {
+      "name": "meduse-lune-ombrelle-04",
+      "png": "meduses/meduse-lune-ombrelle-04.png",
+      "webp": "meduses/meduse-lune-ombrelle-04.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        760
+      ],
+      "pulseState": 4,
+      "pngBytes": 316077,
+      "webpBytes": 158130,
+      "transparentPixels": 782167,
+      "partialAlphaPixels": 266409,
+      "pngSha256": "1a89f59a9219f935c79b040b5a9e7c1a645933381f8573c1456c5b35e1307b3a",
+      "webpSha256": "dd906919f6eeefaf6758646d81e366ad1c095d04d17189b86db9f7da02987fd3"
+    },
+    {
+      "name": "meduse-tentacule-filament",
+      "png": "meduses/meduse-tentacule-filament.png",
+      "webp": "meduses/meduse-tentacule-filament.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 40567,
+      "webpBytes": 17684,
+      "transparentPixels": 1037539,
+      "partialAlphaPixels": 10769,
+      "pngSha256": "2bb0f1568c133b87b2f6d2f2bba846e749e1a63681cb7d9229cb0ba63afa86b8",
+      "webpSha256": "4f36be23dc2745e4069fb08da0164414d1f3ba442e5f4315be0af01adf7600b8"
+    },
+    {
+      "name": "meduse-tentacules-grappe-01",
+      "png": "meduses/meduse-tentacules-grappe-01.png",
+      "webp": "meduses/meduse-tentacules-grappe-01.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 198123,
+      "webpBytes": 96208,
+      "transparentPixels": 948936,
+      "partialAlphaPixels": 99636,
+      "pngSha256": "788ac3611fccaafedcdb0b301ce0f1fca491570574048fbc7241aeba6c4b2e26",
+      "webpSha256": "79a4b2f3081277a0be1731cf5853e6d7af36d836d9527de942c725d7b32d8231"
+    },
+    {
+      "name": "meduse-tentacules-grappe-02",
+      "png": "meduses/meduse-tentacules-grappe-02.png",
+      "webp": "meduses/meduse-tentacules-grappe-02.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 238309,
+      "webpBytes": 104604,
+      "transparentPixels": 889517,
+      "partialAlphaPixels": 158955,
+      "pngSha256": "661903d8676dabe57153121daacd78787bd663bdbd1a04c005c83e2531f2f7a2",
+      "webpSha256": "f0e6becd9263fcce2e0128a91a2c7f58c5e9b5b66897af59a976510ed9f4442c"
+    },
+    {
+      "name": "meduse-tentacules-grappe-03",
+      "png": "meduses/meduse-tentacules-grappe-03.png",
+      "webp": "meduses/meduse-tentacules-grappe-03.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        60
+      ],
+      "pngBytes": 154046,
+      "webpBytes": 67890,
+      "transparentPixels": 986055,
+      "partialAlphaPixels": 62517,
+      "pngSha256": "c7c52e2f388cef25cb1e71ba7bb9d10c7bc9b2d05b02b45b92db227d1f50c400",
+      "webpSha256": "570dc50b44a55b25c969d6dfe200b7afe33011e221d7740000c317b158c3ef86"
+    },
+    {
+      "name": "papillon-azure-commun-aile-arriere",
+      "png": "papillons/papillon-azure-commun-aile-arriere.png",
+      "webp": "papillons/papillon-azure-commun-aile-arriere.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        962,
+        387
+      ],
+      "pngBytes": 1598472,
+      "webpBytes": 255220,
+      "transparentPixels": 491092,
+      "partialAlphaPixels": 557319,
+      "pngSha256": "e203a5bb3b65a806b4d2f6341fa79dae133ba882f5e372180ba9baea746d4ba7",
+      "webpSha256": "5ff9cb64e017a65f243449e762a624faa659bf3fb6ffa0f3d2ac763ade0cda3e"
+    },
+    {
+      "name": "papillon-azure-commun-aile-avant",
+      "png": "papillons/papillon-azure-commun-aile-avant.png",
+      "webp": "papillons/papillon-azure-commun-aile-avant.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        958,
+        754
+      ],
+      "pngBytes": 1496947,
+      "webpBytes": 252970,
+      "transparentPixels": 536235,
+      "partialAlphaPixels": 512212,
+      "pngSha256": "5908ec940c90b348619eec3d80dbc807b0006f4f9315d079469081af83b49fbc",
+      "webpSha256": "a8b76e59b1f5c37cccb5aa0177894d51047872fce6bd15875b944d769976d948"
+    },
+    {
+      "name": "papillon-azure-commun-corps",
+      "png": "papillons/papillon-azure-commun-corps.png",
+      "webp": "papillons/papillon-azure-commun-corps.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        360
+      ],
+      "pngBytes": 87085,
+      "webpBytes": 23020,
+      "transparentPixels": 1023087,
+      "partialAlphaPixels": 25014,
+      "pngSha256": "c12bee5908780ffa3127cd46dcf10ad36cd95e53863dc141a46fa98b1e5a958d",
+      "webpSha256": "4a1d5b22b81c499c8458591a14f9edea1756f13b3bfc86be6d7a5dca46d7652c"
+    },
+    {
+      "name": "papillon-lune-aile-arriere",
+      "png": "papillons/papillon-lune-aile-arriere.png",
+      "webp": "papillons/papillon-lune-aile-arriere.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        833,
+        249
+      ],
+      "pngBytes": 636213,
+      "webpBytes": 75866,
+      "transparentPixels": 794469,
+      "partialAlphaPixels": 253491,
+      "pngSha256": "2a498d5fd2fdffe9cb36e4f119bef32df6a9d80aa07dbb77a7aa9b697accbc83",
+      "webpSha256": "d848dd2fa029fb7ce6f2efa321f63ddbe5898e199982bb651ed081cdf626173d"
+    },
+    {
+      "name": "papillon-lune-aile-avant",
+      "png": "papillons/papillon-lune-aile-avant.png",
+      "webp": "papillons/papillon-lune-aile-avant.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        964,
+        619
+      ],
+      "pngBytes": 1105519,
+      "webpBytes": 136638,
+      "transparentPixels": 600418,
+      "partialAlphaPixels": 447971,
+      "pngSha256": "b826585159cd12cd3bff12053ca9958758142cacba5f95960b5828f51160b0c3",
+      "webpSha256": "395b31c849756efa36fd8c27060c7b9e7aaa61d6332fb4c9c618fba463e3dbc7"
+    },
+    {
+      "name": "papillon-lune-corps",
+      "png": "papillons/papillon-lune-corps.png",
+      "webp": "papillons/papillon-lune-corps.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        360
+      ],
+      "pngBytes": 200108,
+      "webpBytes": 48204,
+      "transparentPixels": 977949,
+      "partialAlphaPixels": 70567,
+      "pngSha256": "c85036aa84d15a6fb14a54bcf3df9763fd8c0ad349ce7083c310531a39574df2",
+      "webpSha256": "84d8d9cbbb29d3d5a10893d70e2b1146b2fa3a2a5c1425e0cc1e22e94e5d44d1"
+    },
+    {
+      "name": "papillon-machaon-aile-arriere",
+      "png": "papillons/papillon-machaon-aile-arriere.png",
+      "webp": "papillons/papillon-machaon-aile-arriere.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        894,
+        356
+      ],
+      "pngBytes": 1144808,
+      "webpBytes": 176248,
+      "transparentPixels": 654836,
+      "partialAlphaPixels": 393123,
+      "pngSha256": "b214e88a659ab766b970d9d34bb7a6cc3953e4e152bba97d23129e54bb567505",
+      "webpSha256": "d4d152432601429915d4c08d3a15ce2418411cb712aafb8100e582e671ac96d5"
+    },
+    {
+      "name": "papillon-machaon-aile-avant",
+      "png": "papillons/papillon-machaon-aile-avant.png",
+      "webp": "papillons/papillon-machaon-aile-avant.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        964,
+        809
+      ],
+      "pngBytes": 1213560,
+      "webpBytes": 178900,
+      "transparentPixels": 580045,
+      "partialAlphaPixels": 468260,
+      "pngSha256": "4c6945094ebd9bf6b8471ec2c1b8c01949f2be83d54cbc4293d08ebd17690e77",
+      "webpSha256": "614523cb368534e0e3d4eda31ea3c106cd31aa1d130fcbf66a165d29171df65d"
+    },
+    {
+      "name": "papillon-machaon-corps",
+      "png": "papillons/papillon-machaon-corps.png",
+      "webp": "papillons/papillon-machaon-corps.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        360
+      ],
+      "pngBytes": 143840,
+      "webpBytes": 30928,
+      "transparentPixels": 1003418,
+      "partialAlphaPixels": 44804,
+      "pngSha256": "4b12148121dfa8d0b081cbff72f46d4122831c71731623e025f7d8f9a8393f6f",
+      "webpSha256": "064ac9479b1bc1a1c490fa178f54292a8c1cf7f3135f5d28d7684e2d7bc017fb"
+    },
+    {
+      "name": "papillon-monarque-aile-arriere",
+      "png": "papillons/papillon-monarque-aile-arriere.png",
+      "webp": "papillons/papillon-monarque-aile-arriere.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        964,
+        277
+      ],
+      "pngBytes": 1305793,
+      "webpBytes": 166098,
+      "transparentPixels": 525842,
+      "partialAlphaPixels": 522346,
+      "pngSha256": "a8d45e2db257a48626675712e009cdd6607c799601f2d95fe1d31731fc3dc3d3",
+      "webpSha256": "def2d38f6ab7be20ae494871c32574a28c365ecb4b43f58ab18e514ede1608c2"
+    },
+    {
+      "name": "papillon-monarque-aile-avant",
+      "png": "papillons/papillon-monarque-aile-avant.png",
+      "webp": "papillons/papillon-monarque-aile-avant.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        964,
+        900
+      ],
+      "pngBytes": 870919,
+      "webpBytes": 110880,
+      "transparentPixels": 690981,
+      "partialAlphaPixels": 356788,
+      "pngSha256": "1b1277382e406cfeeebc992b091afda04f27b92e1af0d8d89e72115238a94d66",
+      "webpSha256": "6cf632b3664fafc7256a5a099f7abd394fb33799cf029d08545474c44ee8f580"
+    },
+    {
+      "name": "papillon-monarque-corps",
+      "png": "papillons/papillon-monarque-corps.png",
+      "webp": "papillons/papillon-monarque-corps.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        360
+      ],
+      "pngBytes": 101384,
+      "webpBytes": 21496,
+      "transparentPixels": 1014865,
+      "partialAlphaPixels": 33253,
+      "pngSha256": "f8813a12e8f46afd44feb130f20a47263343142f8d0badf782808190e7433645",
+      "webpSha256": "7c6a369afe0c1ef8eb48db6b90c128a24938cb787385a6b82ef07ef4e164d05b"
+    },
+    {
+      "name": "papillon-morpho-bleu-aile-arriere",
+      "png": "papillons/papillon-morpho-bleu-aile-arriere.png",
+      "webp": "papillons/papillon-morpho-bleu-aile-arriere.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        948,
+        302
+      ],
+      "pngBytes": 1512885,
+      "webpBytes": 198396,
+      "transparentPixels": 470409,
+      "partialAlphaPixels": 577427,
+      "pngSha256": "6c473a54a066fe9c54478989e52bad7ebb50a0472b424ac8c09ea7ff7ac43199",
+      "webpSha256": "1c7881c0e820c1238f5402231bce033bbd890de80a8a1dd271984f2e08d97af3"
+    },
+    {
+      "name": "papillon-morpho-bleu-aile-avant",
+      "png": "papillons/papillon-morpho-bleu-aile-avant.png",
+      "webp": "papillons/papillon-morpho-bleu-aile-avant.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        964,
+        917
+      ],
+      "pngBytes": 1086183,
+      "webpBytes": 160978,
+      "transparentPixels": 649274,
+      "partialAlphaPixels": 398420,
+      "pngSha256": "961bebd838baa8d49e5ad885a3160dea555aa540cb195b1bc1eedf6769d81a44",
+      "webpSha256": "79e72121c6da4cd67c138d961ce2bacf28d3fc1de359b9874bc7a9da21c4173d"
+    },
+    {
+      "name": "papillon-morpho-bleu-corps",
+      "png": "papillons/papillon-morpho-bleu-corps.png",
+      "webp": "papillons/papillon-morpho-bleu-corps.webp",
+      "width": 1024,
+      "height": 1024,
+      "pivot": [
+        512,
+        360
+      ],
+      "pngBytes": 223441,
+      "webpBytes": 45854,
+      "transparentPixels": 974188,
+      "partialAlphaPixels": 74077,
+      "pngSha256": "52ad593d2315cb652b07e3d2df2cd4744436037160523fec83af9ad84a0e9265",
+      "webpSha256": "daeca7e425a0a451ac8b72c17b1319277426f52a27ce1ae3587dbaa68f556ecc"
+    }
+  ],
+  "basePath": "assets/",
+  "previewsExcludedFromRuntimeBudget": true
+}

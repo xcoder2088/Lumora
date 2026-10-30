@@ -1,0 +1,216 @@
+[
+  {
+    "name": "decor-eau-profonde",
+    "prompt": "Use case: illustration-story. ONE background layer for Lumora calming nursery visual timer. 16:9 landscape artwork intended for 2560x1440. Deep underwater empty water column, subtle smooth blue-green gradient, very dark deep teal at bottom, slightly lighter desaturated marine teal near top, a few very diffuse broad rays of light filtering gently down from outside the top frame. Realistic soft underwater scattering, hazy tranquil enormous depth. Very low contrast, no bright white sunbeams, no hard edges, no sparkling particles. NO creatures, NO jellyfish, NO fish, NO seaweed, NO rocks, NO seabed, NO bubbles, NO text or logo. Full opaque background.",
+    "source": "exec-8469e757-8ea4-454f-a3ea-146fd16b0152.png"
+  },
+  {
+    "name": "decor-prairie-ciel",
+    "prompt": "Use case: illustration-story. ONE SKY ONLY background layer for Lumora calming nursery timer. Wide16:9 intended2560x1440. Smooth realistic dusk sky from muted deep violet at top through dusty lavender and soft muted pink to a narrow warm soft amber glow at bottom horizon. Spacious atmospheric extremely soft gradation, no harsh bright region, no sun disk. Gentle painterly photographic realism, no noise texture. NO land, NO hills, NO trees, NO grass, NO flowers, NO butterflies, NO animals, NO stars, NO moon, NO text or logo. Opaque full-frame SKY ONLY.",
+    "source": "exec-7dba03d8-3a52-4316-87c7-2fcb1a4cdc83.png"
+  },
+  {
+    "name": "decor-prairie-collines",
+    "prompt": "Use case: illustration-story. ONE separate transparent landscape layer for Lumora calming nursery timer, wide16:9 intended2560x1440. ONLY three very gentle distant rolling meadow hills clustered in lower third of frame. Soft realistic atmospheric perspective, farther hill muted lavender, nearer hill subdued dusky mauve plum, lightly suggested distant grassy land surface. The softly rolling horizon should stay below55percent image height, land fills bottom edge fully. Top two thirds TRUE TRANSPARENT ALPHA, no sky, no background matte. Calm soft low contrast, no flowers, no trees, no buildings, NO butterflies, NO creatures, NO text or logo. No hard graphic outlines. A compositable distant-hills layer.",
+    "source": "exec-35a0cbc1-ddc8-4afa-a893-c7be67e585fa.png"
+  },
+  {
+    "name": "decor-prairie-herbes",
+    "prompt": "Use case: illustration-story. ONE separate transparent FOREGROUND GRASS landscape layer for Lumora calming nursery timer, wide16:9 intended2560x1440. Sparse realistic meadow grasses only across bottom edge, fine arching slender blades, a few delicate wild grass seed heads, natural restrained variation, muted deep plum-gray and desaturated dusky green. Most blade tips in lower quarter, few seed heads gently reach into lower third. Soft diffuse twilight lighting, natural delicate botanical detail, low contrast, no black outlines. Bottom edge fully covered by soft grassy ground band. Top60percent TRUE TRANSPARENT ALPHA, no sky, no hills, no background matte, no white halo. NO butterflies, NO creatures, NO flowers, NO text, NO logo.",
+    "source": "exec-7685dc14-3a10-4e8f-8f9a-273f5edd5454.png"
+  },
+  {
+    "name": "papillon-machaon-aile-avant",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Papilio machaon LEFT FOREWING ONLY: single sweeping broadly triangular blade extending diagonally upper-left from root at right-lower. Pale creamy yellow with natural dark charcoal branching veins and black patterned outer edge. Forewing has NO swallowtail extension, no rear wing lobe. Anatomically based dorsal pattern.",
+    "source": "exec-207bccca-a512-48e2-b28a-d6d6c0c9d175.png"
+  },
+  {
+    "name": "papillon-lune-aile-avant",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Actias luna luna moth LEFT FOREWING ONLY: single gently curved triangular upper wing, pale natural translucent pistachio green membrane, fine veins, subtle wine-brown leading edge, one small natural translucent eyespot with muted rim. No rear wing, NO long tail on this FOREwing. Root near right lower quadrant.",
+    "source": "exec-c5c1c72a-cfa9-45da-8dcb-7456364dd759.png"
+  },
+  {
+    "name": "papillon-monarque-aile-arriere",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Danaus plexippus monarch LEFT HINDWING ONLY: single rounded fan with root at upper-right (around x850 y250), broad round distal edge extending left and down. Muted warm orange membrane, thin black radial veins converging at root, dark border with cream spots. Single ROUND lower wing, NO pointed upper forewing.",
+    "source": "exec-15fd05bc-0a12-498b-826c-5850828a7c84.png"
+  },
+  {
+    "name": "papillon-morpho-bleu-aile-arriere",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Morpho menelaus LEFT HINDWING ONLY: single rounded fan, root at upper-right, scalloped broad distal edge extends left and down. Subdued natural pearly azure blue with soft structural sheen, dark brown narrow edge and discreet small pale edge spots, subtle veins. No upper triangular forewing, no combined wing pair.",
+    "source": "exec-5cefb036-cd76-4cf2-acdf-8ddada89a102.png"
+  },
+  {
+    "name": "papillon-azure-commun-aile-arriere",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Male Polyommatus icarus common blue LEFT HINDWING ONLY: small single rounded fan, root upper-right, gently scalloped edge extends left/down. Dorsal blue-lilac membrane, delicate dark veins, thin charcoal margin, fine white fringe. Dorsal male surface, no ventral orange spots or large invented ocelli, NO triangular forewing.",
+    "source": "exec-3018fc25-293d-4e16-9545-eee8aa5e4c9e.png"
+  },
+  {
+    "name": "papillon-machaon-aile-arriere",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Papilio machaon LEFT HINDWING ONLY: single scalloped pale cream-yellow fan, root at upper-right, natural black veins, black scalloped outer band with muted powdery blue patches and small red-orange tornal eyespot. One naturally slender swallowtail extends DOWNWARD from rear margin. No forewing, no extra wing. Include whole tail uncropped.",
+    "source": "exec-b749adde-11ef-43c5-aec6-aabfecfa6e15.png"
+  },
+  {
+    "name": "papillon-lune-aile-arriere",
+    "prompt": "Use case: scientific-educational. ONE isolated separate wing sprite for Lumora calming timer. Realistic soft natural-history illustration with fine correct venation and scale texture; dorsal top view, fully open LEFT wing, root on RIGHT, distal edge on LEFT. 1024x1024 square with margin all around. TRUE TRANSPARENT RGBA background, no shadow, no matte, no text or labels, no body, no right wing, no extra wing. Soft diffuse lighting and natural colors gently muted. SINGLE WING ONLY, not the entire left wing pair. Actias luna LEFT HINDWING ONLY: single pale pistachio-green rounded wing fan, root at upper-right, fine veins, one soft natural eyespot, the characteristic very long narrow gently twisting hindwing tail extending down from lower margin. Whole tail visible with margins. Muted realistic green, a little translucent. NO forewing, no extra wing.",
+    "source": "exec-ae3b7309-ba68-4511-89b9-31b3f7edade1.png"
+  },
+  {
+    "name": "papillon-monarque-corps",
+    "prompt": "Use case: scientific-educational. ONE isolated separate butterfly BODY WITH TWO ANTENNAE sprite for Lumora calming timer. Realistic soft natural-history dorsal TOP view, head up, abdomen down, exactly centered on vertical axis, all appendages within generous transparent margin. No wings whatsoever, no wing fragments, no spread legs. Tiny naturally proportioned head with unobtrusive compound eyes, never human eyes or face. Subtle furry thorax, segmented tapering abdomen, two natural curved antennae. Soft diffuse lighting, no cartoon, no text, no logo, no shadows, no matte. TRUE transparent RGBA background. Danaus plexippus monarch, slender black body with subtle small natural cream white dots on thorax and abdomen, slender black CLUBBED antennae. Natural scale, soft black.",
+    "source": "exec-3e36e476-7f66-4fce-ada1-6898b2986e36.png"
+  },
+  {
+    "name": "papillon-morpho-bleu-corps",
+    "prompt": "Use case: scientific-educational. ONE isolated separate butterfly BODY WITH TWO ANTENNAE sprite for Lumora calming timer. Realistic soft natural-history dorsal TOP view, head up, abdomen down, exactly centered on vertical axis, all appendages within generous transparent margin. No wings whatsoever, no wing fragments, no spread legs. Tiny naturally proportioned head with unobtrusive compound eyes, never human eyes or face. Subtle furry thorax, segmented tapering abdomen, two natural curved antennae. Soft diffuse lighting, no cartoon, no text, no logo, no shadows, no matte. TRUE transparent RGBA background. Morpho menelaus blue morpho, softly furry dark brown-gray thorax and slender brown abdomen, dark gently curved CLUBBED antennae. No blue glow.",
+    "source": "exec-a7223c89-26e4-4327-aa39-330010bf46a4.png"
+  },
+  {
+    "name": "papillon-azure-commun-corps",
+    "prompt": "Use case: scientific-educational. ONE isolated separate butterfly BODY WITH TWO ANTENNAE sprite for Lumora calming timer. Realistic soft natural-history dorsal TOP view, head up, abdomen down, exactly centered on vertical axis, all appendages within generous transparent margin. No wings whatsoever, no wing fragments, no spread legs. Tiny naturally proportioned head with unobtrusive compound eyes, never human eyes or face. Subtle furry thorax, segmented tapering abdomen, two natural curved antennae. Soft diffuse lighting, no cartoon, no text, no logo, no shadows, no matte. TRUE transparent RGBA background. Male Polyommatus icarus common blue: small downy muted blue-gray thorax, slim silvery gray segmented abdomen, thin dark-and-light subtly ringed CLUBBED antennae.",
+    "source": "exec-4510bc9e-920a-4f41-a0b6-30dc8dc1e24e.png"
+  },
+  {
+    "name": "papillon-machaon-corps",
+    "prompt": "Use case: scientific-educational. ONE isolated separate butterfly BODY WITH TWO ANTENNAE sprite for Lumora calming timer. Realistic soft natural-history dorsal TOP view, head up, abdomen down, exactly centered on vertical axis, all appendages within generous transparent margin. No wings whatsoever, no wing fragments, no spread legs. Tiny naturally proportioned head with unobtrusive compound eyes, never human eyes or face. Subtle furry thorax, segmented tapering abdomen, two natural curved antennae. Soft diffuse lighting, no cartoon, no text, no logo, no shadows, no matte. TRUE transparent RGBA background. Papilio machaon swallowtail: dark charcoal slender body with subtle pale cream-yellow longitudinal markings, fine CLUBBED black antennae, naturally tapering abdomen.",
+    "source": "exec-6abe113d-e92d-4ba7-9770-8a3effc8ca3c.png"
+  },
+  {
+    "name": "papillon-lune-corps",
+    "prompt": "Use case: scientific-educational. ONE isolated separate butterfly BODY WITH TWO ANTENNAE sprite for Lumora calming timer. Realistic soft natural-history dorsal TOP view, head up, abdomen down, exactly centered on vertical axis, all appendages within generous transparent margin. No wings whatsoever, no wing fragments, no spread legs. Tiny naturally proportioned head with unobtrusive compound eyes, never human eyes or face. Subtle furry thorax, segmented tapering abdomen, two natural curved antennae. Soft diffuse lighting, no cartoon, no text, no logo, no shadows, no matte. TRUE transparent RGBA background. Actias luna luna moth: soft ivory-white downy thorax and plump cream furry abdomen; two natural broad finely feathered FEATHERY ANTENNAE in pale tan, appropriate moth anatomy. No butterfly club antennae, no wings.",
+    "source": "exec-a2f77fb4-8155-4201-a78d-37b3899ac36e.png"
+  },
+  {
+    "name": "meduse-lune-ombrelle-01",
+    "prompt": "Use case: scientific-educational. Create ONE production-ready separate sprite for Lumora, a calming nursery visual timer. Subject: ONLY the bell/umbrella of a moon jellyfish (Aurelia), side elevation, relaxed broad low dome, anatomically inspired, delicate translucent gelatin, fine radial canals and subtle scalloped rim. NO oral arms, NO tentacles, NO internal clover organs (these will be separate sprites). Soft realistic marine illustration, elegant natural microstructure, not cartoon, no outline, no eyes or face. Strictly neutral WHITE and GRAY, R=G=B throughout, translucent soft alpha; no blue or other tint. TRUE transparent background, no drawn checkerboard, no ground, no cast shadow, no white matte or halo. Center the bell horizontally in a square 1024x1024 canvas, dome apex y=180, rim center at x=512,y=660, width 860 px. Attachment pivot fixed at x=512,y=660. Entire object inside canvas with margin. No text, no logo. Bell only.",
+    "source": "exec-e4bc20ab-7c0b-43c7-aab2-4477d8ce08fe.png"
+  },
+  {
+    "name": "papillon-monarque-aile-avant",
+    "prompt": "Use case: precise-object-edit. This image is the edit target. Correct the anatomical separation: it currently looks like a combined left forewing and hindwing. Deliver ONLY THE UPPER TRIANGULAR FOREWING as ONE isolated wing sprite. REMOVE the entire rounded lower HINDWING LOBE under the indentation, making that region TRUE TRANSPARENT. Preserve the natural species colors, scale microtexture, realistic branching venation and upper tip. The resulting single forewing is roughly triangular, point at upper left, narrow root at lower right; its trailing edge runs nearly diagonally straight from left indentation to the root. No rounded second lower wing, no wing pair, no body. Keep the full forewing inside a square canvas with transparent margins. Soft natural diffuse lighting, no hard gloss, no text, no logo. Actual transparent RGBA background, clean edge, no white matte.",
+    "source": "exec-42db30ce-81e8-42cd-b825-50a1d9ff8b0f.png"
+  },
+  {
+    "name": "papillon-morpho-bleu-aile-avant",
+    "prompt": "Use case: precise-object-edit. This image is the edit target. Correct the anatomical separation: it currently looks like a combined left forewing and hindwing. Deliver ONLY THE UPPER TRIANGULAR FOREWING as ONE isolated wing sprite. REMOVE the entire rounded lower HINDWING LOBE under the indentation, making that region TRUE TRANSPARENT. Preserve the natural species colors, scale microtexture, realistic branching venation and upper tip. The resulting single forewing is roughly triangular, point at upper left, narrow root at lower right; its trailing edge runs nearly diagonally straight from left indentation to the root. No rounded second lower wing, no wing pair, no body. Keep the full forewing inside a square canvas with transparent margins. Soft natural diffuse lighting, no hard gloss, no text, no logo. Actual transparent RGBA background, clean edge, no white matte.",
+    "source": "exec-78bb75a1-73de-4e41-ada3-3a9b28608ef4.png"
+  },
+  {
+    "name": "papillon-azure-commun-aile-avant",
+    "prompt": "Use case: scientific-educational. ONE separate production sprite for Lumora calming nursery timer. Realistic soft natural-history illustration, refined actual anatomical venation and scale patterns. Dorsal top view, butterfly left wing fully spread, distal tip toward upper left, attachment root at RIGHT edge of wing. Entire wing visible with generous transparent margin in 1024x1024 square. Root centered near x=850,y=760. Natural colors gently muted, soft diffuse light, no hard glossy reflections. TRUE transparent RGBA background, NO shadow, NO white matte, no checkerboard. ONE wing ONLY, no body, no right wing, no rear wing, no antenna, no text, no label, no logo, no cartoon face. Do not combine parts. LEFT FOREWING of male common blue Polyommatus icarus. Small rounded triangular delicate blue-lilac wing, fine darker veins, narrow dark outer margin with white fringe. Species appropriate dorsal surface, no invented large spots.",
+    "source": "exec-1e94794c-76e7-4dd9-b52c-8e24b0105df9.png"
+  },
+  {
+    "name": "meduse-haute-ombrelle-01",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY jellyfish BELL without tentacles, oral arms, or internal organs. Side elevation, a graceful tall hemispherical jellyfish bell, relaxed, delicate radial ribs and naturally scalloped lower rim. Bell width 800px on square canvas, top at 160px, central attachment near (512,760). Taller than a moon jelly, rounded crown. No hanging parts.",
+    "source": "exec-910f4472-4017-486b-b259-59875a652e4e.png"
+  },
+  {
+    "name": "meduse-fantomatique-ombrelle-01",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY thin ghostly jellyfish BELL without tentacles, oral arms or internal organs. Side elevation, almost invisible delicate gauze umbrella with flat shallow dome and fine luminous rim, no thick opaque white center. Low broad bell, small fine scallops, very subtle radial fibers. Width800px on1024 square; central lower rim near(512,650). No hanging parts.",
+    "source": "exec-c73d3802-7005-40de-bd1f-283b3f35c496.png"
+  },
+  {
+    "name": "meduse-lune-bras-oraux",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY a central cluster of four moon-jelly ORAL ARMS, side view hanging downward from a small common attachment at upper center. Natural four soft ruffled ribbons of translucent white tissue, delicate fluffy folded frills, gently curved lengths. No umbrella, no bell, no long fine tentacles, no organs. Tall sprite, top attachment at x512 y80, width350 height850. Gentle low contrast.",
+    "source": "exec-23f67bb8-4006-4aa0-a81c-b2b1194a6e46.png"
+  },
+  {
+    "name": "meduse-haute-bras-oraux",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY a central cluster of four tall-bell jellyfish ORAL ARMS, side view hanging downward from common attachment at upper center. Longer flowing and slightly thicker than Aurelia, delicate gathered gauze frilled ribbons with variable fine folds. No bell, no umbrella, no fine tentacles. Top attachment at x512 y80, width500 height850. Soft translucent white.",
+    "source": "exec-2d454e8b-27ca-497b-b488-60eb041ffebb.png"
+  },
+  {
+    "name": "meduse-fantomatique-bras-oraux",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY a few extremely wispy ghost jellyfish ORAL ARMS, hanging down from small attachment at upper center. Two to four long slender translucent fluttering ribbons, uneven organic taper and barely visible folded edges. Very airy and see through, no solid white lump. No bell, no umbrella, no long fine tentacles. Top attachment x512 y80, width300 height850.",
+    "source": "exec-09424110-a1f8-46b1-ab33-7314f29248f6.png"
+  },
+  {
+    "name": "meduse-tentacule-filament",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY one isolated extremely fine jellyfish tentacle FILAMENT texture, stretched vertically, nearly straight with tiny natural organic waviness. Neutral luminous gray white thread, fine biological texture, taper very slightly. Continuous single strand, no branches, no blob, no bell, no other parts. Runs from top center to bottom center of a tall thin composition; keep tips inside canvas. Intended to stretch in code rather than tile seamlessly. No outer glow beyond a narrow soft edge.",
+    "source": "exec-68038c1e-794d-46bf-abd8-98bb2259a67c.png"
+  },
+  {
+    "name": "meduse-tentacules-grappe-01",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY mini cluster of 5 very fine separate jellyfish tentacle filaments attached across a small horizontal arc at top center, flowing vertically downward in gentle natural waves, varied lengths, widely spaced fine luminous gray-white threads. Not oral arms: absolutely no wide ruffles. No bell. Airy, see-through.",
+    "source": "exec-711e088a-344f-401a-8447-1c5c2b3891ae.png"
+  },
+  {
+    "name": "meduse-tentacules-grappe-02",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY mini cluster of 7 extremely fine jellyfish tentacle filaments, attached along short horizontal curve at top center. Gently sweep toward left as if suspended in deep water, unequal length, long graceful curves. Small restrained translucent beads along a few filaments. No bell, no oral arm, no broad ribbon.",
+    "source": "exec-16b285bf-4336-4377-b02c-b11fdef20edc.png"
+  },
+  {
+    "name": "meduse-tentacules-grappe-03",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY sparse mini cluster of 3 ghostly jellyfish tentacle filaments, long and airy, attached together near top center, slightly sweep toward right, naturally taper downward. Fine threads, subtle tiny surface irregularities, almost transparent, no bell, no oral arm, no broad ribbons.",
+    "source": "exec-d600763f-3a61-472a-b267-f2e9c2f857f3.png"
+  },
+  {
+    "name": "meduse-lune-lueur-interne",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY internal organ glow layer for Aurelia moon jellyfish: four delicate overlapping horseshoe shaped gonadal lobes in a natural four-leaf-clover arrangement, seen through a bell from side-oblique elevation. Neutral pearly white translucent tissue, soft broad low-intensity internal luminescence. Small compact floating anatomical shape center of square, no bell, no tentacles, no oral arms, no stars or magic symbols.",
+    "source": "exec-f3899bad-53c8-4cb0-afb0-f37235a4334d.png"
+  },
+  {
+    "name": "meduse-haute-lueur-interne",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY isolated internal-organ glow overlay for tall jellyfish bell in side elevation: delicate pearly gray white central stomach chamber with subtle fine radial canals, roughly small inverted droplet with soft translucent edges. Subdued organic bioluminescence, no neon. No bell membrane, no outer bell outline, no tentacles, no arms.",
+    "source": "exec-56226d04-6745-4007-89f6-be60a0cb9c17.png"
+  },
+  {
+    "name": "meduse-fantomatique-lueur-interne",
+    "prompt": "Use case: scientific-educational. Create ONE separate sprite for Lumora calming nursery visual timer. Soft realistic natural-history illustration, ethereal translucent gelatin, no cartoon, no outlines, no face, no eyes. Strict WHITE and GRAYSCALE only, neutral R=G=B, real partial alpha transparency in the gelatin, not an opaque white object. TRUE transparent RGBA background, no scene, no shadow, no text, no logo, no background pattern or matte. All shapes inside image with generous margin. ONLY isolated very faint internal glow layer for a ghost jellyfish: a small pearly translucent central stomach and 4 slender subtle radial channels, delicate soft neutral white luminescence with barely visible tissue. Compact center composition. No outer bell membrane or silhouette, no arms, no tentacles.",
+    "source": "exec-c54e0fa4-3938-4bd3-9ebe-0f42d24e0807.png"
+  },
+  {
+    "name": "meduse-lune-ombrelle-02",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: early contraction: gently narrow bell by approximately8percent and lift the scalloped rim ends slightly, increasing dome height by8percent. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 02 for lune jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-e4bc20ab-7c0b-43c7-aab2-4477d8ce08fe.png",
+    "source": "exec-6425395d-b49f-43c8-aa46-15c4129c73d1.png"
+  },
+  {
+    "name": "meduse-lune-ombrelle-03",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: middle contraction: narrow bell approximately16percent and deepen dome by16percent, gently pull rim ends inward. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 03 for lune jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-e4bc20ab-7c0b-43c7-aab2-4477d8ce08fe.png",
+    "source": "exec-1dd6c43e-dcea-4b2e-acc0-df8bce38e6ba.png"
+  },
+  {
+    "name": "meduse-lune-ombrelle-04",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: maximum gentle contraction: narrow bell approximately25percent and deepen dome by25percent, rim closes inward softly without turning into a tube. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 04 for lune jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-e4bc20ab-7c0b-43c7-aab2-4477d8ce08fe.png",
+    "source": "exec-c51b4f90-5e19-4550-82fb-1c031e895922.png"
+  },
+  {
+    "name": "meduse-haute-ombrelle-02",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: early contraction: gently narrow bell by approximately8percent and lift the scalloped rim ends slightly, increasing dome height by8percent. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 02 for haute jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-910f4472-4017-486b-b259-59875a652e4e.png",
+    "source": "exec-4a4d9483-94a1-4da8-9bcb-fbca2eebe897.png"
+  },
+  {
+    "name": "meduse-haute-ombrelle-03",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: middle contraction: narrow bell approximately16percent and deepen dome by16percent, gently pull rim ends inward. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 03 for haute jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-910f4472-4017-486b-b259-59875a652e4e.png",
+    "source": "exec-d445c9f3-f66e-4bad-a0f6-2849ce996407.png"
+  },
+  {
+    "name": "meduse-haute-ombrelle-04",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: maximum gentle contraction: narrow bell approximately25percent and deepen dome by25percent, rim closes inward softly without turning into a tube. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 04 for haute jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-910f4472-4017-486b-b259-59875a652e4e.png",
+    "source": "exec-1ded22d2-2017-470b-a71c-096152c08953.png"
+  },
+  {
+    "name": "meduse-fantomatique-ombrelle-02",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: early contraction: gently narrow bell by approximately8percent and lift the scalloped rim ends slightly, increasing dome height by8percent. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 02 for fantomatique jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-c73d3802-7005-40de-bd1f-283b3f35c496.png",
+    "source": "exec-3c5a1f9b-922d-433a-bf6e-cc5525ff6efa.png"
+  },
+  {
+    "name": "meduse-fantomatique-ombrelle-03",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: middle contraction: narrow bell approximately16percent and deepen dome by16percent, gently pull rim ends inward. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 03 for fantomatique jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-c73d3802-7005-40de-bd1f-283b3f35c496.png",
+    "source": "exec-5d0e65ac-e6fd-4136-a511-c36b79dcddda.png"
+  },
+  {
+    "name": "meduse-fantomatique-ombrelle-04",
+    "prompt": "Use case: precise-object-edit. Edit this exact isolated jellyfish bell sprite into ONE next pulse animation frame, not a contact sheet. Reference image is edit target. Change ONLY bell deformation: maximum gentle contraction: narrow bell approximately25percent and deepen dome by25percent, rim closes inward softly without turning into a tube. Keep exact identity, surface fibers, radial ribs, scallops, neutral grayscale soft realistic translucent material and lighting. NO newly invented organs, no tentacles, no arms. SAME SQUARE CANVAS SIZE, same centerline, same CENTER LOWER RIM attachment point as reference, no recentering or camera zoom. Leave margins transparent. Genuinely translucent gray/white RGBA on TRUE transparent background, no white fringe, no background, no drawn checkerboard, no text. This is animation frame 04 for fantomatique jellyfish, subtle continuous biological contraction.",
+    "reference": "exec-c73d3802-7005-40de-bd1f-283b3f35c496.png",
+    "source": "exec-2da225e6-6237-44d4-99f0-ece1869ade26.png"
+  }
+]
