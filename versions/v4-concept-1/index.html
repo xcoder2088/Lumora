@@ -559,7 +559,9 @@ function loadOne(name, tries) {
   return new Promise((ok, no) => {
     const im = new Image();
     im.onload = () => {
-      if (meta.fullFrame) { BGI[name] = im; makeDusk(name, im); } else prepSprite(name, im, name.indexOf('meduse') === 0 ? 0.625 : 0.45);
+      try {
+        if (meta.fullFrame) { makeDusk(name, im); if (!DUSK[name]) BGI[name] = im; } else prepSprite(name, im, name.indexOf('meduse') === 0 ? 0.625 : 0.45);
+      } catch (e) { /* mémoire insuffisante sur cet appareil : on continue avec ce qui est déjà prêt */ }
       ok();
     };
     im.onerror = () => {
@@ -588,9 +590,14 @@ function ensureScene() {
   const sc = S.scene, btn = $('start');
   if (sceneReady[sc]) { btn.disabled = false; btn.textContent = 'Commencer'; return; }
   btn.disabled = true; btn.textContent = 'Chargement des illustrations…';
+  const guard = setTimeout(() => {   // si le chargement traîne, le bouton ne reste jamais bloqué
+    if (S.scene === sc && btn.disabled) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations lentes à charger : elles apparaîtront dès qu\u2019elles sont prêtes.'); }
+  }, 12000);
   loadScene(sc).then(() => {
+    clearTimeout(guard);
     if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; }
   }).catch(() => {
+    clearTimeout(guard);
     if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations non chargées : décor simplifié.'); }
   });
 }
@@ -683,11 +690,11 @@ function makeJelly(d) {
   const type = tq < 0.45 ? 'lune' : tq < 0.75 ? 'haute' : 'fantomatique';
   return {
     kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols, ci, type, u: 0,
-    rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(5, 7, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
+    rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
-    modeT: Math.random() * 3, thrustK: 1, perK: 1, pulsing: true, tiltT: 0,
-    x: null, y: 0, vx: 0, vy: 0, tilt: 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
+    modeT: Math.random() * 3, thrustK: d.giant ? 1.8 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.85 : 0, tiltN: d.giant ? d.side * 0.85 : 0,
+    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.85 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
   };
 }
 
@@ -711,14 +718,15 @@ function updateJelly(c, dt, el) {
   if (c.modeT <= 0) {
     const r = Math.random();
     if (c.giant) {
-      if (r < 0.6) { c.thrustK = 0.8; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
-      else if (r < 0.85) { c.thrustK = 0.4; c.perK = 1.2; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
-      else { c.pulsing = false; c.modeT = lerp(4, 8, Math.random()); }
+      // la géante nage vraiment : chaque battement la pousse dans le sens de sa traversée, et elle ne reste jamais longtemps immobile
+      if (r < 0.7) { c.thrustK = 1.8; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
+      else if (r < 0.95) { c.thrustK = 1.1; c.perK = 1.15; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
+      else { c.pulsing = false; c.modeT = lerp(2, 4, Math.random()); }
     } else if (r < 0.4) { c.thrustK = 1; c.perK = 1; c.pulsing = true; c.modeT = lerp(6, 16, Math.random()); }          // nage régulière
     else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
     else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
     else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
-    c.tiltN = (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
+    c.tiltN = c.giant ? c.side * lerp(0.6, 1.0, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
     if (!c.pulsing && c.pp === 0) c.tiltT = c.tiltN;
   }
   if (c.pulsing || c.pp > 0) {
@@ -738,13 +746,13 @@ function updateJelly(c, dt, el) {
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = smooth((u - 0.8) / 0.2);
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
-  const kx = lerp((c.giant ? 0.6 : 0.12) * (0.5 + 0.5 * loose), 2.2, guide), ky = lerp((c.giant ? 0.8 : 0.3) * loose, 2.5, guide);
+  const kx = lerp((c.giant ? 0.3 : 0.12) * (0.5 + 0.5 * loose), 2.2, guide), ky = lerp((c.giant ? 0.8 : 0.3) * loose, 2.5, guide);
   const sink = minWH() * 0.014;   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
-  const kperp = c.giant ? 1.2 : 2.6;
-  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * 1.1 - (c.vx - vpar * axx) * kperp * (1 - guide)) * dt;
-  c.vy += ((ty - c.y) * ky - (c.vy - sink) * 1.1 - (c.vy - vpar * axy) * kperp * (1 - guide)) * dt;
+  const kperp = c.giant ? 1.2 : 2.6, drag = c.giant ? 0.7 : 1.1;
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide)) * dt;
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide)) * dt;
   c.x += c.vx * dt; c.y += c.vy * dt;
   c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.4);
   c.X = c.x; c.Y = c.y;
@@ -834,10 +842,10 @@ function drawJelly(c) {
   ctx.translate(0, -bellH0 * sy * 0.32);
   // les bras ne se tortillent plus : ils glissent lentement vers le côté opposé au déplacement, avec un très léger balancement
   const dts = Math.min(0.1, Math.max(0, T - (c.shT === undefined ? T : c.shT))); c.shT = T;
-  const shTarget = -clamp(c.vx * 0.003, -0.25, 0.25) + Math.sin(T * 0.35 + c.ph) * 0.03;
+  const shTarget = -clamp(c.vx * 0.005, -0.35, 0.35) + Math.sin(T * 0.5 + c.ph) * 0.07 + Math.sin(c.pp * TAU) * 0.04;
   c.sh = (c.sh || 0) + (shTarget - (c.sh || 0)) * (1 - Math.exp(-dts * 1.1));
   const sh = c.sh;
-  ctx.transform(1, 0, sh, 1 - 0.12 * b, 0, 0);
+  ctx.transform(1 + 0.05 * b, 0, sh, 1 - 0.12 * b, 0, 0);
   drawTinted(tp + 'bras-oraux', cp, a * 0.6, k, 0, 0);
   ctx.restore();
   // ombrelle et lueur interne se déforment ensemble
