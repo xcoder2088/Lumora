@@ -44,6 +44,7 @@ assets/              illustrations (méduses, papillons, décors), voir assets/L
 versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
 versions/v2-illustrations/  version 2 : le même fonctionnement, avec les illustrations de assets/
 versions/v3-fluide/  version 3 : le mouvement de la version 1, avec les illustrations de assets/
+versions/v4-concept-1/  version 4 : le concept de la version 1 (décor, couleurs, ambiance), avec les illustrations de assets/
 tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
 LICENSE              licence : utilisation libre, modification sur autorisation
 ```
@@ -54,11 +55,14 @@ LICENSE              licence : utilisation libre, modification sur autorisation
 
 **La version 3** (`versions/v3-fluide/`) reprend le mouvement et le rendu de la version 1, jugés plus fluides et plus apaisants, avec les illustrations : l'ombrelle des méduses est déformée en continu au lieu de passer d'une image à l'autre.
 
+**La version 4** (`versions/v4-concept-1/`) reprend tout le concept de la version 1 (décor de l'eau, couleurs, mouvement) avec les détails des illustrations ; la prairie est assombrie à la tombée de la nuit, avec des herbes qui bougent dans le vent.
+
 Pour comparer, servir le dépôt par un serveur web (voir « Lancer le projet »), puis ouvrir :
 
 - `/versions/v1-canvas/` : version 1, dessinée par le code ;
 - `/versions/v2-illustrations/` : version 2, avec les illustrations ;
-- `/versions/v3-fluide/` : version 3, le mouvement de la version 1 avec les illustrations.
+- `/versions/v3-fluide/` : version 3, le mouvement de la version 1 avec les illustrations ;
+- `/versions/v4-concept-1/` : version 4, le concept de la version 1 avec les illustrations.
 
 ## Sons et crédits
 
