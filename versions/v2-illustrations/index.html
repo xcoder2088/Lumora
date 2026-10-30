@@ -459,6 +459,7 @@ const SCENE_FILES = {
   butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
     ['aile-avant', 'aile-arriere', 'corps'].map(p => 'papillon-' + s + '-' + p)))
 };
+const RIM_N = 41;
 const BGI = {};            // décors en pleine image
 const SPR = {};            // créatures : image recadrée et réduite, avec ses repères
 let MAN = null;
@@ -483,6 +484,19 @@ function prepSprite(name, img, cs) {
   c2.drawImage(img, bx, by, bw, bh, 0, 0, cv.width, cv.height);
   const pv = MAN[name].pivot;
   SPR[name] = { cv, bx, by, bw, bh, px: pv[0], py: pv[1], tints: {} };
+  if (/ombrelle-0\d$/.test(name)) {
+    // contour du bord inférieur de l'ombrelle : point le plus bas de chaque colonne (en pixels d'origine, par rapport au pivot)
+    const rim = new Float32Array(RIM_N);
+    for (let i = 0; i < RIM_N; i++) {
+      const xs = Math.round(x0 + (x1 - x0) * i / (RIM_N - 1));
+      let best = -1;
+      for (let xx = Math.max(0, xs - 1); xx <= Math.min(sw - 1, xs + 1); xx++) {
+        for (let y = sh - 1; y > best; y--) if (d[(y * sw + xx) * 4 + 3] > 40) { best = y; break; }
+      }
+      rim[i] = (best < 0 ? y1 : best) * q + q - pv[1];
+    }
+    SPR[name].rim = rim; SPR[name].rx0 = x0 * q; SPR[name].rw = (x1 + 1 - x0) * q;
+  }
 }
 function loadOne(name, tries) {
   tries = tries || 0;
@@ -559,6 +573,17 @@ function drawTintedAt(name, cp, alpha, cx, cy, w, h) { // dessin centré en (cx,
     ctx.globalAlpha = alpha * wgt;
     ctx.drawImage(tinted(name, ci), cx - w / 2, cy - h / 2, w, h);
   }
+}
+function rimAnchor(c, u, b) { // point d'attache d'un filament sur le bord réel de l'ombrelle (selon l'état de pulsation)
+  const tp = 'meduse-' + c.type + '-ombrelle-0';
+  const f = b * 3, i0 = Math.floor(f), i1 = Math.min(3, i0 + 1), tt = f - i0;
+  const A = SPR[tp + (i0 + 1)], B = SPR[tp + (i1 + 1)];
+  if (!A || !B || !A.rim || !B.rim) return null;
+  const k = (2 * c.R) / 894;
+  const frac = clamp((u + 1) / 2, 0, 1), pos = frac * (RIM_N - 1), j = Math.min(RIM_N - 2, Math.floor(pos)), fr = pos - j;
+  const ry = lerp(lerp(A.rim[j], A.rim[j + 1], fr), lerp(B.rim[j], B.rim[j + 1], fr), tt);
+  const xo = lerp(A.rx0 + frac * A.rw, B.rx0 + frac * B.rw, tt) - A.px;
+  return { lx: xo * k, ly: (ry - 10) * k };   // légèrement à l'intérieur du bord, pour que le filament touche l'ombrelle
 }
 function drawSpr(sp, k, ox, oy) {
   ctx.drawImage(sp.cv, ox + (sp.bx - sp.px) * k, oy + (sp.by - sp.py) * k, sp.bw * k, sp.bh * k);
@@ -673,7 +698,8 @@ function updateJelly(c, dt, el) {
   const seg0 = R / KSEG;
   for (const t of c.tents) {
     const ca = Math.cos(c.tilt), sa = Math.sin(c.tilt);
-    const lx = t.u * w, ly = R * 0.08;
+    let lx = t.u * w, ly = R * 0.08;
+    if (!t.arm) { const an = rimAnchor(c, t.u, b); if (an) { lx = an.lx; ly = an.ly; } }
     const ax = c.X + lx * ca - ly * sa, ay = c.Y + lx * sa + ly * ca;
     const seg = t.len * seg0, q = t.pts;
     if (!t.init) {
