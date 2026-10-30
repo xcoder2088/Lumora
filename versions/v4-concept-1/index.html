@@ -216,7 +216,7 @@ img { max-width: 100%; }
 <main id="setup" aria-label="Réglages du minuteur">
   <div>
     <h1>Lumora</h1>
-    <p class="ver">Version 4 · révision 4</p>
+    <p class="ver">Version 4 · révision 7</p>
     <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
   </div>
   <fieldset>
@@ -518,10 +518,19 @@ function makeDusk(name, im) {
   const gr = g.createLinearGradient(0, 0, 0, c.height);
   if (name === 'decor-prairie-ciel') {
     gr.addColorStop(0, 'rgb(62,66,150)'); gr.addColorStop(0.5, 'rgb(140,104,162)'); gr.addColorStop(0.8, 'rgb(205,140,138)'); gr.addColorStop(1, 'rgb(110,92,128)');
-  } else {
-    gr.addColorStop(0, 'rgb(112,96,150)'); gr.addColorStop(1, 'rgb(52,56,98)');
+  } else if (name === 'decor-prairie-collines') {
+    gr.addColorStop(0, 'rgb(150,122,172)'); gr.addColorStop(0.5, 'rgb(142,112,165)'); gr.addColorStop(0.75, 'rgb(105,92,140)'); gr.addColorStop(1, 'rgb(70,70,112)');
+  } else {   // herbes : plus sombres vers le pied ; le bout des brins est éclairé plus bas (voir plus loin)
+    gr.addColorStop(0, 'rgb(190,150,175)'); gr.addColorStop(0.5, 'rgb(150,120,155)'); gr.addColorStop(1, 'rgb(85,82,120)');
   }
   g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
+  if (name === 'decor-prairie-herbes') {   // la dernière lueur du couchant éclaire le bout des brins (éclaircissement)
+    g.globalCompositeOperation = 'screen';
+    const lit = g.createLinearGradient(0, 0, 0, c.height);
+    lit.addColorStop(0.22, 'rgba(0,0,0,0)'); lit.addColorStop(0.36, 'rgba(215,135,150,0.85)'); lit.addColorStop(0.60, 'rgba(130,90,125,0.6)');
+    lit.addColorStop(0.85, 'rgba(55,50,90,0.3)'); lit.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = lit; g.fillRect(0, 0, c.width, c.height);
+  }
   if (name !== 'decor-prairie-ciel') { g.globalCompositeOperation = 'destination-in'; g.drawImage(im, 0, 0); }
   DUSK[name] = c;
 }
@@ -751,19 +760,23 @@ function updateJelly(c, dt, el) {
       t.init = true;
     }
     q[0] = ax; q[1] = ay;
+    const an = t.ang || (t.ang = new Float32Array(KSEG).fill(Math.PI / 2));
+    const h = Math.min(dt, 0.05);
+    const trx = -clamp(c.vx * 0.02, -0.7, 0.7), try_ = -clamp(c.vy * 0.008, -0.4, 0.4);
+    let prev = Math.atan2(ca, -sa);
     for (let k = 1; k <= KSEG; k++) {
-      const sw = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * seg * (1 + k * 0.12) * (t.arm ? 1.4 : 1);
-      const gk = Math.pow(k / KSEG, 1.2);                      // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous l'effet de la gravité)
-      let ux = -sa * (1 - gk), uy = ca * (1 - gk) + gk;
-      const un = Math.hypot(ux, uy) || 1; ux /= un; uy /= un;
-      const tgx = q[2 * k - 2] + ux * seg + sw - clamp(c.vx * 0.02, -0.7, 0.7) * seg;          // et ils traînent derrière le mouvement
-      const tgy = q[2 * k - 1] + uy * seg * (1 - 0.25 * b) - clamp(c.vy * 0.008, -0.4, 0.4) * seg;
-      const f = 1 - Math.exp(-dt * (16 - k * 0.9));
-      const nx = q[2 * k] + (tgx - q[2 * k]) * f, ny = q[2 * k + 1] + (tgy - q[2 * k + 1]) * f;
-      const dx = nx - q[2 * k - 2], dy = ny - q[2 * k - 1];
-      const dd = Math.hypot(dx, dy) || 1;
-      q[2 * k] = q[2 * k - 2] + dx / dd * seg;
-      q[2 * k + 1] = q[2 * k - 1] + dy / dd * seg;
+      const gk = Math.pow(k / KSEG, 1.2);                       // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous la gravité)
+      const ux = -sa * (1 - gk) + trx * gk, uy = ca * (1 - gk) + gk + try_ * gk;
+      const sway = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.6 : 1.2);
+      const target = Math.atan2(uy, ux) + sway;
+      let d = target - an[k - 1]; d -= TAU * Math.round(d / TAU);
+      an[k - 1] += d * (1 - Math.exp(-h * lerp(9, 3.5, k / KSEG)));       // chaque segment tourne doucement, le bout est plus lent
+      let bend = an[k - 1] - prev; bend -= TAU * Math.round(bend / TAU);
+      bend = clamp(bend, -0.3, 0.3);                                       // pas de pli net entre deux segments
+      an[k - 1] = prev + bend;
+      prev = an[k - 1];
+      q[2 * k] = q[2 * k - 2] + Math.cos(prev) * seg;
+      q[2 * k + 1] = q[2 * k - 1] + Math.sin(prev) * seg;
     }
   }
 }
@@ -880,10 +893,13 @@ function updateButterfly(c, dt, el) {
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
     c.head += d * Math.min(1, dt * 3);
   }
-  const glide = smooth((Math.sin(T * 0.2 + c.ph) - 0.75) / 0.2);
-  c.fph += dt * TAU * c.fl * (1 - 0.7 * glide);
-  const open = 0.22 + 0.78 * (0.5 + 0.5 * Math.cos(c.fph));
-  c.sx = lerp(open, 0.9, glide);
+  // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
+  // à son propre rythme (indépendant des autres), et plus vite quand il monte.
+  const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
+  const rate = Math.max(1.1, c.fl * 1.5 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb));
+  c.fph += dt * TAU * rate;
+  const amp = 0.85 + 0.15 * Math.sin(T * 0.11 + c.ph * 5);
+  c.sx = 0.2 + 0.8 * amp * (0.5 + 0.5 * Math.cos(c.fph));
 }
 
 
@@ -1119,12 +1135,12 @@ const LAYERS = {
   jelly: [
     { id: 'baleines1', url: AUDIO_BASE + 'baleines1.mp3', gain: 0.9 },
     { id: 'baleines2', url: AUDIO_BASE + 'baleines2.mp3', gain: 0.7 },
-    { id: 'profondeurs', url: AUDIO_BASE + 'profondeurs.mp3', gain: 0.6 }
+    { id: 'profondeurs', url: AUDIO_BASE + 'profondeurs.mp3', gain: 0.25 }
   ],
   butterfly: [
     { id: 'nuit', url: AUDIO_BASE + 'nuit.mp3', gain: 1 },
     { id: 'brise', url: AUDIO_BASE + 'brise.mp3', gain: 2 },
-    { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 1 }
+    { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 0.3 }
   ]
 };
 function audioInit() {

@@ -693,10 +693,13 @@ function updateButterfly(c, dt, el) {
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
     c.head += d * Math.min(1, dt * 3);
   }
-  const glide = smooth((Math.sin(T * 0.2 + c.ph) - 0.75) / 0.2);
-  c.fph += dt * TAU * c.fl * (1 - 0.7 * glide);
-  const open = 0.22 + 0.78 * (0.5 + 0.5 * Math.cos(c.fph));
-  c.sx = lerp(open, 0.9, glide);
+  // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
+  // à son propre rythme (indépendant des autres), et plus vite quand il monte.
+  const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
+  const rate = Math.max(1.1, c.fl * 1.5 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb));
+  c.fph += dt * TAU * rate;
+  const amp = 0.85 + 0.15 * Math.sin(T * 0.11 + c.ph * 5);
+  c.sx = 0.2 + 0.8 * amp * (0.5 + 0.5 * Math.cos(c.fph));
 }
 
 function wingPaths(S, tail) {
@@ -1072,12 +1075,12 @@ const LAYERS = {
   jelly: [
     { id: 'baleines1', url: 'audio/baleines1.mp3', gain: 0.9 },
     { id: 'baleines2', url: 'audio/baleines2.mp3', gain: 0.7 },
-    { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6 }
+    { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.25 }
   ],
   butterfly: [
     { id: 'nuit', url: 'audio/nuit.mp3', gain: 1 },
     { id: 'brise', url: 'audio/brise.mp3', gain: 2 },
-    { id: 'musique-nuit', url: 'audio/musique-nuit.mp3', gain: 1 }
+    { id: 'musique-nuit', url: 'audio/musique-nuit.mp3', gain: 0.3 }
   ]
 };
 function audioInit() {
