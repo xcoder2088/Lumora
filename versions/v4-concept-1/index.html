@@ -421,8 +421,8 @@ function drawGrassImg() {   // herbes dans le vent : chaque bande se penche selo
   const i0 = Math.max(0, Math.floor(-x / sc / cw) - 1), i1 = Math.min(n - 1, Math.ceil((W - x) / sc / cw) + 1);
   for (let i = i0; i <= i1; i++) {
     const xo = i * cw, sw = Math.min(cw + 1, 2560 - xo);
-    const k = 0.04 * Math.sin(T * 0.55 + xo * 0.0042) + 0.024 * Math.sin(T * 1.25 + xo * 0.011 + 1.7)
-      + 0.05 * Math.pow(Math.max(0, Math.sin(T * 0.22 - xo * 0.0021)), 2);   // vent régulier + rafales
+    const k = 0.011 * Math.sin(T * 0.4 + xo * 0.0042) + 0.005 * Math.sin(T * 0.9 + xo * 0.011 + 1.7)
+      + 0.012 * Math.pow(Math.max(0, Math.sin(T * 0.18 - xo * 0.0021)), 2);   // brise très légère + rares souffles
     ctx.save();
     ctx.transform(1, 0, -k, 1, k * bottom, 0);      // se penche vers la droite, pied des herbes immobile
     ctx.drawImage(im, xo, 0, sw, 1440, x + xo * sc, y, sw * sc, dh);
@@ -436,7 +436,7 @@ function drawMotes(w) {   // graines et poussières qui dérivent avec le vent
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 26; i++) {
     const sp = 0.012 + (i % 5) * 0.004, ph = i * 1.7;
-    const x = ((i * 0.137 + T * sp) % 1.1 - 0.05) * W;
+    const x = ((i * 0.137 + T * sp * 0.5) % 1.1 - 0.05) * W;
     const y = (0.3 + 0.6 * ((i * 0.618) % 1) + Math.sin(T * 0.4 + ph) * 0.02) * H;
     ctx.fillStyle = 'rgba(255,235,200,' + (0.2 * k * (0.6 + 0.4 * Math.sin(T * 0.8 + ph))).toFixed(3) + ')';
     ctx.beginPath(); ctx.arc(x, y, (1.2 + (i % 3) * 0.7) * sc, 0, TAU); ctx.fill();
@@ -693,8 +693,8 @@ function makeJelly(d) {
     rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
-    modeT: Math.random() * 3, thrustK: d.giant ? 1.8 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.85 : 0, tiltN: d.giant ? d.side * 0.85 : 0,
-    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.85 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
+    modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 1.1 : 0, tiltN: d.giant ? d.side * 1.1 : 0,
+    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 1.1 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
   };
 }
 
@@ -719,14 +719,14 @@ function updateJelly(c, dt, el) {
     const r = Math.random();
     if (c.giant) {
       // la géante nage vraiment : chaque battement la pousse dans le sens de sa traversée, et elle ne reste jamais longtemps immobile
-      if (r < 0.7) { c.thrustK = 1.8; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
-      else if (r < 0.95) { c.thrustK = 1.1; c.perK = 1.15; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
+      if (r < 0.7) { c.thrustK = 1.1; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
+      else if (r < 0.95) { c.thrustK = 0.7; c.perK = 1.15; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
       else { c.pulsing = false; c.modeT = lerp(2, 4, Math.random()); }
     } else if (r < 0.4) { c.thrustK = 1; c.perK = 1; c.pulsing = true; c.modeT = lerp(6, 16, Math.random()); }          // nage régulière
     else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
     else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
     else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
-    c.tiltN = c.giant ? c.side * lerp(0.6, 1.0, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
+    c.tiltN = c.giant ? c.side * lerp(0.95, 1.3, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
     if (!c.pulsing && c.pp === 0) c.tiltT = c.tiltN;
   }
   if (c.pulsing || c.pp > 0) {
@@ -737,7 +737,9 @@ function updateJelly(c, dt, el) {
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
   const db = b - c.b; c.b = b;
   if (db > 0) {
-    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK;
+    // elle nage plus fort quand elle prend du retard sur son trajet, moins fort quand elle est en avance : ce sont les battements qui la font avancer
+    const lag = c.giant ? (c.side * (tx - c.x)) / (W * 0.4) : (c.y - ty) / (minWH() * 0.5);
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * clamp(1 + lag, 0.45, 2.2);
     c.vx += Math.sin(c.tilt) * f;
     c.vy -= Math.cos(c.tilt) * f;
   }
@@ -746,11 +748,11 @@ function updateJelly(c, dt, el) {
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = smooth((u - 0.8) / 0.2);
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
-  const kx = lerp((c.giant ? 0.3 : 0.12) * (0.5 + 0.5 * loose), 2.2, guide), ky = lerp((c.giant ? 0.8 : 0.3) * loose, 2.5, guide);
-  const sink = minWH() * 0.014;   // elle coule doucement quand elle ne pousse pas
+  const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.25 : 0.1) * loose, c.giant ? 0.25 : 2.5, guide);
+  const sink = minWH() * 0.008;   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
-  const kperp = c.giant ? 1.2 : 2.6, drag = c.giant ? 0.7 : 1.1;
+  const kperp = c.giant ? 1.2 : 2.6, drag = c.giant ? 0.5 : 0.8;
   c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide)) * dt;
   c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide)) * dt;
   c.x += c.vx * dt; c.y += c.vy * dt;
@@ -1023,8 +1025,9 @@ function build() {
     let e = D - Tg * lerp(0.1, 0.6, Math.random()), m = 0;
     while (e > 0) {
       const Tk = Tg * lerp(0.9, 1.15, Math.random());
+      const y0g = lerp(0.4, 0.75, Math.random());   // la géante monte ou reste à niveau pendant sa traversée, elle ne descend pas
       sched.push({ k: 100000 + gs + m, e, T: Tk, s: e - Tk, giant: true, side: Math.random() < 0.5 ? -1 : 1,
-                   y0f: lerp(0.3, 0.7, Math.random()), y1f: lerp(0.15, 0.55, Math.random()) });
+                   y0f: y0g, y1f: y0g - lerp(0.05, 0.25, Math.random()) });
       e -= lerp(70, 150, Math.random());
       m++;
     }
