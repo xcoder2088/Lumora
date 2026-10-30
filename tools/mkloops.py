@@ -19,9 +19,7 @@ def level(x, target_db):
 def save(x, sr, name, kbps):
     raw = x.astype(np.float32).tobytes()
     subprocess.run(['ffmpeg','-y','-v','error','-f','f32le','-ar',str(sr),'-ac','2','-i','-','-codec:a','libmp3lame','-b:a',f'{kbps}k',f'audio/{name}.mp3'],input=raw,check=True)
-jobs = [('crickets4','nuit',44100,(3,3),5,-23,64),
-        ('waves','mer',44100,(1.5,1.5),4,-23,80),
-        ('aquaria','profondeurs',44100,(0.05,0.0),0.6,-23,80)]
+jobs = [('aquaria','profondeurs',44100,(0.05,0.0),0.6,-23,80)]   # les grillons et les baleines ont leurs propres scripts
 for src,name,sr,trim,xf,db,kb in jobs:
     x = load(f'snd_raw/{src}.mp3', sr)
     y = level(loop(x, sr, trim, xf), db)

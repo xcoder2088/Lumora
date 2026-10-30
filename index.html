@@ -234,7 +234,7 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button">Commencer</button>
-  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (vagues, grillons) et cynicmusic, OpenGameArt (profondeurs).</p>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons), NOAA (baleines bleues) et cynicmusic, OpenGameArt (profondeurs).</p>
 </main>
 
 <div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
@@ -1070,7 +1070,8 @@ const layers = {};
 /* Enregistrements libres de droits (CC0), mis en boucle sans coupure. Chaque calque a son volume. */
 const LAYERS = {
   jelly: [
-    { id: 'mer', url: 'audio/mer.mp3', gain: 1 },
+    { id: 'baleines1', url: 'audio/baleines1.mp3', gain: 0.9 },
+    { id: 'baleines2', url: 'audio/baleines2.mp3', gain: 0.7 },
     { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6 }
   ],
   butterfly: [

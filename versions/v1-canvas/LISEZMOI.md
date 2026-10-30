@@ -13,3 +13,5 @@ python3 -m http.server 8000
 puis ouvrir <http://localhost:8000>.
 
 Licence : utilisation libre, modification et redistribution sur autorisation (voir le fichier `LICENSE` à la racine du dépôt). Sons : CC0, crédits dans le `README.md` à la racine.
+
+*Note : l'image et le mouvement de cette version n'ont pas changé. Seuls les fichiers de son ont été mis à jour (baleines à la place des vagues, grillons plus lointains).*

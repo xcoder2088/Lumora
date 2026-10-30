@@ -66,26 +66,25 @@ Pour comparer, servir le dépôt par un serveur web (voir « Lancer le projet »
 
 ## Sons et crédits
 
-Les trois sons sont des enregistrements libres de droits (CC0, domaine public). Ils ont été rognés, filtrés, ajustés en volume et rendus bouclables sans coupure par les scripts du dossier `tools/`.
+Les sons sont des enregistrements libres de droits (CC0 ou domaine public). Ils ont été rognés, filtrés, ajustés en volume et rendus bouclables sans coupure par les scripts du dossier `tools/`. Le carillon final est généré par le code (aucun fichier).
 
 | Fichier | Utilisé pour | Source originale | Auteur |
 |---|---|---|---|
-| `audio/mer.mp3` | Méduses : vagues douces (très adoucies : aigus retirés, pics lissés) | [Small Waves Facing the Ocean](https://bigsoundbank.com/small-waves-facing-the-ocean-s1046.html), BigSoundBank | Joseph Sardin |
-| `audio/profondeurs.mp3` | Méduses : ambiance sous-marine, mélangée aux vagues | [Aquaria](https://opengameart.org/content/aquaria), OpenGameArt | cynicmusic |
-| `audio/nuit.mp3` | Papillons : grillons de nuit (volume bas, aigus retirés) | [Campaign at Night #4](https://bigsoundbank.com/campagne-la-nuit-4-s1880.html), BigSoundBank | Joseph Sardin |
+| `audio/baleines1.mp3` | Méduses : chant de baleine bleue, très discret (une octave plus haut pour être audible sur un petit haut-parleur) | [Blue Whale West Pacific 1x](https://commons.wikimedia.org/wiki/File:Blue_Whale_West_Pacific_1x.oga), Wikimedia Commons (CC0) | NOAA |
+| `audio/baleines2.mp3` | Méduses : second chant de baleine bleue, en boucle plus courte pour que la répétition ne se remarque pas | [Blue whale atlantic3 1x](https://commons.wikimedia.org/wiki/File:Blue_whale_atlantic3_1x.oga), Wikimedia Commons (CC0) | NOAA |
+| `audio/profondeurs.mp3` | Méduses : ambiance sous-marine | [Aquaria](https://opengameart.org/content/aquaria), OpenGameArt | cynicmusic |
+| `audio/nuit.mp3` | Papillons : grillons de nuit, très lointains, avec de longues pauses | [Campaign at Night #4](https://bigsoundbank.com/campagne-la-nuit-4-s1880.html), BigSoundBank | Joseph Sardin |
 
-La licence CC0 n'exige aucune mention, elles sont citées par courtoisie. Le carillon final est généré par le code (aucun fichier).
+La licence CC0 n'exige aucune mention, elles sont citées par courtoisie.
 
 ### Refaire les boucles sonores
 
-Les enregistrements d'origine ne sont pas dans le dépôt (plusieurs dizaines de Mo). Pour refaire les boucles :
+Les enregistrements d'origine ne sont pas dans le dépôt. Pour refaire les boucles :
 
 1. Installer `ffmpeg`, Python 3 et `numpy`.
-2. Télécharger les trois fichiers MP3 d'origine dans un dossier `snd_raw/` en les nommant `crickets4.mp3`, `waves.mp3` et `aquaria.mp3`.
-3. Lancer dans cet ordre (le dossier `audio/` existe déjà, ses fichiers sont remplacés) : `python3 tools/mkloops.py`, `python3 tools/soften.py` (remplace `mer.mp3` par la version adoucie), `python3 tools/softcrickets.py` (remplace `nuit.mp3` par la version sobre).
+2. Télécharger les originaux : « Campaign at Night #4 » dans `snd_raw/crickets4.mp3`, « Aquaria » dans `snd_raw/aquaria.mp3`, et les deux enregistrements de baleines bleues dans `whales_raw/bleue_ouest_pacifique.oga` et `whales_raw/bleue_atlantique3.oga`.
+3. Depuis la racine du dépôt : `python3 tools/mkloops.py` (musique sous-marine), `python3 tools/crickets_soft.py` (grillons, avec leurs pauses), `python3 tools/whales_make.py` (baleines).
 4. `python3 tools/seam.py` vérifie que le raccord de chaque boucle est continu, et `python3 tools/analyze.py` mesure le volume et le contenu en fréquences des enregistrements d'origine.
-
-Les scripts doivent être lancés depuis la racine du dépôt.
 
 ## Limites connues
 

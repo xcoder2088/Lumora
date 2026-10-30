@@ -216,7 +216,7 @@ img { max-width: 100%; }
 <main id="setup" aria-label="Réglages du minuteur">
   <div>
     <h1>Lumora</h1>
-    <p class="ver">Version 3 · révision 2</p>
+    <p class="ver">Version 3 · révision 3</p>
     <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
   </div>
   <fieldset>
@@ -237,7 +237,7 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button">Commencer</button>
-  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (vagues, grillons) et cynicmusic, OpenGameArt (profondeurs). Illustrations générées avec l'aide de l'intelligence artificielle.</p>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons), NOAA (baleines bleues) et cynicmusic, OpenGameArt (profondeurs). Illustrations générées avec l'aide de l'intelligence artificielle.</p>
 </main>
 
 <div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
@@ -599,7 +599,7 @@ function makeJelly(d) {
   const z = d.giant ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
   const nThin = 16, nArm = 4;
-  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(2.0, 3.6, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
   for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
   const c0 = Math.floor(rnd() * JPAL.length);
   const c1 = (c0 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
@@ -681,7 +681,7 @@ function updateJelly(c, dt, el) {
     let lx = t.u * w, ly = R * 0.08;
     if (!t.arm) { const an = rimAnchor(c, t.u, b); if (an) { lx = an.lx; ly = an.ly; } }
     const ax = c.X + lx * ca - ly * sa, ay = c.Y + lx * sa + ly * ca;
-    const seg = t.len * seg0, q = t.pts;
+    const seg = Math.min(t.len * R, minWH() * 0.38) / KSEG, q = t.pts;
     if (!t.init) {
       for (let k = 0; k <= KSEG; k++) { q[2 * k] = ax; q[2 * k + 1] = ay + seg * k; }
       t.init = true;
@@ -689,11 +689,11 @@ function updateJelly(c, dt, el) {
     q[0] = ax; q[1] = ay;
     for (let k = 1; k <= KSEG; k++) {
       const sw = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * seg * (1 + k * 0.12) * (t.arm ? 1.4 : 1);
-      const gk = Math.pow(k / KSEG, 0.8);                      // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous l'effet de la gravité)
+      const gk = Math.pow(k / KSEG, 1.2);                      // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous l'effet de la gravité)
       let ux = -sa * (1 - gk), uy = ca * (1 - gk) + gk;
       const un = Math.hypot(ux, uy) || 1; ux /= un; uy /= un;
-      const tgx = q[2 * k - 2] + ux * seg + sw - c.vx * 0.004 * seg;          // et ils traînent derrière le mouvement
-      const tgy = q[2 * k - 1] + uy * seg * (1 - 0.25 * b) - c.vy * 0.002 * seg;
+      const tgx = q[2 * k - 2] + ux * seg + sw - clamp(c.vx * 0.02, -0.7, 0.7) * seg;          // et ils traînent derrière le mouvement
+      const tgy = q[2 * k - 1] + uy * seg * (1 - 0.25 * b) - clamp(c.vy * 0.008, -0.4, 0.4) * seg;
       const f = 1 - Math.exp(-dt * (16 - k * 0.9));
       const nx = q[2 * k] + (tgx - q[2 * k]) * f, ny = q[2 * k + 1] + (tgy - q[2 * k + 1]) * f;
       const dx = nx - q[2 * k - 2], dy = ny - q[2 * k - 1];
@@ -729,7 +729,7 @@ function drawJelly(c) {
   // tentacules
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  const gt = ctx.createLinearGradient(0, Y, 0, Y + R * 3.8);
+  const gt = ctx.createLinearGradient(0, Y, 0, Y + Math.min(R * 2.6, minWH() * 0.38));
   gt.addColorStop(0, rgba(col, 0.55)); gt.addColorStop(1, rgba(col, 0));
   const ga = ctx.createLinearGradient(0, Y, 0, Y + R * 2.2);
   ga.addColorStop(0, rgba(col, 0.3)); ga.addColorStop(1, rgba(col, 0));
@@ -1052,7 +1052,8 @@ const layers = {};
 /* Enregistrements libres de droits (CC0), mis en boucle sans coupure. Chaque calque a son volume. */
 const LAYERS = {
   jelly: [
-    { id: 'mer', url: AUDIO_BASE + 'mer.mp3', gain: 1 },
+    { id: 'baleines1', url: AUDIO_BASE + 'baleines1.mp3', gain: 0.9 },
+    { id: 'baleines2', url: AUDIO_BASE + 'baleines2.mp3', gain: 0.7 },
     { id: 'profondeurs', url: AUDIO_BASE + 'profondeurs.mp3', gain: 0.6 }
   ],
   butterfly: [
