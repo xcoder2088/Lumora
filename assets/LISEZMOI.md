@@ -7,7 +7,7 @@ Ce dossier reçoit les illustrations produites pour remplacer le dessin par le c
 - **Ne rien modifier en dehors de `assets/`.** En particulier, ne pas toucher à `index.html`, `audio/`, `tools/` ni à `versions/v1-canvas/` (copie figée de la version 1, gardée comme référence).
 - Un sous-dossier par thème : `meduses/`, `papillons/`, `decors/`.
 - Une planche-contact `planche-contact.png` à la racine de `assets/` avec tous les éléments, pour validation d'un coup d'œil.
-- Petits commits clairs, par exemple « Ajout des méduses : ombrelles et tentacules ». Faire un `git pull` avant d'envoyer.
+- Petits commits clairs, par exemple « Ajout des méduses : ombrelles et tentacules ». Messages sobres : **aucun nom d'outil, aucune ligne de co-auteur** (pas de « Co-Authored-By »). Faire un `git pull` avant d'envoyer.
 
 ## Format
 
@@ -28,4 +28,4 @@ Réaliste doux, translucide, lumineux. Pas de dessin animé, pas de contours noi
 
 ## Licence
 
-Créations originales, sans personnage ni œuvre protégée, que l'auteur du projet a le droit d'utiliser et de publier dans ce dépôt public (sous licence GPL-3.0 pour le code, avec une licence à préciser pour les images). Indiquer dans le commit l'outil utilisé pour générer chaque image. La licence des images sera précisée ici une fois qu'elles seront déposées.
+Créations originales, sans personnage ni œuvre protégée, que l'auteur du projet a le droit d'utiliser et de publier dans ce dépôt public. Les images seront publiées sous la licence CC BY-SA 4.0, voir `LICENCE.md` dans ce dossier. Leur origine (outil de génération) n'est pas mentionnée dans les commits : la mention générale sur l'intelligence artificielle se trouve dans `LICENCE.md` et dans le README.

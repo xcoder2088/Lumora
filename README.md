@@ -107,12 +107,14 @@ Les scripts doivent être lancés depuis la racine du dépôt.
 
 **Sons.** Les trois enregistrements du dossier `audio/` sont dans le domaine public (CC0), voir « Sons et crédits ». Ils ne sont pas soumis à la GPL.
 
-**Illustrations.** Les images du dossier `assets/` (en préparation) auront leur propre licence, à préciser dans `assets/LISEZMOI.md` à leur arrivée. Elle peut être différente de celle du code.
+**Illustrations.** Les images du dossier `assets/` (en préparation) seront publiées sous la licence Creative Commons **CC BY-SA 4.0** (attribution, partage dans les mêmes conditions, usage commercial permis). Le projet de texte est dans `assets/LICENCE.md`. Cette licence est distincte de celle du code.
 
 **Polices.** Cormorant Garamond et Jost sont publiées sous licence SIL Open Font License. Elles ne sont pas incluses dans le dépôt : la page les charge depuis Google Fonts.
 
 **Aucune garantie.** Lumora est fourni « tel quel », sans garantie d'aucune sorte (voir les articles 15 et 16 de la licence). C'est un outil d'ambiance : il **ne remplace en aucun cas la surveillance des enfants**, et l'adulte responsable reste seul juge de la durée de la sieste et de la sécurité du groupe.
 
 **Vie privée.** Lumora ne demande aucun compte, ne collecte aucune donnée personnelle et n'utilise aucun suivi ni statistique. Les seuls réglages mémorisés (décor et durée) restent dans le navigateur de l'appareil. Seule exception : le chargement des polices depuis Google Fonts transmet l'adresse IP du visiteur à Google. Pour s'en passer, il faudra inclure les polices dans le dépôt (prévu).
+
+**Outils d'intelligence artificielle.** Une partie du code, du traitement des sons et des illustrations a été produite avec l'aide d'outils d'intelligence artificielle générative, sous la direction de l'auteur. Cela ne change pas les conditions de licence décrites ici.
 
 **Contributions.** Toute contribution envoyée à ce dépôt est acceptée sous la même licence que le projet (GPL v3).
