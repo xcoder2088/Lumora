@@ -444,8 +444,17 @@ function updateSnow(dt) { for (const p of snow) { p.y += p.v * dt * (0.5 + p.z);
 
 
 /* ================= Méduses ================= */
-const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222]];
+const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222], [255, 222, 150], [150, 255, 190], [215, 160, 255], [255, 165, 150]];
 const JWHITE = [236, 246, 255];
+function pickColorIdx() {   // des indices dans JPAL ; JPAL.length désigne le blanc. Quatre familles : fantômes blanches, unies, à deux ou trois teintes, et à quatre teintes qui changent tout au long du trajet
+  const n = JPAL.length, q = rnd(), c0 = Math.floor(rnd() * n);
+  const other = a => (a + 1 + Math.floor(rnd() * (n - 1))) % n;
+  if (q < 0.2) return [n, c0, n];
+  if (q < 0.35) return [c0, c0, c0];
+  const c1 = other(c0), c2 = other(c1);
+  if (q < 0.65) return [c0, c1, rnd() < 0.3 ? n : c2];
+  return [c0, c1, c2, other(c2)];
+}
 function pathColor(cols, u) { // couleur le long du trajet : bleue au départ, mauve au milieu, parfois blanche à la fin
   const x = u * (cols.length - 1), i = Math.min(cols.length - 2, Math.floor(x));
   return mixc(cols[i], cols[i + 1], smooth(x - i));
@@ -608,11 +617,8 @@ function makeJelly(d) {
   const nThin = 16, nArm = 4;
   for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
   for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
-  const c0 = Math.floor(rnd() * JPAL.length);
-  const c1 = (c0 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
-  const c2 = rnd() < 0.35 ? 5 : (c1 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;   // 5 = blanc
-  const ci = [c0, c1, c2];
-  const cols = ci.map(i => i === 5 ? JWHITE : JPAL[i]);
+  const ci = pickColorIdx();
+  const cols = ci.map(i => i === JPAL.length ? JWHITE : JPAL[i]);
   const tq = rnd();
   const type = tq < 0.45 ? 'lune' : tq < 0.75 ? 'haute' : 'fantomatique';
   return {
@@ -620,8 +626,8 @@ function makeJelly(d) {
     rf: sz, period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
-    modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 1.1 : 0, tiltN: d.giant ? d.side * 1.1 : 0,
-    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 1.1 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
+    modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
+    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
   };
 }
 
@@ -629,11 +635,12 @@ function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
   const u = clamp((el - c.s) / c.T, 0, 1);
-  let tx, ty;
+  let tx, ty, gvx = 0;
   if (c.giant) {
     // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
     const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
     tx = lerp(xa, xb, u);
+    gvx = (xb - xa) / c.T;   // vitesse moyenne de la traversée
     ty = lerp(c.y0f, c.y1f, u) * H;
   } else {
     tx = lerp(c.x0, c.x1, u) * W;
@@ -653,7 +660,7 @@ function updateJelly(c, dt, el) {
     else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
     else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
     else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
-    c.tiltN = c.giant ? c.side * lerp(0.95, 1.3, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
+    c.tiltN = c.giant ? c.side * lerp(0.6, 0.95, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
     if (!c.pulsing && c.pp === 0) c.tiltT = c.tiltN;
   }
   if (c.pulsing || c.pp > 0) {
@@ -667,21 +674,22 @@ function updateJelly(c, dt, el) {
     // elle nage plus fort quand elle prend du retard sur son trajet, moins fort quand elle est en avance : ce sont les battements qui la font avancer
     const lag = c.giant ? (c.side * (tx - c.x)) / (W * 0.4) : (c.y - ty) / (minWH() * 0.5);
     const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * clamp(1 + lag, 0.45, 2.2);
-    c.vx += Math.sin(c.tilt) * f;
-    c.vy -= Math.cos(c.tilt) * f;
+    const thr = c.giant ? c.side * 1.3 : c.tilt;   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
+    c.vx += Math.sin(thr) * f;
+    c.vy -= Math.cos(thr) * f;
   }
   // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
   const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = smooth((u - 0.8) / 0.2);
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
-  const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.25 : 0.1) * loose, c.giant ? 0.25 : 2.5, guide);
-  const sink = minWH() * 0.008;   // elle coule doucement quand elle ne pousse pas
+  const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.1) * loose, c.giant ? 0.06 : 2.5, guide);
+  const sink = c.giant ? 0 : minWH() * 0.008;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
-  const kperp = c.giant ? 1.2 : 2.6, drag = c.giant ? 0.5 : 0.8;
-  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide)) * dt;
-  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide)) * dt;
+  const kperp = c.giant ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0)) * dt;
   c.x += c.vx * dt; c.y += c.vy * dt;
   c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.4);
   c.X = c.x; c.Y = c.y;
@@ -928,7 +936,7 @@ function build() {
   const D = S.dur, T0 = travelBase();
   const r = mulberry(Math.floor(Math.random() * 1e9));
   const runSeed = Math.floor(r() * 1e6) * 1000;
-  const lo = S.scene === 'jelly' ? 3 : 2, hiN = S.scene === 'jelly' ? 18 : 9;
+  const lo = S.scene === 'jelly' ? 7 : 4, hiN = S.scene === 'jelly' ? 24 : 13;
   const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
   const dens = t => {
     const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
@@ -1084,7 +1092,6 @@ const LAYERS = {
   ],
   butterfly: [
     { id: 'nuit', url: AUDIO_BASE + 'nuit.mp3', gain: 1 },
-    { id: 'brise', url: AUDIO_BASE + 'brise.mp3', gain: 2 },
     { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 0.17 }
   ]
 };

@@ -74,7 +74,7 @@ Les sons sont des enregistrements libres de droits (CC0 ou domaine public). Ils 
 | `audio/baleines2.mp3` | Méduses : second chant de baleine bleue, en boucle plus courte pour que la répétition ne se remarque pas | [Blue whale atlantic3 1x](https://commons.wikimedia.org/wiki/File:Blue_whale_atlantic3_1x.oga), Wikimedia Commons (CC0) | NOAA |
 | `audio/profondeurs.mp3` | Méduses : ambiance sous-marine | [Aquaria](https://opengameart.org/content/aquaria), OpenGameArt | cynicmusic |
 | `audio/nuit.mp3` | Papillons : grillons de nuit, très lointains, avec de longues pauses | [Campaign at Night #4](https://bigsoundbank.com/campagne-la-nuit-4-s1880.html), BigSoundBank | Joseph Sardin |
-| `audio/brise.mp3` | Papillons : brise douce dans les arbres | [Wind in the Trees](https://bigsoundbank.com/forest-wind-in-the-trees-s0904.html), BigSoundBank | Joseph Sardin |
+| `audio/brise.mp3` | Papillons : brise dans les arbres (fichier gardé, mais plus utilisé pour l’instant : le vent a été retiré) | [Wind in the Trees](https://bigsoundbank.com/forest-wind-in-the-trees-s0904.html), BigSoundBank | Joseph Sardin |
 | `audio/musique-nuit.mp3` | Papillons : petite musique calme (fin retirée pour la boucle) | [Another August](https://opengameart.org/content/another-august), OpenGameArt | cynicmusic |
 
 La licence CC0 n'exige aucune mention, elles sont citées par courtoisie.
