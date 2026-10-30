@@ -74,6 +74,8 @@ Les sons sont des enregistrements libres de droits (CC0 ou domaine public). Ils 
 | `audio/baleines2.mp3` | Méduses : second chant de baleine bleue, en boucle plus courte pour que la répétition ne se remarque pas | [Blue whale atlantic3 1x](https://commons.wikimedia.org/wiki/File:Blue_whale_atlantic3_1x.oga), Wikimedia Commons (CC0) | NOAA |
 | `audio/profondeurs.mp3` | Méduses : ambiance sous-marine | [Aquaria](https://opengameart.org/content/aquaria), OpenGameArt | cynicmusic |
 | `audio/nuit.mp3` | Papillons : grillons de nuit, très lointains, avec de longues pauses | [Campaign at Night #4](https://bigsoundbank.com/campagne-la-nuit-4-s1880.html), BigSoundBank | Joseph Sardin |
+| `audio/brise.mp3` | Papillons : brise douce dans les arbres | [Wind in the Trees](https://bigsoundbank.com/forest-wind-in-the-trees-s0904.html), BigSoundBank | Joseph Sardin |
+| `audio/musique-nuit.mp3` | Papillons : petite musique calme (fin retirée pour la boucle) | [Another August](https://opengameart.org/content/another-august), OpenGameArt | cynicmusic |
 
 La licence CC0 n'exige aucune mention, elles sont citées par courtoisie.
 
@@ -82,8 +84,8 @@ La licence CC0 n'exige aucune mention, elles sont citées par courtoisie.
 Les enregistrements d'origine ne sont pas dans le dépôt. Pour refaire les boucles :
 
 1. Installer `ffmpeg`, Python 3 et `numpy`.
-2. Télécharger les originaux : « Campaign at Night #4 » dans `snd_raw/crickets4.mp3`, « Aquaria » dans `snd_raw/aquaria.mp3`, et les deux enregistrements de baleines bleues dans `whales_raw/bleue_ouest_pacifique.oga` et `whales_raw/bleue_atlantique3.oga`.
-3. Depuis la racine du dépôt : `python3 tools/mkloops.py` (musique sous-marine), `python3 tools/crickets_soft.py` (grillons, avec leurs pauses), `python3 tools/whales_make.py` (baleines).
+2. Télécharger les originaux : « Campaign at Night #4 » dans `snd_raw/crickets4.mp3`, « Wind in the Trees » dans `papillons_raw/vent_arbres.mp3`, « Another August » dans `papillons_raw/musique.mp3`, « Aquaria » dans `snd_raw/aquaria.mp3`, et les deux enregistrements de baleines bleues dans `whales_raw/bleue_ouest_pacifique.oga` et `whales_raw/bleue_atlantique3.oga`.
+3. Depuis la racine du dépôt : `python3 tools/mkloops.py` (musique sous-marine), `python3 tools/crickets_soft.py` (grillons, avec leurs pauses), `python3 tools/whales_make.py` (baleines), `python3 tools/wind_music_make.py` (brise et musique de nuit).
 4. `python3 tools/seam.py` vérifie que le raccord de chaque boucle est continu, et `python3 tools/analyze.py` mesure le volume et le contenu en fréquences des enregistrements d'origine.
 
 ## Limites connues

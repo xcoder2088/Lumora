@@ -216,7 +216,7 @@ img { max-width: 100%; }
 <main id="setup" aria-label="Réglages du minuteur">
   <div>
     <h1>Lumora</h1>
-    <p class="ver">Version 3 · révision 3</p>
+    <p class="ver">Version 3 · révision 4</p>
     <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
   </div>
   <fieldset>
@@ -237,7 +237,7 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button">Commencer</button>
-  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons), NOAA (baleines bleues) et cynicmusic, OpenGameArt (profondeurs). Illustrations générées avec l'aide de l'intelligence artificielle.</p>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons, vent), NOAA (baleines bleues) et cynicmusic, OpenGameArt (musiques). Illustrations générées avec l'aide de l'intelligence artificielle.</p>
 </main>
 
 <div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
@@ -1057,7 +1057,9 @@ const LAYERS = {
     { id: 'profondeurs', url: AUDIO_BASE + 'profondeurs.mp3', gain: 0.6 }
   ],
   butterfly: [
-    { id: 'nuit', url: AUDIO_BASE + 'nuit.mp3', gain: 1 }
+    { id: 'nuit', url: AUDIO_BASE + 'nuit.mp3', gain: 1 },
+    { id: 'brise', url: AUDIO_BASE + 'brise.mp3', gain: 2 },
+    { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 1 }
   ]
 };
 function audioInit() {

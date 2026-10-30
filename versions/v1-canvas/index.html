@@ -234,7 +234,7 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button">Commencer</button>
-  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons), NOAA (baleines bleues) et cynicmusic, OpenGameArt (profondeurs).</p>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons, vent), NOAA (baleines bleues) et cynicmusic, OpenGameArt (musiques).</p>
 </main>
 
 <div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
@@ -1075,7 +1075,9 @@ const LAYERS = {
     { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6 }
   ],
   butterfly: [
-    { id: 'nuit', url: 'audio/nuit.mp3', gain: 1 }
+    { id: 'nuit', url: 'audio/nuit.mp3', gain: 1 },
+    { id: 'brise', url: 'audio/brise.mp3', gain: 2 },
+    { id: 'musique-nuit', url: 'audio/musique-nuit.mp3', gain: 1 }
   ]
 };
 function audioInit() {
