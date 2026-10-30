@@ -40,7 +40,7 @@ La validation visuelle par le créateur de Lumora reste nécessaire avant intég
 
 ## Usage
 
-Voir `LICENCE.md` (licence CC BY-SA 4.0).
+Voir `LICENCE.md`.
 
 
 ## Intégration dans l'application

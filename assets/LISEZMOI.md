@@ -22,7 +22,7 @@ assets/
   planche-contact.png      aperçu de tous les éléments
   manifest.json            chemins relatifs à assets/, dimensions et repères
   GUIDE_INTEGRATION.md      instructions et limites pour l'intégration
-  LICENCE.md                licence des illustrations (CC BY-SA 4.0)
+  LICENCE.md                licence des illustrations
 ```
 
 Les ZIP et les générations brutes ne sont pas dupliqués dans ce dépôt : les éléments destinés à l'assemblage sont directement accessibles comme fichiers individuels.
@@ -53,6 +53,6 @@ Le lot et ses aperçus ont été contrôlés; l'animation dans la page et les es
 
 ## Licence des illustrations
 
-Voir [LICENCE.md](LICENCE.md) : licence **CC BY-SA 4.0**, avec la mention que les images ont été générées avec l'aide de l'intelligence artificielle. Aucun personnage, artiste ou œuvre protégée n'a été demandé comme référence.
+Voir [LICENCE.md](LICENCE.md) : mêmes conditions que le reste du projet, avec la mention que les images ont été générées avec l'aide de l'intelligence artificielle. Aucun personnage, artiste ou œuvre protégée n'a été demandé comme référence.
 
 La licence du code reste celle du fichier `LICENSE` à la racine du dépôt; cette livraison ne la modifie pas.
