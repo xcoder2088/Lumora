@@ -746,8 +746,8 @@ function updateJelly(c, dt, el) {
   const db = b - c.b; c.b = b;
   if (db > 0) {
     // elle nage plus fort quand elle prend du retard sur son trajet, moins fort quand elle est en avance : ce sont les battements qui la font avancer
-    const lag = c.giant ? (c.side * (tx - c.x)) / (W * 0.4) : (c.y - ty) / (minWH() * 0.5);
-    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * clamp(1 + lag, 0.45, 2.2);
+    const lag = c.giant ? (c.side * (tx - c.x)) / (W * 0.4) : (c.y - ty) / (minWH() * 0.35);
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * clamp(1 + lag, 0.2, 2.2);
     const thr = c.giant ? c.side * 1.3 : c.tilt;   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
     c.vx += Math.sin(thr) * f;
     c.vy -= Math.cos(thr) * f;
@@ -758,7 +758,7 @@ function updateJelly(c, dt, el) {
   const guide = smooth((u - 0.8) / 0.2);
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
   const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.1) * loose, c.giant ? 0.06 : 2.5, guide);
-  const sink = c.giant ? 0 : minWH() * 0.008;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
+  const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
   const kperp = c.giant ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
@@ -899,9 +899,10 @@ function pickSpecies() {
 function makeButterfly(d) {
   const sp = pickSpecies();
   const z = lerp(0.5, 1, rnd());
+  const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
     kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.04, 0.058, z),
-    far: rnd() < 0.4, farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
+    far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.25, 0.8, rnd()), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
   };
@@ -917,8 +918,13 @@ function updateButterfly(c, dt, el) {
   const calm = 1 - smooth((u - 0.85) / 0.15);
   const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
-  const X = (lerp(c.x0, c.far ? lerp(c.x1, 0.5, 0.45) : c.x1, u) + wx * (c.far ? lerp(1, 0.3, u) : 1)) * W;
-  const Y = c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
+  const cross = !c.far && !c.rise;
+  // en traversée : de côté à côté, avec des montées et des descentes douces, à vitesse qui varie un peu
+  const ue = clamp(u + 0.03 * Math.sin(u * TAU * 4 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
+  const X = cross ? lerp(c.side < 0 ? W + mg : -mg, c.side < 0 ? -mg : W + mg, ue) + wx * W * 0.3
+    : (lerp(c.x0, c.far ? lerp(c.x1, 0.5, 0.45) : c.x1, u) + wx * (c.far ? lerp(1, 0.3, u) : 1)) * W;
+  const Y = cross ? (lerp(c.ya, clamp(c.ya + c.yb, 0.12, 0.85), u) + wy * 2.2) * H
+    : c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
   const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.22 + Math.sin(T * 1.9 + c.ph * 3) * 0.12) * c.S * calm;
   const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.3 + Math.sin(T * 1.4 + c.ph) * 0.15) * c.S * calm;
@@ -928,7 +934,7 @@ function updateButterfly(c, dt, el) {
   if (Math.hypot(vx, vy) > 6) {
     const tgt = Math.atan2(vx, -vy);
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
-    c.head += d * Math.min(1, dt * 3);
+    c.head += d * Math.min(1, dt * 1.6);
   }
   // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
@@ -974,6 +980,35 @@ function drawButterfly(c, w) {
 }
 
 function hash1(n) { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); }
+/* ================= Étoiles filantes (ciel de la prairie) ================= */
+let shoot = null, nextShoot = 8 + Math.random() * 20;
+function drawShooting(w) {
+  const k = 1 - w * 1.3;
+  if (k <= 0) return;
+  if (!shoot && T >= nextShoot) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    shoot = { t0: T, dur: lerp(0.8, 1.4, Math.random()), x: lerp(0.15, 0.85, Math.random()) * W, y: lerp(0.06, 0.32, Math.random()) * H, dir,
+              ang: lerp(0.2, 0.55, Math.random()), len: lerp(0.18, 0.3, Math.random()) * W };
+    nextShoot = T + lerp(25, 70, Math.random());
+  }
+  if (!shoot) return;
+  const q = (T - shoot.t0) / shoot.dur;
+  if (q >= 1) { shoot = null; return; }
+  const vx = shoot.dir * Math.cos(shoot.ang), vy = Math.sin(shoot.ang);
+  const hx = shoot.x + vx * shoot.len * q, hy = shoot.y + vy * shoot.len * q;
+  const tl = shoot.len * 0.35 * Math.min(1, q * 4);
+  const al = Math.sin(Math.PI * q) * 0.8 * k;
+  const g = ctx.createLinearGradient(hx, hy, hx - vx * tl, hy - vy * tl);
+  g.addColorStop(0, 'rgba(255,250,235,' + al.toFixed(3) + ')');
+  g.addColorStop(1, 'rgba(255,250,235,0)');
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - vx * tl, hy - vy * tl); ctx.stroke();
+  const gl = ctx.createRadialGradient(hx, hy, 0, hx, hy, 5);
+  gl.addColorStop(0, 'rgba(255,250,235,' + (al * 0.9).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,250,235,0)');
+  ctx.fillStyle = gl; ctx.fillRect(hx - 5, hy - 5, 10, 10);
+  ctx.globalCompositeOperation = 'source-over';
+}
 function drawFlies(w) {
   // Quelques lucioles seulement : chacune s'allume doucement une à deux secondes,
   // puis disparaît plusieurs secondes et se rallume ailleurs.
@@ -1030,7 +1065,7 @@ function build() {
   };
   sched = [];
   let e = D;
-  for (let k = 0; e > 0 && k < 5000; k++) {
+  for (let k = 0; S.scene !== 'jelly' && e > 0 && k < 5000; k++) {
     const Tk = T0 * lerp(0.85, 1.25, r());
     const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
     const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
@@ -1038,16 +1073,21 @@ function build() {
     e -= T0 / dens(e) * lerp(0.7, 1.3, r());
   }
   if (S.scene === 'jelly') {
-    // De temps en temps, une très grande méduse entre par un côté de l'écran et le traverse lentement.
-    const Tg = Math.min(T0 * 1.6, D), gs = Math.floor(Math.random() * 1e6);
-    let e = D - Tg * lerp(0.1, 0.6, Math.random()), m = 0;
-    while (e > 0) {
-      const Tk = Tg * lerp(0.9, 1.15, Math.random());
-      const y0g = lerp(0.4, 0.75, Math.random());   // la géante monte ou reste à niveau pendant sa traversée, elle ne descend pas
-      sched.push({ k: 100000 + gs + m, e, T: Tk, s: e - Tk, giant: true, side: Math.random() < 0.5 ? -1 : 1,
-                   y0f: y0g, y1f: y0g - lerp(0.05, 0.25, Math.random()) });
-      e -= lerp(70, 150, Math.random());
-      m++;
+    // Les méduses sont liées au temps : une seule sort de l'écran par minute (une toutes les P secondes pour les durées très courtes),
+    // et la dernière sort à l'instant D. À l'écran, il y en a donc autant que de minutes restantes (au plus N), et la scène se vide doucement.
+    const P = clamp(D / 4, 8, 60), N = 9, gs = Math.floor(Math.random() * 1e6);
+    let lastGiant = false;
+    for (let k = 0, e = D; e > 0.5 && k < 400; k++, e = D - k * P) {
+      if (k > 0 && !lastGiant && r() < 0.12) {
+        lastGiant = true;
+        const Tg = Math.min(T0 * 1.6, D), y0g = lerp(0.4, 0.75, r());   // la géante monte ou reste à niveau pendant sa traversée, elle ne descend pas
+        sched.push({ k: 100000 + gs + k, e, T: Tg, s: e - Tg, giant: true, side: r() < 0.5 ? -1 : 1, y0f: y0g, y1f: y0g - lerp(0.05, 0.25, r()) });
+      } else {
+        lastGiant = false;
+        const Tk = N * P * lerp(0.9, 1.15, r());
+        const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
+        sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1: clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08) });
+      }
     }
   }
   sched.sort((a, b) => a.s - b.s);
@@ -1093,6 +1133,7 @@ function frame(now) {
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
   drawBackground(w);
+  if (S.scene !== 'jelly') drawShooting(w);
   if (S.scene === 'jelly') {
     drawSnow(false);
     for (const c of sorted) { try { drawJelly(c); } catch (e) { ctx.restore(); } }
