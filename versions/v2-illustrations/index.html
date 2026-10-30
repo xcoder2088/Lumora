@@ -216,7 +216,7 @@ img { max-width: 100%; }
 <main id="setup" aria-label="Réglages du minuteur">
   <div>
     <h1>Lumora</h1>
-    <p class="ver">Version 2 · révision 4</p>
+    <p class="ver">Version 2 · révision 5</p>
     <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
   </div>
   <fieldset>
@@ -689,7 +689,11 @@ function updateJelly(c, dt, el) {
     q[0] = ax; q[1] = ay;
     for (let k = 1; k <= KSEG; k++) {
       const sw = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * seg * (1 + k * 0.12) * (t.arm ? 1.4 : 1);
-      const tgx = q[2 * k - 2] + sw, tgy = q[2 * k - 1] + seg * (1 - 0.25 * b);
+      const gk = Math.pow(k / KSEG, 0.8);                      // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous l'effet de la gravité)
+      let ux = -sa * (1 - gk), uy = ca * (1 - gk) + gk;
+      const un = Math.hypot(ux, uy) || 1; ux /= un; uy /= un;
+      const tgx = q[2 * k - 2] + ux * seg + sw - c.vx * 0.004 * seg;          // et ils traînent derrière le mouvement
+      const tgy = q[2 * k - 1] + uy * seg * (1 - 0.25 * b) - c.vy * 0.002 * seg;
       const f = 1 - Math.exp(-dt * (16 - k * 0.9));
       const nx = q[2 * k] + (tgx - q[2 * k]) * f, ny = q[2 * k + 1] + (tgy - q[2 * k + 1]) * f;
       const dx = nx - q[2 * k - 2], dy = ny - q[2 * k - 1];
