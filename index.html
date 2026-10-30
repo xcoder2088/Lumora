@@ -88,7 +88,6 @@ legend {
 }
 .chip:hover { border-color: rgba(190, 235, 245, 0.5); }
 .chip[aria-pressed="true"] { background: var(--glow); border-color: var(--glow); color: var(--glow-ink); font-weight: 500; }
-#cadence { margin: 8px 0 0; font-size: 14px; color: var(--ink-dim); }
 .switch { display: flex; align-items: center; gap: 12px; font-size: 15px; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch .track { width: 44px; height: 26px; border-radius: 999px; border: 1px solid var(--line); position: relative; flex: none; transition: background 0.25s; }
@@ -208,19 +207,6 @@ body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opac
     <legend>Durée</legend>
     <div class="chips" id="chipDur"></div>
   </fieldset>
-  <fieldset>
-    <legend>Rythme</legend>
-    <div class="chips" id="chipPace"></div>
-  </fieldset>
-  <fieldset>
-    <legend>Créatures à l'écran</legend>
-    <div class="chips" id="chipCount"></div>
-    <p id="cadence" aria-live="polite"></p>
-  </fieldset>
-  <fieldset id="mixField">
-    <legend>Ambiance de la mer</legend>
-    <div class="chips" id="chipMix"></div>
-  </fieldset>
   <label class="switch" for="soundBox">
     <input type="checkbox" id="soundBox">
     <span class="track"></span>
@@ -295,24 +281,16 @@ const fmtClock = s => {
 
 /* ================= État ================= */
 const DURS = [30, 300, 600, 900, 1200, 1800, 2700];
-const COUNTS_BY = { jelly: [5, 8, 12, 18], butterfly: [3, 5, 8, 12] };
-const DEFAULT_COUNT = { jelly: 12, butterfly: 5 };
-const countsFor = () => COUNTS_BY[S.scene];
-const PACES = [[1, 'Très calme'], [0.7, 'Calme'], [0.5, 'Vif']];
 const SCENES = [['jelly', 'Méduses'], ['butterfly', 'Papillons']];
-const S = { scene: 'jelly', dur: 1200, count: 12, pace: 0.7, mix: 'mix', sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
+const S = { scene: 'jelly', dur: 1200, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
 try {
   const saved = JSON.parse(localStorage.getItem('lumora.v1') || 'null');
   if (saved) {
     if (SCENES.some(s => s[0] === saved.scene)) S.scene = saved.scene;
     if (DURS.includes(saved.dur)) S.dur = saved.dur;
-    S.count = DEFAULT_COUNT[S.scene];
-    if (countsFor().includes(saved.count)) S.count = saved.count;
-    if (PACES.some(p => p[0] === saved.pace)) S.pace = saved.pace;
-    if (saved.mix === 'mix' || saved.mix === 'sea') S.mix = saved.mix;
   }
 } catch (e) {}
-const persist = () => { try { localStorage.setItem('lumora.v1', JSON.stringify({ scene: S.scene, dur: S.dur, count: S.count, pace: S.pace, mix: S.mix })); } catch (e) {} };
+const persist = () => { try { localStorage.setItem('lumora.v1', JSON.stringify({ scene: S.scene, dur: S.dur })); } catch (e) {} };
 
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MOT = reduceMotion ? 0.5 : 1;
@@ -344,18 +322,21 @@ const BG = {
   jelly: {
     off: [0, 0.5, 1],
     a: [hex('#0d4257'), hex('#08232f'), hex('#030b13')],
+    alt: [hex('#1a2f66'), hex('#0d1d44'), hex('#060a20')],
     b: [hex('#a9dcdc'), hex('#5da3b5'), hex('#1e4d66')]
   },
   butterfly: {
     off: [0, 0.5, 0.78, 1],
     a: [hex('#121838'), hex('#3a3268'), hex('#bd8089'), hex('#e3a67c')],
+    alt: [hex('#1a1c4c'), hex('#48326e'), hex('#d49a72'), hex('#efb46c')],
     b: [hex('#88bbe3'), hex('#c9ddef'), hex('#f6e3c8'), hex('#fbe6c4')]
   }
 };
+const skyTint = () => 0.5 + 0.5 * Math.sin(T * 0.045 + 1.3); // va-et-vient très lent (environ 2 minutes)
 function drawBackground(w) {
-  const def = BG[S.scene];
+  const def = BG[S.scene], tint = skyTint() * 0.8;
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  for (let i = 0; i < def.off.length; i++) g.addColorStop(def.off[i], rgba(mixc(def.a[i], def.b[i], w), 1));
+  for (let i = 0; i < def.off.length; i++) g.addColorStop(def.off[i], rgba(mixc(mixc(def.a[i], def.alt[i], tint), def.b[i], w), 1));
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 }
@@ -405,8 +386,9 @@ function drawRays(w) {
   for (const r of rays) {
     const x0 = (r.x + Math.sin(T * 0.05 + r.ph) * 0.04) * W, wd = r.w * W, dx = r.slant * H;
     const g = ctx.createLinearGradient(0, 0, 0, H * 0.95);
-    g.addColorStop(0, 'rgba(150,232,242,' + ((0.075 + 0.12 * w) * r.a).toFixed(3) + ')');
-    g.addColorStop(1, 'rgba(150,232,242,0)');
+    const rc = mixc([150, 232, 242], [185, 180, 255], skyTint());
+    g.addColorStop(0, rgba(rc, ((0.075 + 0.12 * w) * r.a).toFixed(3)));
+    g.addColorStop(1, rgba(rc, 0));
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.moveTo(x0, -10); ctx.lineTo(x0 + wd, -10);
@@ -418,7 +400,12 @@ function drawRays(w) {
 }
 
 /* ================= Méduses ================= */
-const JPAL = [[110, 215, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222], [150, 188, 255]];
+const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222]];
+const JWHITE = [236, 246, 255];
+function pathColor(cols, u) { // couleur le long du trajet : bleue au départ, mauve au milieu, parfois blanche à la fin
+  const x = u * (cols.length - 1), i = Math.min(cols.length - 2, Math.floor(x));
+  return mixc(cols[i], cols[i + 1], smooth(x - i));
+}
 const KSEG = 12;
 
 function placeHomes(n, y0, y1) {
@@ -446,11 +433,16 @@ function makeJelly(d) {
   const nThin = 16, nArm = 4;
   for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(2.0, 3.6, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
   for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  const c0 = Math.floor(rnd() * JPAL.length);
+  const c1 = (c0 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
+  const c2 = rnd() < 0.35 ? -1 : (c1 + 1 + Math.floor(rnd() * (JPAL.length - 1))) % JPAL.length;
+  const cols = [JPAL[c0], JPAL[c1], c2 < 0 ? JWHITE : JPAL[c2]];
   return {
-    kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: JPAL[d.k % JPAL.length],
-    rf: sz * (S.count <= 5 ? 1.1 : S.count >= 18 ? 0.9 : 1), period: d.giant ? lerp(5, 7, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
+    kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols,
+    rf: sz, period: d.giant ? lerp(5, 7, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
+    modeT: Math.random() * 3, thrustK: 1, perK: 1, pulsing: true, tiltT: 0,
     x: null, y: 0, vx: 0, vy: 0, tilt: 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
   };
 }
@@ -459,28 +451,56 @@ function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
   const u = clamp((el - c.s) / c.T, 0, 1);
-  const calm = 1 - smooth((u - 0.88) / 0.12);
   let tx, ty;
   if (c.giant) {
     // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
     const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
-    tx = lerp(xa, xb, u) + Math.sin(T * c.fx + c.ph) * c.ax * R * 0.3;
-    ty = lerp(c.y0f, c.y1f, u) * H + Math.sin(T * c.fy + c.ph * 1.7) * c.ay * R * 0.3;
+    tx = lerp(xa, xb, u);
+    ty = lerp(c.y0f, c.y1f, u) * H;
   } else {
-    tx = lerp(c.x0, c.x1, u) * W + Math.sin(T * c.fx + c.ph) * c.ax * R * calm;
-    ty = lerp(H + R * 1.8, -R * 4.4, u) + Math.sin(T * c.fy + c.ph * 1.7) * c.ay * R * calm;
+    tx = lerp(c.x0, c.x1, u) * W;
+    ty = lerp(H + R * 1.8, -R * 4.4, u);
   }
   if (c.x === null) { c.x = tx; c.y = ty; }
-  c.pp += dt / c.period; if (c.pp >= 1) c.pp -= 1;
+  // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
+  c.modeT -= dt;
+  if (c.modeT <= 0) {
+    const r = Math.random();
+    if (c.giant) {
+      if (r < 0.6) { c.thrustK = 0.8; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
+      else if (r < 0.85) { c.thrustK = 0.4; c.perK = 1.2; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
+      else { c.pulsing = false; c.modeT = lerp(4, 8, Math.random()); }
+    } else if (r < 0.4) { c.thrustK = 1; c.perK = 1; c.pulsing = true; c.modeT = lerp(6, 16, Math.random()); }          // nage régulière
+    else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
+    else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
+    else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
+    c.tiltT = (Math.random() - 0.5) * 1.5;   // la poussée suit l'inclinaison : elle part en diagonale
+  }
+  if (c.pulsing || c.pp > 0) {
+    c.pp += dt / (c.period * c.perK);
+    if (c.pp >= 1) c.pp = c.pulsing ? c.pp - 1 : 0;   // au repos, l'ombrelle finit son cycle puis reste détendue
+  }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
   const db = b - c.b; c.b = b;
-  if (db > 0) c.vy -= db * R * (c.giant ? 0.25 : 0.6);
-  c.vx += ((tx - c.x) * 1.2 - c.vx * 1.6) * dt;
-  c.vy += ((ty - c.y) * 1.5 - c.vy * 1.4) * dt;
+  if (db > 0) {
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK;
+    c.vx += Math.sin(c.tilt) * f;
+    c.vy -= Math.cos(c.tilt) * f;
+  }
+  // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
+  const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
+  // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
+  const guide = smooth((u - 0.8) / 0.2);
+  const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
+  const kx = lerp((c.giant ? 0.6 : 0.12) * (0.5 + 0.5 * loose), 2.2, guide), ky = lerp((c.giant ? 0.8 : 0.3) * loose, 2.5, guide);
+  const sink = minWH() * 0.014;   // elle coule doucement quand elle ne pousse pas
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * 1.1) * dt;
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * 1.1) * dt;
   c.x += c.vx * dt; c.y += c.vy * dt;
-  c.tilt += (clamp(c.vx * 0.004, -0.25, 0.25) + Math.sin(T * 0.23 + c.ph) * 0.07 - c.tilt) * Math.min(1, dt * 2);
+  c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.9);
   c.X = c.x; c.Y = c.y;
+  c.col = pathColor(c.cols, u);
   // tentacules : suiveurs de chaîne
   const w = R * (1 - 0.22 * b);
   const seg0 = R / KSEG;
@@ -873,18 +893,27 @@ const TRAVEL = { jelly: 90, butterfly: 70 }; // secondes pour traverser l'écran
 const frac = x => x - Math.floor(x);
 let sched = [], live = [], hi = 0;
 let fade = 0;
-function travelBase() { return Math.min(TRAVEL[S.scene] * S.pace, S.dur); }
+function travelBase() { return Math.min(TRAVEL[S.scene] * 0.7, S.dur); }
 function build() {
-  const D = S.dur, N = S.count, T0 = travelBase(), gap = T0 / N;
-  const r = mulberry(S.scene === 'jelly' ? 7 : 11);
+  // Rien à régler : le nombre de créatures varie tout seul, par vagues lentes (parfois beaucoup, parfois très peu).
+  // Le calendrier est tiré au hasard à chaque lancement. La dernière créature sort toujours à l'instant D.
+  const D = S.dur, T0 = travelBase();
+  const r = mulberry(Math.floor(Math.random() * 1e9));
+  const runSeed = Math.floor(r() * 1e6) * 1000;
+  const lo = S.scene === 'jelly' ? 3 : 2, hiN = S.scene === 'jelly' ? 18 : 9;
+  const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
+  const dens = t => {
+    const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
+    return lerp(lo, hiN, smooth((n - 0.5) * 1.5 + 0.5)); // nombre visé à l'écran à cet instant
+  };
   sched = [];
-  const K = Math.ceil((D + T0 * 1.3) / gap) + 1;
-  for (let k = 0; k < K; k++) {
-    const e = D - k * gap + (k ? (r() - 0.5) * gap * 0.6 : 0);
+  let e = D;
+  for (let k = 0; e > 0 && k < 5000; k++) {
     const Tk = T0 * lerp(0.85, 1.25, r());
     const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
     const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
-    if (e > 0) sched.push({ k, e, T: Tk, s: e - Tk, x0, x1 });
+    sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1 });
+    e -= T0 / dens(e) * lerp(0.7, 1.3, r());
   }
   if (S.scene === 'jelly') {
     // De temps en temps, une très grande méduse entre par un côté de l'écran et le traverse lentement.
@@ -907,7 +936,7 @@ function streamUpdate(el) {
   while (hi < sched.length && sched[hi].s <= el) {
     const d = sched[hi++];
     if (d.e > el) {
-      rnd = mulberry(500 + d.k * 7919 + (S.scene === 'jelly' ? 131 : 262));
+      rnd = mulberry(500 + (d.seed !== undefined ? d.seed : d.k) * 7919 + (S.scene === 'jelly' ? 131 : 262));
       live.push(S.scene === 'jelly' ? makeJelly(d) : makeButterfly(d));
     }
   }
@@ -1014,14 +1043,8 @@ function buildChips(host, items, isOn, onPick) {
   });
 }
 function refreshSetup() {
-  buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; S.count = DEFAULT_COUNT[S.scene]; build(); audioSync(); } persist(); });
+  buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; build(); audioSync(); } persist(); });
   buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? 'Essai 30 s' : (d / 60) + ' min']), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
-  buildChips($('chipPace'), PACES, v => v === S.pace, v => { if (v !== S.pace) { S.pace = v; build(); } persist(); });
-  $('mixField').hidden = S.scene !== 'jelly';
-  buildChips($('chipMix'), [['mix', 'Vagues et profondeurs'], ['sea', 'Vagues seules']], v => v === S.mix, v => { if (v !== S.mix) { S.mix = v; audioSync(); } persist(); });
-  buildChips($('chipCount'), countsFor().map(c => [c, String(c)]), v => v === S.count, v => { if (v !== S.count) { S.count = v; build(); } persist(); });
-  const T0 = travelBase();
-  $('cadence').textContent = 'Une nouvelle créature arrive toutes les ' + fmtDur(T0 / S.count) + '. Chacune met environ ' + fmtDur(T0) + ' à traverser l\'écran.';
 }
 
 /* ================= Son ================= */
@@ -1031,7 +1054,7 @@ const layers = {};
 const LAYERS = {
   jelly: [
     { id: 'mer', url: 'audio/mer.mp3', gain: 1 },
-    { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6, onlyMix: true }
+    { id: 'profondeurs', url: 'audio/profondeurs.mp3', gain: 0.6 }
   ],
   butterfly: [
     { id: 'nuit', url: 'audio/nuit.mp3', gain: 1 }
@@ -1073,35 +1096,36 @@ function audioSync() {
   const t = ac.currentTime;
   for (const [scene, defs] of Object.entries(LAYERS)) {
     for (const def of defs) {
-      const want = live && scene === S.scene && (!def.onlyMix || S.mix === 'mix');
+      const want = live && scene === S.scene;
       if (want && !layers[def.id]) loadLayer(def);
       const L = layers[def.id];
-      if (L) L.g.gain.setTargetAtTime(want ? def.gain : 0, t, want ? 1.2 : 0.8);
+      if (L) L.g.gain.setTargetAtTime(want ? def.gain : 0, t, want ? 1.2 : (S.phase === 'done' ? 4 : 0.8));
     }
   }
   if (S.sound && ac.state === 'suspended') ac.resume();
 }
-function previewAmbience() {
+function previewAmbience(ms) {
   S.preview = true;
   audioSync();
   clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => { S.preview = false; audioSync(); }, 9000);
+  previewTimer = setTimeout(() => { S.preview = false; audioSync(); }, ms || 9000);
 }
-function playNotes(freqs, vol, gap, len) {
-  if (!ac) return;
-  freqs.forEach((f, i) => {
-    const t = ac.currentTime + i * gap;
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = 'sine'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.05);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    o.connect(g); g.connect(ac.destination);
-    o.start(t); o.stop(t + len + 0.1);
-  });
-}
+/* Fin du temps : une nappe très douce qui monte lentement comme un souffle, sans attaque, sans cloche.
+   Quatre notes graves et arrondies entrent l'une après l'autre, puis s'éteignent doucement (environ 15 s). */
 function chime() {
-  if (S.sound) playNotes([523.25, 659.25, 783.99, 1046.5], 0.2, 0.9, 3.2);
+  if (!ac || !S.sound) return;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+  lp.connect(ac.destination);
+  const t0 = ac.currentTime + 0.3;
+  [[220, 0.016, 0], [329.63, 0.014, 1.5], [440, 0.009, 3], [554.37, 0.005, 4.5]].forEach(([f, vol, delay]) => {
+    const o = ac.createOscillator(), g = ac.createGain(), t = t0 + delay;
+    o.type = 'sine'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 6;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 11);
+    o.connect(g); g.connect(lp);
+    o.start(t); o.stop(t + 11.2);
+  });
 }
 /* Sur iPhone/iPad, le mode silencieux coupe le son des pages web, sauf si la page joue un média.
    On joue donc un silence en boucle et on demande à Safari la catégorie « lecture ». */
@@ -1147,7 +1171,7 @@ function setSound(on) {
 }
 function testSound() {
   S.sound = true;
-  prepareAudio().then(ok => { if (ok) previewAmbience(); });
+  prepareAudio().then(ok => { if (ok) { previewAmbience(16000); setTimeout(chime, 2000); } }); // ambiance, puis le carillon de fin
   audioSync();
 }
 
