@@ -43,6 +43,7 @@ audio/               les trois boucles sonores (MP3)
 assets/              illustrations (méduses, papillons, décors), voir assets/LISEZMOI.md
 versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
 versions/v2-illustrations/  version 2 : le même fonctionnement, avec les illustrations de assets/
+versions/v3-fluide/  version 3 : le mouvement de la version 1, avec les illustrations de assets/
 tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
 LICENSE              licence : utilisation libre, modification sur autorisation
 ```
@@ -51,10 +52,13 @@ LICENSE              licence : utilisation libre, modification sur autorisation
 
 **La version 2** (`versions/v2-illustrations/`) a exactement le même fonctionnement que la version 1 (quantité aléatoire, mouvements, couleurs qui changent, lucioles, sons, fin du temps). Seul le dessin change : les méduses, les papillons et les décors sont les illustrations du dossier `assets/` au lieu d'être dessinés par le code. Elle utilise les images en WebP (environ 5 Mo) et les sons du dossier `audio/`.
 
+**La version 3** (`versions/v3-fluide/`) reprend le mouvement et le rendu de la version 1, jugés plus fluides et plus apaisants, avec les illustrations : l'ombrelle des méduses est déformée en continu au lieu de passer d'une image à l'autre.
+
 Pour comparer, servir le dépôt par un serveur web (voir « Lancer le projet »), puis ouvrir :
 
 - `/versions/v1-canvas/` : version 1, dessinée par le code ;
-- `/versions/v2-illustrations/` : version 2, avec les illustrations.
+- `/versions/v2-illustrations/` : version 2, avec les illustrations ;
+- `/versions/v3-fluide/` : version 3, le mouvement de la version 1 avec les illustrations.
 
 ## Sons et crédits
 
