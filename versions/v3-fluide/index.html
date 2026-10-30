@@ -612,8 +612,8 @@ function makeJelly(d) {
   // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
   const q = rnd();
   // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
-  const sz = d.giant ? lerp(0.18, 0.26, rnd()) : 0.02 * Math.pow(6, Math.pow(hash1(d.k * 1.713 + 0.37), 1.15));
-  const z = d.giant ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
+  const sz = d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.11, 0.15, rnd()) : 0.016 * Math.pow(6, Math.pow(hash1(d.k * 1.713 + 0.37), 1.15));
+  const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
   const nThin = 16, nArm = 4;
   for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
@@ -627,8 +627,9 @@ function makeJelly(d) {
     rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
+    hx: lerp(0.12, 0.88, hash1(d.k * 2.31 + 0.7)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
     modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
-    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant ? 0.75 : 1
+    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant || d.big ? 0.8 : 1
   };
 }
 
@@ -636,7 +637,7 @@ function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
   const u = clamp((el - c.s) / c.T, 0, 1);
-  let tx, ty, gvx = 0;
+  let tx, ty, gvx = 0, exitQ = 0;
   if (c.giant) {
     // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
     const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
@@ -644,8 +645,12 @@ function updateJelly(c, dt, el) {
     gvx = (xb - xa) / c.T;   // vitesse moyenne de la traversée
     ty = lerp(c.y0f, c.y1f, u) * H;
   } else {
-    tx = lerp(c.x0, c.x1, u) * W;
-    ty = lerp(H + R * 1.8, -R * 4.4, u);
+    // aquarium : la méduse nage dans l'écran autour de son coin, et ne le quitte que pendant sa dernière minute (c.e = son instant de sortie)
+    exitQ = smooth(clamp((el - (c.e - c.exitT)) / c.exitT, 0, 1));
+    const hx = c.hx * W + Math.sin(T * c.fx * 0.5 + c.ph) * 0.14 * W * c.ax;
+    const hy = c.hy * H + Math.sin(T * c.fy * 0.5 + c.ph * 1.7) * 0.1 * H * c.ay;
+    tx = hx;
+    ty = lerp(clamp(hy, R * 1.5, H - R), -R * 4.4, exitQ);
   }
   if (c.x === null) { c.x = tx; c.y = ty; }
   // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
@@ -682,7 +687,7 @@ function updateJelly(c, dt, el) {
   // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
   const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
-  const guide = smooth((u - 0.8) / 0.2);
+  const guide = c.giant ? smooth((u - 0.8) / 0.2) : exitQ;
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
   const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.1) * loose, c.giant ? 0.06 : 2.5, guide);
   const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
@@ -691,6 +696,18 @@ function updateJelly(c, dt, el) {
   const kperp = c.giant ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
   c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
   c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0)) * dt;
+  if (!c.giant) {   // elles s'écartent doucement les unes des autres
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null) continue;
+      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.05;
+      if (d < mn) { const f = (mn - d) * 0.9 * dt; c.vx += dx / d * f; c.vy += dy / d * f * 0.6; }
+    }
+  }
+  if (!c.giant && exitQ < 0.02) {   // les parois de l'aquarium
+    const mx = R * 1.1, my0 = R * 1.5, my1 = H - R;
+    if (c.x < mx) c.vx += (mx - c.x) * 1.5 * dt; else if (c.x > W - mx) c.vx -= (c.x - (W - mx)) * 1.5 * dt;
+    if (c.y < my0) c.vy += (my0 - c.y) * 1.5 * dt; else if (c.y > my1) c.vy -= (c.y - my1) * 1.5 * dt;
+  }
   c.x += c.vx * dt; c.y += c.vy * dt;
   c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.4);
   c.X = c.x; c.Y = c.y;
@@ -828,7 +845,7 @@ function makeButterfly(d) {
   const z = lerp(0.5, 1, rnd());
   const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
-    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.04, 0.058, z),
+    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.032, 0.048, z),
     far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.25, 0.8, rnd()), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
@@ -847,14 +864,14 @@ function updateButterfly(c, dt, el) {
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
   const cross = !c.far && !c.rise;
   // en traversée : de côté à côté, avec des montées et des descentes douces, à vitesse qui varie un peu
-  const ue = clamp(u + 0.03 * Math.sin(u * TAU * 4 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
+  const ue = clamp(u + 0.045 * Math.sin(u * TAU * 3 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
   const X = cross ? lerp(c.side < 0 ? W + mg : -mg, c.side < 0 ? -mg : W + mg, ue) + wx * W * 0.3
     : (lerp(c.x0, c.far ? lerp(c.x1, 0.5, 0.45) : c.x1, u) + wx * (c.far ? lerp(1, 0.3, u) : 1)) * W;
   const Y = cross ? (lerp(c.ya, clamp(c.ya + c.yb, 0.12, 0.85), u) + wy * 2.2) * H
     : c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
-  const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.22 + Math.sin(T * 1.9 + c.ph * 3) * 0.12) * c.S * calm;
-  const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.3 + Math.sin(T * 1.4 + c.ph) * 0.15) * c.S * calm;
+  const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18) * c.S * calm;
+  const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2) * c.S * calm;
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
@@ -866,12 +883,12 @@ function updateButterfly(c, dt, el) {
   // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
-  const rate = Math.max(1.1, c.fl * 1.5 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb + 0.18 * Math.sin(T * 1.1 + c.ph * 7) + 0.1 * Math.sin(T * 2.7 + c.ph * 2)));
+  const rate = Math.max(1.1, c.fl * 1.9 * (0.85 + 0.3 * Math.sin(T * 0.17 + c.ph * 3) + 0.5 * climb + 0.18 * Math.sin(T * 1.1 + c.ph * 7) + 0.1 * Math.sin(T * 2.7 + c.ph * 2)));
   c.fph += dt * TAU * rate;
   const amp = 0.85 + 0.15 * Math.sin(T * 0.11 + c.ph * 5);
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
-  c.sx = 0.2 + 0.8 * amp * (0.5 + 0.5 * Math.cos(p));
-  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.12;   // le corps monte un peu à chaque battement
+  c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
+  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2;   // le corps monte un peu à chaque battement
 }
 
 
@@ -973,7 +990,7 @@ function drawFlies(w) {
 /* ================= Flux de créatures ================= */
 /* Les créatures arrivent en continu pendant toute la durée. Chacune met T secondes à traverser l'écran
    de bas en haut; la dernière sort par le haut à l'instant exact D (temps = 0). */
-const TRAVEL = { jelly: 90, butterfly: 70 }; // secondes pour traverser l'écran (vitesse de base)
+const TRAVEL = { jelly: 90, butterfly: 55 }; // secondes pour traverser l'écran (vitesse de base)
 const frac = x => x - Math.floor(x);
 let sched = [], live = [], hi = 0;
 let fade = 0;
@@ -1000,21 +1017,12 @@ function build() {
     e -= T0 / dens(e) * lerp(0.7, 1.3, r());
   }
   if (S.scene === 'jelly') {
-    // Les méduses sont liées au temps : une seule sort de l'écran par minute (une toutes les P secondes pour les durées très courtes),
-    // et la dernière sort à l'instant D. À l'écran, il y en a donc autant que de minutes restantes (au plus N), et la scène se vide doucement.
-    const P = clamp(D / 4, 8, 60), N = 9, gs = Math.floor(Math.random() * 1e6);
-    let lastGiant = false;
-    for (let k = 0, e = D; e > 0.5 && k < 400; k++, e = D - k * P) {
-      if (k > 0 && !lastGiant && r() < 0.12) {
-        lastGiant = true;
-        const Tg = Math.min(T0 * 1.6, D), y0g = lerp(0.4, 0.75, r());   // la géante monte ou reste à niveau pendant sa traversée, elle ne descend pas
-        sched.push({ k: 100000 + gs + k, e, T: Tg, s: e - Tg, giant: true, side: r() < 0.5 ? -1 : 1, y0f: y0g, y1f: y0g - lerp(0.05, 0.25, r()) });
-      } else {
-        lastGiant = false;
-        const Tk = N * P * lerp(0.9, 1.15, r());
-        const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
-        sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1: clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08) });
-      }
+    // Aquarium : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
+    // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
+    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 9);
+    for (let k = 0; k < N; k++) {
+      const e = D - k * P;
+      sched.push({ k, seed: runSeed + k, e, T: e + 30, s: -30, big: k > 0 && r() < 0.14, x0: 0.5, x1: 0.5 });
     }
   }
   sched.sort((a, b) => a.s - b.s);
