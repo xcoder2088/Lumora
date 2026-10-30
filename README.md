@@ -46,12 +46,7 @@ tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
 LICENSE              licence : utilisation libre, modification sur autorisation
 ```
 
-**La version 1 est conservée comme référence.** Elle est gardée à deux endroits :
-
-- dans le dossier `versions/v1-canvas/`, qui fonctionne seul (il a sa propre copie des sons) : on peut l'ouvrir et la comparer à tout moment avec la version courante ;
-- dans la branche Git `reference-v1`, qui garde l'état exact du dépôt à ce moment-là et ne doit plus recevoir de changement. Pour revenir à cette version : `git checkout reference-v1`.
-
-Les nouveaux éléments (images, nouvelle version de la page) s'ajoutent à côté sans remplacer ce dossier.
+**La version 1 est conservée comme référence** dans le dossier `versions/v1-canvas/`. C'est une copie figée et autonome (elle a sa propre copie des sons) : on peut l'ouvrir et la comparer à tout moment avec la version courante. Les nouveaux éléments (images, nouvelle version de la page) s'ajoutent à côté sans la remplacer.
 
 ## Sons et crédits
 
