@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "Écriture, déplacement de la luciole, fin automatique, focus et minuteur vérifiés sur ordinateur.",
+    "Affichage 390 × 844, absence de débordement et bouton Passer tactile vérifiés.",
+    "Échap permet de passer l’animation.",
+    "Réduction des mouvements : options accessibles directement, sans animation.",
+    "Un changement du réglage de mouvement en cours d’introduction rend aussi les options accessibles.",
+    "Repli en cas d’erreur SVG : l’accueil ne bloque pas l’application."
+  ],
+  "uncaughtErrors": [],
+  "browser": "156.0.8078.47"
+}
