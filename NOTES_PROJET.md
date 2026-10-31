@@ -57,8 +57,28 @@ Vrai iPhone, vrai tableau blanc, son à l'oreille, fluidité réelle.
 - Texte d'introduction du panneau de départ mis à jour.
 - Historique nettoyé : aucun nom d'outil dans les messages, fichiers ou contenus (poussé en mode forcé avec l'accord du propriétaire). Si l'autre outil d'illustration avait une copie locale ancienne, il doit refaire `git fetch` puis `git reset --hard origin/main` avant de pousser.
 
-## En attente
-- Retours du propriétaire après essai sur le tableau blanc (fluidité, taille de l'interface).
+## État au 31 octobre 2026 (fin de la session dans le nuage)
+Déjà dans le dépôt (main) :
+- Méduses sur 3 plans de profondeur (se croisent sans se toucher).
+- Accueil : papillon qui se pose sur le L.
+- Texte de crédits retiré du panneau de départ (les crédits restent dans le README).
+- Fichiers de mise en ligne : `tools/build_site.py` (prépare `dist`), `deploy/installer-sur-serveur.sh`, `deploy/lumora-web.service` (serveur local 127.0.0.1:8791), `deploy/cloudflared-ingress.example.yml`, `_headers` (utile seulement pour Cloudflare Pages), procédure dans `DEPLOIEMENT.md`.
+
+## À FAIRE EN PRIORITÉ (session avec accès SSH à l'ordinateur du propriétaire)
+**1. Mettre Lumora en ligne sur lumora.pixeldrop.ca, sur le même serveur que PixelDrop.** Le propriétaire veut que l'assistant le fasse lui-même, comme pour ses autres sites (le dépôt PixelDrop contient `deploy.sh` : la commande SSH habituelle vise `ubuntu@148.116.71.199`, le service PixelDrop tourne sur le port 8123). La session dans le nuage n'avait ni SSH ni clés : rien n'a été déployé ni testé sur le serveur.
+Marche à suivre :
+- Se connecter au serveur de PixelDrop (Oracle, selon le propriétaire), vérifier que le port 8791 est libre (`ss -ltn | grep 8791`), puis : `git clone https://github.com/xcoder2088/lumora ~/lumora` (ou `git pull`) et `bash deploy/installer-sur-serveur.sh` (attendu : « Test local : HTTP 200 »).
+- Ajouter la route du tunnel Cloudflare existant : `lumora.pixeldrop.ca` vers `http://127.0.0.1:8791` (fichier de configuration du tunnel ou tableau de bord Zero Trust → Tunnels → Published application routes), et le DNS (CNAME `lumora` vers `<UUID-du-tunnel>.cfargotunnel.com`, proxy activé) si le fichier est édité à la main. Relancer le tunnel.
+- Vérifier https://lumora.pixeldrop.ca (méduses ET papillons, son après un clic) ET que PixelDrop fonctionne toujours. Les deux doivent tourner. Ne pas modifier le service PixelDrop, son `.env`, ses données.
+- Si le propriétaire préfère un hébergement indépendant du serveur : Cloudflare Pages (commande de build `python3 tools/build_site.py`, dossier `dist`).
+
+**2. Défaut signalé par le propriétaire, non résolu : les méduses se retrouvent en « paquet » dans la zone du bas / milieu de l'écran (téléphone).** Les essais de correction (choisir les trajets dans les zones vides ; écarter doucement les méduses proches) ont donné des mesures contradictoires et n'ont pas été gardés. Demander à quel moment le paquet apparaît (début ou plus tard) et obtenir une vidéo ou des captures espacées de 30 s. Piste : dans `updateJelly`, en vol libre, l'évitement « doux » n'a aucun effet (`kx = 0`) ; seule la priorité (attente ou changement de plan) agit.
+
+## Pièges techniques (pour les tests)
+- La page est une fonction auto-appelée : pour tester, copier `index.html` et ajouter `window.__live=()=>live;` juste avant `requestAnimationFrame(frame);\n})();`, puis supprimer la copie.
+- Serveur de test : `python3 -m http.server 8771` depuis la racine du dépôt, lancé en arrière-plan avec une longue durée ; il s'arrête tout seul au bout de sa durée.
+- Sans carte graphique, la simulation tourne à ≈ 0,5× et les mesures varient beaucoup d'une exécution à l'autre : toujours répéter.
+- Les scripts de mesure étaient dans un dossier temporaire du nuage (perdus) : mesurer les chevauchements par paires (distance < 0,75 × somme des rayons, même plan), les plans occupés et les plus gros paquets.
 
 ## Page de démonstration privée
 Version 5 : la page de démonstration privée est dans la liste des pages publiées du propriétaire (titre « Lumora »).
