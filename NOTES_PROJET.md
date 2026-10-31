@@ -37,7 +37,13 @@ Décor : plantes animées, arbres lointains seulement, petites marguerites propo
 Accueil : une luciole écrit « Lumora », un seul halo ensuite.
 Grands écrans (tableau blanc 5 pi × 4 pi) : interface agrandie jusqu'à 2,6×, image limitée à ≈ 4,2 M de points. Testé en simulation (1280×1024, 1600×1200, 1920×1080, 3840×2160) : fonctionne, tactile OK.
 
-## Reconstruire la v5
+## Ajouts du 31 octobre 2026
+- Méduses : **3 plans de profondeur** (devant / milieu / fond). Quand deux méduses vont se croiser, celle qui n'a pas la priorité passe lentement (≈ 1,7 s par plan) dans un plan plus profond : un peu plus petite et plus pâle, dessinée derrière. Elle revient devant quand la voie est libre. Si tous les plans sont occupés, elle attend comme avant. Mesure (téléphone, 170 s, simulation) : chevauchements à 14 % et 33 % des instants avant, 3 % et 4 % après.
+- Accueil : après l'écriture et le halo, un papillon bleu arrive de la droite, ralentit, se pose sur le haut du L et bat des ailes très doucement ; l'accueil se ferme ≈ 3,8 s plus tard (durée totale ≈ 11 s ; « Passer l'animation » reste disponible).
+- Mise en ligne : voir `DEPLOIEMENT.md` (Cloudflare Pages, lumora.pixeldrop.ca, commande `python3 tools/build_site.py`, dossier `dist`).
+- Important : ces changements ont été faits directement dans `versions/v5-traversees/index.html`. Le script `outils/makev5.py` ne les contient pas : il ne reproduit plus la v5 exacte. Modifier la v5 directement, puis refaire la copie racine.
+
+## Reconstruire la v5 (ancienne méthode, avant les ajouts ci-dessus)
 `makev5.py` lit une copie de la v4 (identique à `versions/v4-concept-1/index.html`) et applique des remplacements de texte précis ; chaque remplacement vérifie qu'il trouve exactement le texte attendu. Les chemins en tête du script pointent vers un dossier temporaire : les adapter. Plus simple en général : modifier directement `versions/v5-traversees/index.html`.
 
 ## Tests (Playwright, Node)

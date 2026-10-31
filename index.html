@@ -69,6 +69,10 @@ body.idle { cursor: none; }
 #welcome.is-glowing .welcome-trace:not(.welcome-trace--glow) { animation: welcome-bright 1500ms ease-in-out 1; }
 @keyframes welcome-glow { 0% { opacity: 0.2; stroke-width: 6; } 45% { opacity: 0.95; stroke-width: 13; } 100% { opacity: 0.2; stroke-width: 6; } }
 @keyframes welcome-bright { 0%, 100% { stroke: #e6dfb8; } 45% { stroke: #fffbe0; } }
+#welcomeButterfly { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+#welcomeButterfly .wb-wing { fill: url(#wb-wing-grad); stroke: #3a5a8a; stroke-opacity: 0.55; stroke-width: 0.025; }
+#welcomeButterfly .wb-low { fill: url(#wb-wing-grad2); }
+#welcomeButterfly .wb-vein { fill: none; stroke: #2e4a78; stroke-opacity: 0.35; stroke-width: 0.018; }
 #welcomeFly { opacity: 0; transition: opacity 400ms ease; }
 #welcomeFly.is-visible { opacity: 1; }
 .welcome-wing { fill: #dbe5d0; opacity: 0.4; }
@@ -296,6 +300,25 @@ img { max-width: 100%; }
       <ellipse cy="1.3" rx="1.4" ry="2.1" fill="#f2e9bd"/>
     </g>
   </svg>
+  <!-- Papillon de l'accueil : dessiné en pixels écran, il se pose sur le L. -->
+  <svg id="welcomeButterfly" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="wb-wing-grad" x1="0" y1="0" x2="1" y2="0.3">
+        <stop offset="0" stop-color="#6f98c8"/><stop offset="0.6" stop-color="#8fbbe6"/><stop offset="1" stop-color="#a9cdee"/>
+      </linearGradient>
+      <linearGradient id="wb-wing-grad2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5c82b6"/><stop offset="1" stop-color="#86b0dc"/>
+      </linearGradient>
+      <radialGradient id="wb-halo"><stop stop-color="#a9cdee" stop-opacity="0.22"/><stop offset="1" stop-color="#a9cdee" stop-opacity="0"/></radialGradient>
+    </defs>
+    <g id="wbBody" opacity="0">
+      <circle r="1.5" fill="url(#wb-halo)"/>
+      <g id="wbWingL"><g transform="scale(-1 1)"><path class="wb-wing" d="M0 -0.08 C0.3 -0.8 1.0 -0.95 1.1 -0.5 C1.15 -0.12 0.6 0.04 0 0.04 Z"/><path class="wb-wing wb-low" d="M0 0.04 C0.6 0.04 0.95 0.2 0.82 0.6 C0.7 0.9 0.25 0.72 0 0.26 Z"/><path class="wb-vein" d="M0.05 -0.03 L0.95 -0.55 M0.05 0 L1.0 -0.3 M0.05 0.08 L0.7 0.5"/></g></g>
+      <g id="wbWingR"><path class="wb-wing" d="M0 -0.08 C0.3 -0.8 1.0 -0.95 1.1 -0.5 C1.15 -0.12 0.6 0.04 0 0.04 Z"/><path class="wb-wing wb-low" d="M0 0.04 C0.6 0.04 0.95 0.2 0.82 0.6 C0.7 0.9 0.25 0.72 0 0.26 Z"/><path class="wb-vein" d="M0.05 -0.03 L0.95 -0.55 M0.05 0 L1.0 -0.3 M0.05 0.08 L0.7 0.5"/></g>
+      <ellipse cy="0.05" rx="0.055" ry="0.42" fill="#27324d"/>
+      <path d="M-0.01 -0.36 C-0.1 -0.62 -0.22 -0.7 -0.3 -0.66 M0.01 -0.36 C0.1 -0.62 0.22 -0.7 0.3 -0.66" fill="none" stroke="#27324d" stroke-width="0.022" stroke-linecap="round"/>
+    </g>
+  </svg>
   <button id="welcomeSkip" type="button">Passer l’animation</button>
 </section>
 <canvas id="scene" aria-hidden="true"></canvas>
@@ -427,12 +450,47 @@ img { max-width: 100%; }
     if (motion.addEventListener) motion.addEventListener('change', onMotion);
     else if (motion.addListener) motion.addListener(onMotion);
     skip.focus({ preventScroll: true });
-    fallback = setTimeout(() => reveal(false), 8000);
+    fallback = setTimeout(() => reveal(false), 16000);
 
     const started = performance.now();
     const delay = 250;
     const duration = 3800;
     let glowed = false;
+    // --- Papillon : il arrive de la droite, ralentit et se pose sur le haut du L, puis reste en battant des ailes doucement ---
+    const bBody = document.getElementById('wbBody'), bL = document.getElementById('wbWingL'), bR = document.getElementById('wbWingR');
+    const svgEl = path.ownerSVGElement;
+    let top = path.getPointAtLength(0);
+    for (let i = 0; i <= 500; i++) { const q = path.getPointAtLength(length * 0.5 * i / 500); if (q.y < top.y) top = q; }   // le point le plus haut du L
+    const flyStart = delay + duration + 150, flyDur = 3200, hold = 3800;
+    const endAt = flyStart + flyDur + hold;
+    const lerpN = (a, b, t) => a + (b - a) * t, sm = t => t * t * (3 - 2 * t);
+    let phase = 0, lastT = 0;
+    function butterfly(elapsed) {
+      const m = svgEl.getScreenCTM();
+      if (!m || elapsed < flyStart) return;
+      const sz = Math.max(30, 40 * m.a);                             // envergure d'une aile en pixels
+      const tx = m.a * top.x + m.e, ty = m.d * top.y + m.f - sz * 0.18;   // il se pose sur le haut du L
+      const Wd = window.innerWidth, Hd = window.innerHeight;
+      const P0 = { x: Wd + sz * 2, y: ty + Hd * 0.28 }, P1 = { x: tx + (Wd - tx) * 0.7, y: ty - Hd * 0.3 };
+      const P2 = { x: tx + (Wd - tx) * 0.2 + sz * 1.5, y: ty - sz * 2.2 }, P3 = { x: tx, y: ty };
+      const bez = (u) => { const v = 1 - u; return {
+        x: v*v*v*P0.x + 3*v*v*u*P1.x + 3*v*u*u*P2.x + u*u*u*P3.x,
+        y: v*v*v*P0.y + 3*v*v*u*P1.y + 3*v*u*u*P2.y + u*u*u*P3.y }; };
+      const t = Math.min(1, (elapsed - flyStart) / flyDur);
+      const u = 1 - Math.pow(1 - t, 2.3);                              // il ralentit en approchant
+      const p = bez(u), p2 = bez(Math.min(1, u + 0.01));
+      const wob = (1 - t) * Math.sin(elapsed * 0.004) * sz * 0.35;     // léger flottement qui s'éteint à l'arrivée
+      let ang = Math.atan2(p2.y - p.y, p2.x - p.x) + Math.PI / 2;     // la tête pointe dans le sens du vol
+      ang = lerpN(ang, -0.1, sm(Math.max(0, (t - 0.78) / 0.22)));      // en se posant, il se redresse
+      const dtf = Math.max(0, Math.min(0.1, (elapsed - lastT) / 1000)); lastT = elapsed;
+      const hz = lerpN(6.5, 0.45, sm(Math.max(0, (t - 0.8) / 0.2)));   // battements rapides en vol, très lents une fois posé
+      phase += dtf * hz * Math.PI * 2;
+      const open = 0.5 + 0.5 * Math.cos(phase), w = 0.14 + 0.86 * (t >= 1 ? sm(open) : open);
+      bBody.setAttribute('transform', 'translate(' + (p.x + wob).toFixed(1) + ' ' + p.y.toFixed(1) + ') rotate(' + (ang * 180 / Math.PI).toFixed(1) + ') scale(' + sz.toFixed(1) + ')');
+      bBody.setAttribute('opacity', '1');
+      bL.setAttribute('transform', 'scale(' + w.toFixed(3) + ' 1)');
+      bR.setAttribute('transform', 'scale(' + w.toFixed(3) + ' 1)');
+    }
     function draw(now) {
       if (closed) return;
       const elapsed = now - started;
@@ -444,7 +502,8 @@ img { max-width: 100%; }
       fly.setAttribute('transform', 'translate(' + (point.x + departure * 32) + ' ' + (point.y - departure * 28) + ')');
       fly.classList.toggle('is-visible', elapsed > 80 && departure < 0.65);
       if (progress >= 1 && !glowed) { glowed = true; welcome.classList.add('is-glowing'); }   // le mot est écrit : il s'illumine une fois
-      if (elapsed >= delay + duration + 1900) { reveal(); return; }
+      butterfly(elapsed);
+      if (elapsed >= endAt) { reveal(); return; }
       animation = requestAnimationFrame(draw);
     }
     animation = requestAnimationFrame(draw);
@@ -1131,7 +1190,7 @@ function updateJelly(c, dt, el) {
   if (!c.giant) {
     let avx = 0, avy = 0;
     for (const o of live) {
-      if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15) continue;
+      if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || Math.abs((o.back || 0) - (c.back || 0)) > 0.75) continue;
       let dx = c.x - o.x; const dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 2.2;
       if (d < mn) {
         if (Math.abs(dx) < (R + o.R) * 0.4) dx = (c.avSide || (c.avSide = Math.random() < 0.5 ? -1 : 1)) * d;   // pile derrière elle : elle choisit un côté et le garde
@@ -1144,19 +1203,39 @@ function updateJelly(c, dt, el) {
   // priorités : une méduse laisse passer celles qui ont la priorité au lieu de les bousculer. Elle ralentit jusqu'à ce que le chemin soit libre, puis reprend sa route.
   // (une méduse en dernier passage passe toujours en premier ; sinon la priorité va à la plus ancienne : aucun blocage possible)
   if (c.yieldF === undefined) c.yieldF = 1;
+  if (c.back === undefined) { c.back = 0; c.laneT = 0; c.laneHold = 0; }
+  c.laneHold -= dt;
   if (!c.giant) {
     let wantYield = false;
     if (freeFlight) {
       const prio = q => q.yw !== undefined ? -1 : q.k;
       const vcx = c.dx * c.spd, vcy = c.dy * c.spd;
-      for (const o of live) {
-        if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || !(prio(o) < prio(c))) continue;
-        const dx = o.x - c.x, dy = o.y - c.y, wx = o.vx - vcx, wy = o.vy - vcy, ww = wx * wx + wy * wy;
-        const ts = ww > 1e-6 ? clamp(-(dx * wx + dy * wy) / ww, 0, 5) : 0;
-        const lim = (R + o.R) * 1.15;
-        if (Math.hypot(dx + wx * ts, dy + wy * ts) < lim && (ts > 0 || Math.hypot(dx, dy) < lim)) { wantYield = true; break; }
-      }
+      // y a-t-il une rencontre (maintenant ou dans les 5 prochaines secondes) avec une méduse de ce plan ? onlyPrio : seulement celles qui passent avant elle
+      const meets = (lane, onlyPrio) => {
+        for (const o of live) {
+          if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15) continue;
+          if ((o.laneT || 0) !== lane) continue;   // seulement celles qui sont (ou vont être) dans ce plan
+          if (onlyPrio && !(prio(o) < prio(c))) continue;
+          const dx = o.x - c.x, dy = o.y - c.y, wx = o.vx - vcx, wy = o.vy - vcy, ww = wx * wx + wy * wy;
+          const ts = ww > 1e-6 ? clamp(-(dx * wx + dy * wy) / ww, 0, 5) : 0;
+          const lim = (R + o.R) * 1.15;
+          if (Math.hypot(dx + wx * ts, dy + wy * ts) < lim && (ts > 0 || Math.hypot(dx, dy) < lim)) return true;
+        }
+        return false;
+      };
+      if (meets(c.laneT, true)) {
+        // rencontre : elle change de profondeur si un autre plan est libre (d'abord vers le fond), sinon elle attend comme avant
+        let moved = false;
+        if (c.laneHold <= 0) {
+          for (const l of [c.laneT + 1, c.laneT - 1, c.laneT + 2, c.laneT - 2]) {
+            if (l < 0 || l > 2 || meets(l, false)) continue;
+            c.laneT = l; c.laneHold = 6; moved = true; break;
+          }
+        }
+        if (!moved) wantYield = true;
+      } else if (c.laneT > 0 && c.laneHold <= 0 && !meets(c.laneT - 1, false)) { c.laneT -= 1; c.laneHold = 6; }   // le chemin du plan de devant est libre : elle revient d'un cran
     }
+    c.back += clamp(c.laneT - c.back, -dt * 0.6, dt * 0.6);   // changement de profondeur lent (≈ 1,7 s par plan)
     // si elle attend depuis trop longtemps, elle repart un moment quand même (jamais de longue attente)
     if (c.noYield > 0) { c.noYield -= dt; wantYield = false; }
     else if (wantYield) { c.waitT = (c.waitT || 0) + dt; if (c.waitT > 7) { c.noYield = 6; c.waitT = 0; wantYield = false; } }
@@ -1330,10 +1409,12 @@ function drawKelp(layer, w) {
   }
 }
 function drawJelly(c) {
-  const a = c.alpha * lerp(0.7, 1, c.z);
+  const bs = smooth((c.back || 0) / 2);   // 0 = premier plan, 1 = tout au fond (3 plans de profondeur : 0, 1, 2)
+  const a = c.alpha * lerp(0.7, 1, c.z) * (1 - 0.32 * bs);
   if (a <= 0.003) return;
   const R = c.R, X = c.X, Y = c.Y, col = c.col, b = c.b;
   ctx.save();
+  if (bs > 0.001) { const k = 1 - 0.2 * bs; ctx.translate(X, Y); ctx.scale(k, k); ctx.translate(-X, -Y); }
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = a;
   // halo
@@ -1798,7 +1879,7 @@ function frame(now) {
     if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
     else updateButterfly(c, Math.max(dt, 1e-4), el);
   }
-  const sorted = live.slice().sort((a, b) => a.z - b.z);
+  const sorted = live.slice().sort((a, b) => (a.z - 2 * (a.back || 0)) - (b.z - 2 * (b.back || 0)));
 
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
