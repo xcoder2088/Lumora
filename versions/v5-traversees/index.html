@@ -43,6 +43,60 @@ body {
 #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: var(--deep); }
 body.idle { cursor: none; }
 
+/* ---------- Accueil : une luciole écrit le nom sur un fond uni ---------- */
+#welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #04101a;
+  opacity: 1;
+  transition: opacity 700ms ease;
+}
+#welcome.is-leaving { opacity: 0; pointer-events: none; }
+.welcome-mark { width: min(82vw, 680px); height: auto; overflow: visible; }
+.welcome-trace {
+  fill: none;
+  stroke: #e6dfb8;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.welcome-trace--glow { stroke-width: 6; opacity: 0.2; filter: url(#welcome-soft-glow); }
+#welcomeFly { opacity: 0; transition: opacity 400ms ease; }
+#welcomeFly.is-visible { opacity: 1; }
+.welcome-wing { fill: #dbe5d0; opacity: 0.4; }
+.welcome-wing--left { transform-origin: 0 -1px; animation: welcome-wing-left 180ms ease-in-out infinite alternate; }
+.welcome-wing--right { transform-origin: 0 -1px; animation: welcome-wing-right 180ms ease-in-out infinite alternate; }
+@keyframes welcome-wing-left { to { transform: scaleX(0.45) rotate(12deg); } }
+@keyframes welcome-wing-right { to { transform: scaleX(0.45) rotate(-12deg); } }
+#welcomeSkip {
+  position: absolute;
+  right: max(24px, env(safe-area-inset-right, 0px));
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  min-height: 44px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: #9db1b6;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+#welcomeSkip:hover { color: #e6dfb8; }
+#welcomeSkip:focus-visible { outline: 1px solid #a8ad9a; outline-offset: 2px; }
+body.welcome-active #scene,
+body.welcome-active #setup,
+body.welcome-active #hud,
+body.welcome-active #end,
+body.welcome-active #bar { visibility: hidden !important; pointer-events: none !important; }
+#setup h1:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) {
+  #welcome, #welcomeFly { transition: none; }
+  .welcome-wing { animation: none; }
+}
+
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
 
@@ -211,12 +265,37 @@ img { max-width: 100%; }
 </style>
 </head>
 <body>
+<section id="welcome" role="dialog" aria-modal="true" aria-label="Bienvenue dans Lumora" hidden>
+  <svg class="welcome-mark" viewBox="40 20 510 190" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="welcome-soft-glow" x="-30%" y="-50%" width="160%" height="200%">
+        <feGaussianBlur stdDeviation="3"/>
+      </filter>
+      <radialGradient id="welcome-firefly-glow">
+        <stop stop-color="#f2e9bd" stop-opacity="0.48"/>
+        <stop offset="1" stop-color="#f2e9bd" stop-opacity="0"/>
+      </radialGradient>
+      <!-- Tracé continu original : chaque point de lumière suit la pointe du trait. -->
+      <path id="welcomeWriting" d="M 66 153 C 87 157 118 108 124 72 C 130 39 105 35 102 62 C 98 86 117 120 103 151 C 92 174 75 177 72 163 C 69 150 85 148 102 156 C 119 165 137 170 154 153 C 164 141 168 128 173 119 C 165 140 157 162 171 164 C 182 166 194 146 204 122 C 195 142 188 166 203 164 C 211 163 218 152 223 142 L 232 121 L 222 161 C 231 140 246 118 254 121 C 267 125 250 155 256 162 C 266 166 278 120 291 122 C 307 122 286 160 299 163 C 308 163 316 153 322 145 C 323 129 341 116 351 123 C 366 132 349 164 334 164 C 315 162 321 139 333 126 C 342 119 353 124 361 132 C 368 140 372 139 381 131 L 371 162 C 378 143 391 124 397 123 C 410 119 409 132 400 136 C 412 137 417 131 423 126 C 438 112 452 120 448 138 C 444 154 433 166 424 163 C 408 158 419 131 434 125 C 442 121 448 124 451 129 L 460 120 C 452 143 444 166 459 163 C 468 161 478 149 485 141 C 492 136 498 139 497 143"/>
+    </defs>
+    <use class="welcome-trace welcome-trace--glow" href="#welcomeWriting"/>
+    <use class="welcome-trace" href="#welcomeWriting"/>
+    <g id="welcomeFly">
+      <circle r="17" fill="url(#welcome-firefly-glow)"/>
+      <ellipse class="welcome-wing welcome-wing--left" cx="-3" cy="-3" rx="3.2" ry="1.7" transform="rotate(30)"/>
+      <ellipse class="welcome-wing welcome-wing--right" cx="3" cy="-3" rx="3.2" ry="1.7" transform="rotate(-30)"/>
+      <ellipse cy="-1.4" rx="1.3" ry="3.1" fill="#9ba98c"/>
+      <ellipse cy="1.3" rx="1.4" ry="2.1" fill="#f2e9bd"/>
+    </g>
+  </svg>
+  <button id="welcomeSkip" type="button">Passer l’animation</button>
+</section>
 <canvas id="scene" aria-hidden="true"></canvas>
 
 <main id="setup" aria-label="Réglages du minuteur">
   <div>
     <h1>Lumora</h1>
-    <p class="ver">Version 5 · révision 1</p>
+    <p class="ver">Version 5 · révision 2</p>
     <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
   </div>
   <fieldset>
@@ -264,6 +343,106 @@ img { max-width: 100%; }
   <p>Le temps est écoulé.</p>
 </div>
 <div id="bar"></div>
+
+<script>
+/* L'accueil est indépendant du minuteur : il ne lance ni compte à rebours ni son. */
+(() => {
+  'use strict';
+  const welcome = document.getElementById('welcome');
+  const skip = document.getElementById('welcomeSkip');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (motion.matches) return;
+
+  const blocked = ['setup', 'hud', 'end'].map(id => document.getElementById(id));
+  const previousInert = blocked.map(element => element.inert);
+  let closed = false;
+  let animation = 0;
+  let fallback = 0;
+  let removal = 0;
+
+  function onKey(event) {
+    if (event.key === 'Tab') { event.preventDefault(); skip.focus(); }
+    if (event.key === 'Escape') { event.preventDefault(); reveal(); }
+  }
+  function onMotion(event) { if (event.matches) reveal(false); }
+  function reveal(fade = true) {
+    if (closed) return;
+    closed = true;
+    cancelAnimationFrame(animation);
+    clearTimeout(fallback);
+    document.body.classList.remove('welcome-active');
+    blocked.forEach((element, index) => { element.inert = previousInert[index]; });
+    skip.removeEventListener('click', onSkip);
+    document.removeEventListener('keydown', onKey);
+    if (motion.removeEventListener) motion.removeEventListener('change', onMotion);
+    else if (motion.removeListener) motion.removeListener(onMotion);
+    const heading = document.querySelector('#setup h1');
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+    welcome.setAttribute('aria-hidden', 'true');
+    welcome.inert = true;
+    function hideWelcome() {
+      welcome.hidden = true;
+      // Le panneau peut encore être en transition de visibilité au premier focus.
+      // Ne pas voler le focus si l'éducateur a déjà choisi une option.
+      if (document.activeElement === document.body) heading.focus({ preventScroll: true });
+    }
+    if (fade && !motion.matches) {
+      welcome.classList.add('is-leaving');
+      removal = setTimeout(hideWelcome, 720);
+    } else {
+      clearTimeout(removal);
+      hideWelcome();
+      requestAnimationFrame(() => {
+        if (document.activeElement === document.body) heading.focus({ preventScroll: true });
+      });
+    }
+  }
+  function onSkip() { reveal(); }
+
+  // En cas de géométrie SVG indisponible, l'application reste toujours accessible.
+  try {
+    const path = document.getElementById('welcomeWriting');
+    const traces = welcome.querySelectorAll('.welcome-trace');
+    const fly = document.getElementById('welcomeFly');
+    const length = path.getTotalLength();
+    if (!Number.isFinite(length) || length <= 0) return;
+    traces.forEach(trace => {
+      trace.style.strokeDasharray = String(length);
+      trace.style.strokeDashoffset = String(length);
+    });
+    blocked.forEach(element => { element.inert = true; });
+    document.body.classList.add('welcome-active');
+    welcome.hidden = false;
+    skip.addEventListener('click', onSkip);
+    document.addEventListener('keydown', onKey);
+    if (motion.addEventListener) motion.addEventListener('change', onMotion);
+    else if (motion.addListener) motion.addListener(onMotion);
+    skip.focus({ preventScroll: true });
+    fallback = setTimeout(() => reveal(false), 8000);
+
+    const started = performance.now();
+    const delay = 250;
+    const duration = 3800;
+    function draw(now) {
+      if (closed) return;
+      const elapsed = now - started;
+      const progress = Math.max(0, Math.min(1, (elapsed - delay) / duration));
+      traces.forEach(trace => { trace.style.strokeDashoffset = String(length * (1 - progress)); });
+      const point = path.getPointAtLength(length * progress);
+      // Après l'écriture, la luciole s'écarte doucement puis s'efface.
+      const departure = Math.max(0, Math.min(1, (elapsed - delay - duration) / 750));
+      fly.setAttribute('transform', 'translate(' + (point.x + departure * 32) + ' ' + (point.y - departure * 28) + ')');
+      fly.classList.toggle('is-visible', elapsed > 80 && departure < 0.65);
+      if (elapsed >= delay + duration + 800) { reveal(); return; }
+      animation = requestAnimationFrame(draw);
+    }
+    animation = requestAnimationFrame(draw);
+  } catch (error) {
+    reveal(false);
+  }
+})();
+</script>
 
 <script>
 (() => {
@@ -856,7 +1035,7 @@ function newJellyPass(c, R, first) {
   const r = first ? 0.25 + 0.75 * Math.random() : Math.random();   // au début, surtout des arrivées par les côtés : l'écran se remplit sur toute sa hauteur
   let ang;   // angle depuis la verticale (0 = vers le haut, + = vers la droite) ; jamais vers le bas
   if (r < 0.35) ang = (Math.random() - 0.5) * 0.9;                                           // surtout vers le haut
-  else if (r < 0.7) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.2, 1.5, Math.random());   // de gauche à droite ou de droite à gauche
+  else if (r < 0.7) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.4, 1.56, Math.random());   // de gauche à droite ou de droite à gauche, presque à l'horizontale
   else ang = (Math.random() < 0.5 ? 1 : -1) * lerp(0.55, 1.1, Math.random());               // en diagonale
   c.ang = ang; c.dx = Math.sin(ang); c.dy = -Math.cos(ang);
   c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
@@ -958,7 +1137,7 @@ function updateJelly(c, dt, el) {
   }
   if (c.pulsing || c.pp > 0) {
     c.pp += dt / (c.period * c.perK);
-    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.65, 0.65) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.85, 0.85) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
   }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
@@ -1217,7 +1396,7 @@ function updateButterfly(c, dt, el) {
       // chaque passage : entrée par un bord au hasard (gauche, droite, bas ou haut), sortie par un autre, donc de côté, en diagonale, vers le haut ou vers le bas
       const rt = h(1), mgp = Math.max(0.08 * W, Sz * 2.2);
       c.far = rt < 0.15; c.rise = false;
-      const edge = w => w < 0.3 ? 0 : w < 0.6 ? 1 : w < 0.85 ? 2 : 3;   // 0 gauche, 1 droite, 2 bas, 3 haut
+      const edge = w => w < 0.35 ? 0 : w < 0.7 ? 1 : 2;   // entrée : 0 gauche, 1 droite, 2 bas (jamais par le haut) ; la sortie peut se faire par n'importe quel bord
       const e1 = edge(h(2)), e2 = h(3) < 0.6 ? [1, 0, 3, 2][e1] : (e1 + 1 + Math.floor(h(4) * 3)) % 4;
       const pt = (e, f) => e === 0 ? [-mgp, lerp(0.12, 0.85, f) * H] : e === 1 ? [W + mgp, lerp(0.12, 0.85, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + mgp] : [lerp(0.08, 0.92, f) * W, -mgp];
       c.P1 = pt(e1, h(5)); c.P2 = pt(e2, h(6));
@@ -1549,6 +1728,7 @@ function streamUpdate(el) {
 let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
+  if (document.body.classList.contains('welcome-active')) { last = now; return; }   // le minuteur attend la fin de l'accueil
   const rdt = Math.min(0.05, Math.max(0, (now - last) / 1000));
   last = now;
   const dt = rdt * MOT;
