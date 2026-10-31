@@ -1,51 +1,48 @@
-# Mettre Lumora en ligne sur lumora.pixeldrop.ca (Cloudflare Pages)
+# Mettre Lumora en ligne sur lumora.pixeldrop.ca
 
-Lumora est un site tout simple : une page, des images et des sons. Aucun serveur à gérer.
-Cloudflare Pages va lire le dépôt GitHub, préparer le site, puis le publier à l'adresse voulue.
-Chaque fois que le dépôt change (branche `main`), le site se met à jour tout seul.
+Même méthode que PhoenixWire (wire.phoenixmail.ca) : le site tourne sur le portable, et le **tunnel Cloudflare déjà en place** le rend public, avec le HTTPS. Aucun nouveau tunnel. Lumora n'est qu'un site statique (une page, des images, des sons) : un tout petit serveur local suffit.
 
-## Ce qui est déjà prêt dans le dépôt
-- `tools/build_site.py` : prépare un dossier `dist` qui contient seulement l'utile (la page, les sons, les images `.webp`). Résultat : environ 18 Mo au lieu de 80 Mo. Les notes, les anciennes versions et les images en double ne sont pas publiées.
-- `_headers` : réglages envoyés avec chaque fichier (sécurité de base, et la page se rafraîchit toujours quand on la rouvre).
+Ports déjà pris sur le portable : 8788 (phoenixmail-web), 8790 (PhoenixWire), 8099 (claim). Lumora utilise **8791**.
 
-## Étapes (une seule fois)
+## Ce qui est prêt dans le dépôt
+- `tools/build_site.py` : prépare le dossier `dist` (la page, les sons, les images .webp : ≈ 18,5 Mo).
+- `deploy/installer-sur-portable.sh` : prépare le site, le copie dans `/var/www/lumora` (garde l'ancienne version dans `/var/www/lumora.old`), installe et démarre le service.
+- `deploy/lumora-web.service` : le petit serveur local (127.0.0.1:8791, jamais exposé directement).
+- `deploy/cloudflared-ingress.example.yml` : la ligne à ajouter au tunnel.
 
-### A. Créer le projet
-1. Va sur https://dash.cloudflare.com et connecte-toi.
-2. Dans le menu de gauche : **Workers & Pages** (ou « Compute (Workers) » selon l'affichage).
-3. Clique **Create** (ou « Créer une application »), puis choisis l'onglet **Pages**, puis **Import an existing Git repository** (« Se connecter à Git »).
-4. Choisis **GitHub**. Cloudflare demande l'autorisation d'accéder à ton compte GitHub : accepte, et donne accès au dépôt **xcoder2088/lumora** seulement.
-5. Sélectionne le dépôt `lumora`, puis **Begin setup**.
+## 1. Sur le portable : installer le site
+```bash
+git clone https://github.com/xcoder2088/lumora ~/lumora      # la première fois seulement
+cd ~/lumora && git pull
+bash deploy/installer-sur-portable.sh
+```
+Le script affiche `Test local : HTTP 200` quand tout va bien. (Python 3 doit être installé : c'est le cas sur la plupart des Linux.)
 
-### B. Réglages du projet
-Remplis exactement ceci :
+## 2. Ajouter Lumora au tunnel existant (une seule fois)
+1. Trouve le fichier de configuration du tunnel : `sudo systemctl cat cloudflared-phoenixmail` (cherche la ligne avec `--config` ou le chemin du fichier .yml).
+2. Ouvre ce fichier. Dans la liste `ingress:`, ajoute ce bloc **avant** la dernière ligne (celle qui ressemble à `- service: http_status:404`), sans rien supprimer d'autre :
+```yaml
+  - hostname: lumora.pixeldrop.ca
+    service: http://127.0.0.1:8791
+```
+3. Relance le tunnel : `sudo systemctl restart cloudflared-phoenixmail`.
 
-| Champ | Valeur |
-|---|---|
-| Project name | `lumora` |
-| Production branch | `main` |
-| Framework preset | `None` |
-| Build command | `python3 tools/build_site.py` |
-| Build output directory | `dist` |
+## 3. DNS (une seule fois)
+Le domaine `pixeldrop.ca` est dans le même compte Cloudflare que `phoenixmail.ca` : tout se fait au même endroit.
+1. Cloudflare → **pixeldrop.ca** → **DNS** → **Records** → **Add record**.
+2. Type **CNAME**, nom **lumora**, cible **`<UUID-du-tunnel>.cfargotunnel.com`**, **Proxied** (nuage orange), TTL Auto.
+3. L'UUID est la ligne `tunnel:` du même fichier de configuration (ce n'est pas un secret). Ou, à la place des points 1 et 2 : `cloudflared tunnel route dns <UUID> lumora.pixeldrop.ca`.
+4. Ouvre https://lumora.pixeldrop.ca (parfois quelques minutes d'attente).
 
-Laisse le reste vide, puis clique **Save and Deploy**. Après une ou deux minutes, Cloudflare te donne une adresse de test du genre `lumora.pages.dev`. Ouvre-la et vérifie que Lumora fonctionne.
-
-### C. Brancher lumora.pixeldrop.ca
-1. Dans le projet `lumora` : onglet **Custom domains**, puis **Set up a custom domain**.
-2. Écris : `lumora.pixeldrop.ca`, puis continue.
-3. Deux cas :
-   - **pixeldrop.ca est déjà dans ton compte Cloudflare** (son DNS est géré par Cloudflare) : Cloudflare ajoute tout seul la ligne DNS. Clique pour confirmer.
-   - **pixeldrop.ca est ailleurs** : Cloudflare te donne une ligne à ajouter chez ton fournisseur de domaine : type **CNAME**, nom `lumora`, valeur `lumora.pages.dev`.
-4. Attends quelques minutes (parfois jusqu'à une heure). Le statut passe à **Active**. Le certificat HTTPS (le cadenas) est créé automatiquement.
-
-## Au quotidien
-- Pour mettre à jour le site : modifier `index.html` (ou les images, les sons), enregistrer dans GitHub sur `main`. Cloudflare republie en environ une minute.
-- Les anciennes versions restent consultables dans l'onglet **Deployments** du projet, avec un bouton pour revenir en arrière.
-- Pour tester le site préparé sur ton ordinateur : `python3 tools/build_site.py`, puis `cd dist` et `python3 -m http.server 8000`, puis ouvrir http://localhost:8000.
+## Mettre à jour plus tard
+```bash
+cd ~/lumora && git pull && bash deploy/installer-sur-portable.sh
+```
+Cloudflare garde l'ancienne page en cache : si besoin, **Caching → Purge Everything**.
+Retour arrière : `sudo rm -rf /var/www/lumora && sudo mv /var/www/lumora.old /var/www/lumora`.
 
 ## Bon à savoir
-- Les polices de caractères viennent de Google Fonts : il faut une connexion Internet à l'ouverture. Si la connexion manque, une police de secours s'affiche et tout fonctionne.
-- Le son ne démarre qu'après un clic de l'éducatrice (règle des navigateurs). C'est déjà prévu.
-- Sur iPhone et tableau blanc, ouvrir l'adresse en **https** (Cloudflare le fait automatiquement).
-- Le dossier `dist` est recréé à chaque publication : ne jamais le modifier à la main (il est ignoré par Git).
-- Les limites gratuites de Cloudflare Pages (500 publications par mois, 20 000 fichiers, 25 Mo par fichier) sont très au-dessus des besoins de Lumora (70 fichiers, le plus gros fait moins de 5 Mo).
+- Le site n'est visible que si le **portable est allumé** et connecté (comme PhoenixWire). Pour un site toujours en ligne, même portable éteint, il existe l'hébergement Cloudflare Pages (gratuit, branché sur GitHub). Dis-le-moi si tu veux que j'écrive cette procédure.
+- Les polices viennent de Google Fonts (connexion Internet nécessaire à l'ouverture ; sinon police de secours).
+- Le son ne démarre qu'après un clic (règle des navigateurs) : déjà prévu.
+- `_headers` ne sert que pour Cloudflare Pages ; il est ignoré par ce serveur local.

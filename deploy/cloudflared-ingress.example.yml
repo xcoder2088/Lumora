@@ -1,0 +1,4 @@
+# À insérer AVANT la ligne « catch-all » du tunnel existant (garder toutes les autres entrées).
+# Ne pas créer un deuxième tunnel.
+- hostname: lumora.pixeldrop.ca
+  service: http://127.0.0.1:8791
