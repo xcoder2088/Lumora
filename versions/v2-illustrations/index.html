@@ -678,7 +678,7 @@ function updateJelly(c, dt, el) {
       const u2 = Math.min(1, u + 0.12);
       stx = sway(u2); sty = lerp(c.yw, -R * 2.9, u2);
     } else {   // vol libre
-      freeFlight = true; vUp = Math.max((H + R * 4) / c.T, minWH() * 0.016);
+      freeFlight = true; vUp = Math.max((H + R * 4) / c.T, minWH() * 0.024);
       u = 0; tx = sway(0); ty = c.y - 300; stx = tx; sty = ty;
       if (c.y < -R * 3.2) { c.y = H + R * 1.1; c.x = c.hx * W; c.vx = 0; c.vy = 0; for (const t of c.tents) t.init = false; }
     }
@@ -776,9 +776,10 @@ function updateJelly(c, dt, el) {
     if (c.x < mx) c.vx += (mx - c.x) * 1.5 * dt; else if (c.x > W - mx) c.vx -= (c.x - (W - mx)) * 1.5 * dt;
     if (c.y < my0) c.vy += (my0 - c.y) * 1.5 * dt; else if (c.y > my1) c.vy -= (c.y - my1) * 1.5 * dt;
   }
+  if (!c.giant) c.vx += Math.sin(T * 0.9 + c.ph * 3) * minWH() * 0.012 * dt;   // balancement latéral : elle ne glisse jamais en ligne droite
   c.x += c.vx * dt; c.y += c.vy * dt;
   if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
-  c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.4));
+  c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.1 + Math.sin(T * 0.6 + c.ph) * 0.07) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
   c.u = uc;
@@ -803,7 +804,7 @@ function updateJelly(c, dt, el) {
     for (let k = 1; k <= KSEG; k++) {
       const gk = Math.pow(k / KSEG, 1.2);                       // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous la gravité)
       const ux = -sa * (1 - gk) + trx * gk, uy = ca * (1 - gk) + gk + try_ * gk;
-      const sway = Math.sin(T * 0.9 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.6 : 1.2);
+      const sway = Math.sin(T * 1.1 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.6 : 2.0);
       const target = Math.atan2(uy, ux) + sway;
       let d = target - an[k - 1]; d -= TAU * Math.round(d / TAU);
       an[k - 1] += d * (1 - Math.exp(-h * lerp(9, 3.5, k / KSEG)));       // chaque segment tourne doucement, le bout est plus lent
@@ -1011,6 +1012,22 @@ function updateButterfly(c, dt, el) {
     }
   }
   c.wL = wL;
+  // jamais de chevauchement : deux papillons qui se croisent se détournent l'un de l'autre (écart qui s'efface ensuite)
+  if (c.ox === undefined) { c.ox = 0; c.oy = 0; }
+  if (wL < 0.97 && Xp > -50 && Xp < W + 50 && Yp > -50 && Yp < H + 50) {
+    let pxs = 0, pys = 0;
+    for (const o of live) {
+      if (o === c || o.kind !== 'b' || !o.init) continue;
+      const dx = Xp + c.ox - o.X, dy = Yp + c.oy - o.Y, d = Math.hypot(dx, dy) || 0.01, mn = 1.5 * (c.S + o.S), hard = 1.3 * (c.S + o.S);
+      if (d < mn) { const f = (mn - d) / mn; pxs += dx / d * f; pys += dy / d * f; }
+      if (d < hard) { const kk = o.wL > 0.9 ? 1 : 0.5; c.ox += dx / d * (hard - d) * kk; c.oy += dy / d * (hard - d) * kk; }   // trop près : écart immédiat (entier face à un papillon posé)
+    }
+    c.ox += pxs * c.S * 18 * dt; c.oy += pys * c.S * 18 * dt;
+  }
+  const om = Math.hypot(c.ox, c.oy), omax = c.S * 10;
+  if (om > omax) { c.ox *= omax / om; c.oy *= omax / om; }
+  c.ox *= Math.exp(-dt * 0.5); c.oy *= Math.exp(-dt * 0.5);
+  Xp += c.ox; Yp += c.oy;
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
