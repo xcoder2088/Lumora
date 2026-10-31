@@ -658,7 +658,7 @@ function updateJelly(c, dt, el) {
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
   let u = clamp((el - c.s) / c.T, 0, 1);
   const uc = JELLY_MODE === 'loop' && !c.giant ? clamp(el / Math.max(1, c.e), 0, 1) : u;   // la couleur change lentement pendant toute la durée
-  let tx, ty, gvx = 0, exitQ = 0, stx = 0, sty = 0;
+  let tx, ty, gvx = 0, exitQ = 0, stx = 0, sty = 0, freeFlight = false, vUp = 0;
   if (c.giant) {
     // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
     const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
@@ -666,17 +666,22 @@ function updateJelly(c, dt, el) {
     gvx = (xb - xa) / c.T;   // vitesse moyenne de la traversée
     ty = lerp(c.y0f, c.y1f, u) * H;
   } else if (JELLY_MODE === 'loop') {
-    // elle monte sans cesse, sort par le haut, revient par le bas ; le dernier passage se termine exactement à son instant de sortie c.e
-    const ph = (((el - c.e) / c.T) % 1 + 1) % 1;
-    if (c.lastPh !== undefined && ph < c.lastPh - 0.5 && c.x !== null) {   // elle vient de sortir par le haut : elle réapparaît sous l'écran
-      c.x = c.hx * W; c.y = H + R * 1.1; c.vx = 0; c.vy = 0;
-      for (const t of c.tents) t.init = false;
-    }
-    c.lastPh = ph; u = ph;
+    // elle monte sans cesse, librement (jamais retenue : plus d'attente) ; sortie par le haut, retour par le bas.
+    // Seul son dernier passage est guidé, pour qu'elle sorte exactement à son instant c.e.
+    const Tw = Math.min(55, Math.max(5, c.e * 0.9)), tw = c.e - Tw;
+    if (c.x === null) { c.x = c.hx * W; c.y = c.hy * H; }
     const sway = (p) => (c.hx + 0.09 * Math.sin(T * c.fx * 0.6 + c.ph + p * 2)) * W;
-    tx = sway(u); ty = lerp(H + R * 1.1, -R * 2.9, u);
-    const u2 = Math.min(1, u + 0.12);
-    stx = sway(u2); sty = lerp(H + R * 1.1, -R * 2.9, u2);
+    if (el >= tw) {   // dernier passage : de là où elle est jusqu'en haut de l'écran
+      if (c.yw === undefined) c.yw = c.y;
+      u = clamp((el - tw) / Tw, 0, 1);
+      tx = sway(u); ty = lerp(c.yw, -R * 2.9, u);
+      const u2 = Math.min(1, u + 0.12);
+      stx = sway(u2); sty = lerp(c.yw, -R * 2.9, u2);
+    } else {   // vol libre
+      freeFlight = true; vUp = Math.max((H + R * 4) / c.T, minWH() * 0.016);
+      u = 0; tx = sway(0); ty = c.y - 300; stx = tx; sty = ty;
+      if (c.y < -R * 3.2) { c.y = H + R * 1.1; c.x = c.hx * W; c.vx = 0; c.vy = 0; for (const t of c.tents) t.init = false; }
+    }
   } else if (!JELLY_AQUARIUM) {
     tx = lerp(c.x0, c.x1, u) * W;
     ty = lerp(H + R * 1.8, -R * 4.4, u);
@@ -724,6 +729,7 @@ function updateJelly(c, dt, el) {
     else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
     else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
     c.tiltN = c.giant ? c.side * lerp(0.6, 0.95, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
+    if (JELLY_MODE === 'loop' && !c.giant) { c.pulsing = true; c.thrustK = Math.max(c.thrustK, 0.9); }   // en boucle, jamais de pause ni de sur-place : elles continuent toujours d'avancer
     if (!c.pulsing && c.pp === 0) c.tiltT = c.tiltN;
   }
   if (c.pulsing || c.pp > 0) {
@@ -738,6 +744,7 @@ function updateJelly(c, dt, el) {
     // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
     const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
     const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2)
+      : freeFlight ? 1
       : JELLY_AQUARIUM ? clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1)
       : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
     const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * boost;
@@ -750,18 +757,18 @@ function updateJelly(c, dt, el) {
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = c.giant || !JELLY_AQUARIUM ? smooth((u - 0.8) / 0.2) : exitQ;
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
-  const kx = lerp((c.giant ? 0.12 : JELLY_AQUARIUM ? 0.1 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose, c.giant ? 0.06 : 2.5, guide);
+  const kx = lerp((c.giant ? 0.12 : JELLY_AQUARIUM ? 0.1 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose * (freeFlight ? 0 : 1), c.giant ? 0.06 : 2.5, guide);
   const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
   const kperp = c.giant ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
   c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
-  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0)) * dt;
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0) + (freeFlight ? (-vUp - c.vy) * 0.5 : 0)) * dt;
   if (!c.giant) {   // elles s'écartent doucement les unes des autres
     for (const o of live) {
       if (o === c || o.kind !== 'j' || o.x === null) continue;
       const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.25;
-      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * 0.8; }
+      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.05 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
     }
   }
   if (JELLY_AQUARIUM && !c.giant && exitQ < 0.02) {   // les parois de l'aquarium
@@ -929,13 +936,13 @@ function drawJelly(c) {
 const SPECIES = [
   { id: 'monarque', w: 3, size: 1.0, flap: 0.9, a: [232, 108, 18], b: [250, 152, 44], border: [16, 11, 10], bw: 0.085,
     vein: { w: 0.03, a: 0.95, col: [16, 11, 10] }, dots: { col: 'rgba(255,255,255,0.92)', k: 1 }, tail: 0, body: '#0b0a0c' },
-  { id: 'morpho', w: 2, size: 1.2, flap: 0.8, a: [8, 36, 170], b: [34, 120, 240], hi: [150, 230, 255], border: [6, 9, 28], bw: 0.05,
+  { id: 'morpho', w: 1.2, size: 0.95, flap: 0.8, a: [8, 36, 170], b: [34, 120, 240], hi: [150, 230, 255], border: [6, 9, 28], bw: 0.05,
     vein: { w: 0.01, a: 0.25, col: [4, 8, 40] }, tail: 0, shimmer: true, body: '#0a0c18' },
-  { id: 'azure', w: 2, size: 0.62, flap: 1.5, a: [92, 108, 214], b: [156, 176, 248], border: [46, 46, 84], bw: 0.02,
+  { id: 'azure', w: 1.6, size: 0.62, flap: 1.5, a: [92, 108, 214], b: [156, 176, 248], border: [46, 46, 84], bw: 0.02,
     vein: { w: 0.008, a: 0.2, col: [40, 40, 90] }, fringe: true, tail: 0, body: '#15172a' },
-  { id: 'machaon', w: 2, size: 1.05, flap: 1.0, a: [244, 212, 56], b: [253, 238, 140], border: [14, 12, 10], bw: 0.1,
+  { id: 'machaon', w: 3, size: 1.05, flap: 1.0, a: [244, 212, 56], b: [253, 238, 140], border: [14, 12, 10], bw: 0.1,
     vein: { w: 0.022, a: 0.92, col: [14, 12, 10] }, dots: { col: 'rgba(250,226,96,0.95)', k: 1.2 }, band: true, eye: 'machaon', tail: 0.55, body: '#0c0a08' },
-  { id: 'lune', w: 1, size: 1.1, flap: 0.65, a: [158, 222, 168], b: [208, 246, 208], border: [150, 122, 156], bw: 0.03,
+  { id: 'lune', w: 2, size: 1.1, flap: 0.65, a: [158, 222, 168], b: [208, 246, 208], border: [150, 122, 156], bw: 0.03,
     vein: { w: 0.01, a: 0.3, col: [90, 130, 90] }, eye: 'lune', tail: 1.0, body: '#eceee2' }
 ];
 const SPECIES_TOTAL = SPECIES.reduce((n, s) => n + s.w, 0);
@@ -950,7 +957,7 @@ function makeButterfly(d) {
   const z = lerp(0.5, 1, rnd());
   const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
-    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.032, 0.048, z),
+    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
     far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.22, 0.8, frac(d.k * 0.618034 + 0.3)), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
