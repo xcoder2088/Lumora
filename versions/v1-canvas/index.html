@@ -454,8 +454,8 @@ function makeJelly(d) {
   // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
   const q = rnd();
   // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
-  const szf = d.n > 9 ? Math.sqrt(9 / d.n) : 1;   // plus il y en a, plus elles sont petites
-  const sz = szf * (d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.11, 0.15, rnd()) : 0.016 * Math.pow(6, Math.pow(hash1(d.k * 1.713 + 0.37), 1.15)));
+  const szf = d.n > 12 ? 0.85 : 1;
+  const sz = szf * (d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.085, 0.115, rnd()) : 0.027 * Math.pow(4.5, rnd()));
   const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
   const nThin = 16, nArm = 4;
@@ -488,10 +488,13 @@ function updateJelly(c, dt, el) {
   } else {
     // aquarium : la méduse nage dans l'écran autour de son coin, et ne le quitte que pendant sa dernière minute (c.e = son instant de sortie)
     exitQ = smooth(clamp((el - (c.e - c.exitT)) / c.exitT, 0, 1));
-    const hx = c.hx * W + Math.sin(T * c.fx * 0.5 + c.ph) * 0.14 * W * c.ax;
-    const hy = c.hy * H + Math.sin(T * c.fy * 0.5 + c.ph * 1.7) * 0.1 * H * c.ay;
-    tx = hx;
-    ty = lerp(clamp(hy, R * 1.5, H - R), -R * 4.4, exitQ);
+    // elle se choisit un but quelque part dans l'aquarium, nage vers lui, puis en choisit un autre
+    if (!c.wp || el >= c.wpT || (Math.hypot(c.wp[0] - c.x, c.wp[1] - c.y) < R * 1.5 && el > c.wpT - 12)) {
+      c.wp = [lerp(0.08, 0.92, Math.random()) * W, lerp(0.15, 0.85, Math.random()) * H];
+      c.wpT = el + lerp(18, 40, Math.random());
+    }
+    tx = c.wp[0];
+    ty = lerp(clamp(c.wp[1], R * 1.5, H - R), -R * 4.4, exitQ);
   }
   if (c.x === null) { c.x = tx; c.y = ty; }
   // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
@@ -512,15 +515,17 @@ function updateJelly(c, dt, el) {
   }
   if (c.pulsing || c.pp > 0) {
     c.pp += dt / (c.period * c.perK);
-    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.tiltN === undefined ? 0 : c.tiltN; }   // au repos, l'ombrelle finit son cycle puis reste détendue
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(tx - c.x, c.y - ty), -0.9, 0.9) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
   }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
   const db = b - c.b; c.b = b;
   if (db > 0) {
     // elle nage plus fort quand elle prend du retard sur son trajet, moins fort quand elle est en avance : ce sont les battements qui la font avancer
-    const lag = c.giant ? (c.side * (tx - c.x)) / (W * 0.4) : (c.y - ty) / (minWH() * 0.35);
-    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * clamp(1 + lag, 0.2, 2.2);
+    // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
+    const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
+    const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2) : clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1);
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * boost;
     const thr = c.giant ? c.side * 1.3 : c.tilt;   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
     c.vx += Math.sin(thr) * f;
     c.vy -= Math.cos(thr) * f;
@@ -530,7 +535,7 @@ function updateJelly(c, dt, el) {
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = c.giant ? smooth((u - 0.8) / 0.2) : exitQ;
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
-  const kx = lerp((c.giant ? 0.12 : 0.05) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.1) * loose, c.giant ? 0.06 : 2.5, guide);
+  const kx = lerp((c.giant ? 0.12 : 0.1) * (0.5 + 0.5 * loose), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose, c.giant ? 0.06 : 2.5, guide);
   const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
@@ -1023,7 +1028,7 @@ function build() {
     const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 20);   // autant de méduses que de minutes choisies (au plus 20)
     for (let k = 0; k < N; k++) {
       const e = D - k * P;
-      sched.push({ k, seed: runSeed + k, e, T: e + 30, s: -30, n: N, big: k > 0 && r() < 0.14, x0: 0.5, x1: 0.5 });
+      sched.push({ k, seed: runSeed + k, e, T: e + 30, s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });
     }
   }
   sched.sort((a, b) => a.s - b.s);
