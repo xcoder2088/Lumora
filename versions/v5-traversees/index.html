@@ -1059,6 +1059,7 @@ function newJellyPass(c, R, first) {
   c.x = c.ex = E[0]; c.y = c.ey = E[1];
   c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
   c.seen = false; c.passT = 0;
+  c.tilt = c.tiltT = c.ang;   // elle entre déjà la tête dans le sens du mouvement
   for (const t of c.tents) t.init = false;
 }
 function updateJelly(c, dt, el) {
@@ -1173,7 +1174,7 @@ function updateJelly(c, dt, el) {
   }
   if (c.pulsing || c.pp > 0) {
     c.pp += dt / (c.period * c.perK);
-    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.28, 0.28) + (Math.random() - 0.5) * 0.1; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : (JELLY_MODE === 'loop' ? clamp(thrAng, -2.2, 2.2) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6)) + (Math.random() - 0.5) * 0.1; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
   }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
@@ -1188,7 +1189,7 @@ function updateJelly(c, dt, el) {
       : JELLY_MODE === 'loop' ? clamp(1 + ((tx - c.x) * c.dx + (ty - c.y) * c.dy) / (minWH() * 0.35), 0.2, 2.2)
       : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
     const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * boost;
-    const thr = c.giant ? c.side * 1.3 : JELLY_MODE === 'loop' ? clamp(thrAng, -1.45, 1.45) : c.tilt;   // en traversée, la poussée suit la direction du trajet, même presque horizontale   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
+    const thr = c.giant ? c.side * 1.3 : JELLY_MODE === 'loop' ? thrAng : c.tilt;   // en traversée, la poussée suit la direction du trajet, même presque horizontale   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
     c.vx += Math.sin(thr) * f;
     c.vy -= Math.cos(thr) * f;
   }
@@ -1219,9 +1220,17 @@ function updateJelly(c, dt, el) {
   if (el < c.tin && c.ex !== undefined) { c.vx = 0; c.vy = 0; c.x = c.ex; c.y = c.ey; }   // pas encore arrivée : elle attend hors de l'écran, à son point d'entrée
   if (!c.giant) c.vx += Math.sin(T * 0.9 + c.ph * 3) * minWH() * 0.012 * dt;   // balancement latéral : elle ne glisse jamais en ligne droite
   c.x += c.vx * dt; c.y += c.vy * dt;
-  if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.28, 0.28);   // elle s'incline tout de suite du côté où elle se détourne
-  c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
+  if (avm > 0.25 && JELLY_MODE !== 'loop') c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
+  c.tilt += (c.tiltT * (JELLY_MODE === 'loop' ? 1 : 1 - guide) + (Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04) - c.tilt) * Math.min(1, dt * (JELLY_MODE === 'loop' ? 0 : avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
   if (c.alpha0 === undefined) c.alpha0 = c.alpha;
+  if (JELLY_MODE === 'loop' && !c.giant) {   // la tête pointe toujours dans le sens du mouvement réel (vitesse lissée), de côté comme en diagonale ou vers le haut
+    const kv = 1 - Math.exp(-dt / 0.9);
+    c.svx = c.svx === undefined ? c.vx : c.svx + (c.vx - c.svx) * kv; c.svy = c.svy === undefined ? c.vy : c.svy + (c.vy - c.svy) * kv;
+    if (Math.hypot(c.svx, c.svy) > 4) c.hd = Math.atan2(c.svx, -c.svy);
+    let dh = (c.hd === undefined ? c.ang : c.hd) + Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04 - c.tilt;
+    dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+    c.tilt += dh * Math.min(1, dt * 2.2);
+  }
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
   c.u = uc;
