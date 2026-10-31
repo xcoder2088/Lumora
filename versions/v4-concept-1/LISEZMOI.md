@@ -21,3 +21,5 @@ python3 -m http.server 8000
 ```
 
 puis ouvrir <http://localhost:8000/versions/v4-concept-1/>.
+
+> **Sauvegarde.** Cette version est conservée telle quelle (version stable avant la version 5, `versions/v5-traversees/`). Elle ne sera plus modifiée.

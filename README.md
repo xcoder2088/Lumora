@@ -48,7 +48,8 @@ assets/              illustrations (méduses, papillons, décors), voir assets/L
 versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
 versions/v2-illustrations/  version 2 : le même fonctionnement, avec les illustrations de assets/
 versions/v3-fluide/  version 3 : le mouvement de la version 1, avec les illustrations de assets/
-versions/v4-concept-1/  version 4 : le concept de la version 1 (décor, couleurs, ambiance), avec les illustrations de assets/
+versions/v4-concept-1/  version 4 : le concept de la version 1 (décor, couleurs, ambiance), avec les illustrations de assets/. SAUVEGARDE, ne plus modifier
+versions/v5-traversees/  version 5 : comme la version 4, avec des méduses et des papillons qui arrivent et traversent l'écran dans toutes les directions
 tools/               scripts utilisés pour préparer les sons (voir ci-dessous)
 LICENSE              licence : utilisation libre, modification sur autorisation
 ```

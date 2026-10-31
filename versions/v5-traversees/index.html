@@ -1,0 +1,1841 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Lumora : minuteur visuel et relaxant.
+  Copyright (C) 2026 Xcoder
+  Utilisation libre et gratuite. Toute modification, copie dans un autre projet ou redistribution
+  nécessite l'autorisation écrite de l'auteur (voir le fichier LICENSE). Fourni sans aucune garantie.
+-->
+<title>Lumora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: plein écran. Le décor animé occupe tout l'écran; un panneau de réglages en verre dépoli
+   (bas-gauche, pleine largeur sur téléphone) puis une barre de contrôles qui s'efface seule. */
+:root {
+  color-scheme: dark;
+  --deep: #04101a;
+  --ink: #e9f5f7;
+  --ink-dim: #9dbcc5;
+  --glass: rgba(5, 20, 30, 0.66);
+  --line: rgba(190, 235, 245, 0.2);
+  --glow: #86e6ef;
+  --glow-ink: #031219;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui: "Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--deep);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.45;
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: var(--deep); }
+body.idle { cursor: none; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+
+/* ---------- Réglages ---------- */
+#setup {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  max-width: 440px;
+  max-height: calc(100% - 32px - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  transition: opacity 0.9s ease, transform 0.9s ease, visibility 0.9s;
+}
+body:not([data-phase="setup"]) #setup { opacity: 0; transform: translateY(16px); visibility: hidden; pointer-events: none; }
+#setup h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+#setup .lede { margin: 0; color: var(--ink-dim); font-size: 15px; max-width: 38ch; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 15px;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.chip:hover { border-color: rgba(190, 235, 245, 0.5); }
+.chip[aria-pressed="true"] { background: var(--glow); border-color: var(--glow); color: var(--glow-ink); font-weight: 500; }
+.switch { display: flex; align-items: center; gap: 12px; font-size: 15px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 44px; height: 26px; border-radius: 999px; border: 1px solid var(--line); position: relative; flex: none; transition: background 0.25s; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); transition: transform 0.25s, background 0.25s; }
+.switch input:checked + .track { background: var(--glow); border-color: var(--glow); }
+.switch input:checked + .track::after { transform: translateX(18px); background: var(--glow-ink); }
+.switch input:focus-visible + .track { outline: 2px solid var(--glow); outline-offset: 3px; }
+.ver { margin: 4px 0 10px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--glow); }
+#start:disabled { opacity: 0.65; cursor: progress; filter: none; }
+.credits { margin: 0; font-size: 12px; line-height: 1.4; color: var(--ink-dim); opacity: 0.8; }
+.soundrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: -8px; }
+#soundState { font-size: 14px; color: var(--ink-dim); flex: 1 1 200px; min-width: 0; }
+#start {
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--glow);
+  color: var(--glow-ink);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s, filter 0.2s;
+}
+#start:hover { filter: brightness(1.08); }
+#start:active { transform: scale(0.98); }
+
+/* ---------- Barre de contrôles ---------- */
+#hud {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+body[data-phase="running"] #hud, body[data-phase="paused"] #hud, body[data-phase="done"] #hud { opacity: 1; visibility: visible; pointer-events: auto; }
+body.idle #hud { opacity: 0; pointer-events: none; }
+.ib {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: 50%;
+  transition: background 0.2s;
+}
+.ib:hover { background: rgba(190, 235, 245, 0.12); }
+.ib:disabled { opacity: 0.35; cursor: default; background: transparent; }
+.ib svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ib .solid { fill: currentColor; stroke: none; }
+.ib[aria-pressed="false"] .on, .ib[aria-pressed="true"] .off { display: none; }
+#remain {
+  min-width: 78px;
+  padding: 0 8px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0.02em;
+}
+#bar { position: fixed; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(233, 245, 247, 0.35); transform-origin: left; transform: scaleX(0); pointer-events: none; }
+
+/* ---------- Fin ---------- */
+#end {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 24px 16px 96px;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 2.5s ease 1s, visibility 0s linear 3.5s;
+  color: #f6fbfc;
+}
+body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opacity 3s ease 1.5s, visibility 0s linear 1.5s; }
+#end h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: clamp(34px, 7vw, 64px); line-height: 1.1; text-wrap: balance; text-shadow: 0 2px 28px rgba(5, 20, 40, 0.6); }
+#end p { margin: 0; font-size: 16px; letter-spacing: 0.04em; opacity: 0.8; }
+
+@media (max-width: 520px) {
+  #setup { padding: 20px 18px 18px; }
+  #setup h1 { font-size: 40px; }
+  #remain { min-width: 64px; font-size: 26px; }
+  .ib { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #setup, #hud, #end { transition-duration: 0.01s; transition-delay: 0s; }
+}
+</style>
+<style>
+/* Base commune (la page est autonome) */
+:root { color-scheme: dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<main id="setup" aria-label="Réglages du minuteur">
+  <div>
+    <h1>Lumora</h1>
+    <p class="ver">Version 5 · révision 1</p>
+    <p class="lede">Un minuteur pour les moments de calme. Les créatures montent doucement, sans s'arrêter. La dernière sort de l'écran au moment où le temps tombe à zéro.</p>
+  </div>
+  <fieldset>
+    <legend>Décor</legend>
+    <div class="chips" id="chipScene"></div>
+  </fieldset>
+  <fieldset>
+    <legend>Durée</legend>
+    <div class="chips" id="chipDur"></div>
+  </fieldset>
+  <label class="switch" for="soundBox">
+    <input type="checkbox" id="soundBox">
+    <span class="track"></span>
+    <span>Ambiance sonore du décor et carillon final</span>
+  </label>
+  <div class="soundrow">
+    <button class="chip" id="soundTest" type="button">Tester le son</button>
+    <span id="soundState" aria-live="polite"></span>
+  </div>
+  <button id="start" type="button">Commencer</button>
+  <p class="credits">Sons libres de droits (CC0) : Joseph Sardin, BigSoundBank (grillons, vent), NOAA (baleines bleues) et cynicmusic, OpenGameArt (musiques). Illustrations générées avec l'aide de l'intelligence artificielle.</p>
+</main>
+
+<div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
+  <button class="ib" id="btnPause" type="button" aria-label="Mettre en pause" title="Pause (barre d'espace)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><g class="pauseIcon"><rect class="solid" x="6" y="5" width="4" height="14" rx="1"/><rect class="solid" x="14" y="5" width="4" height="14" rx="1"/></g><path class="solid playIcon" d="M8 5.5v13l11-6.5z" style="display:none"/></svg>
+  </button>
+  <button class="ib" id="btnRestart" type="button" aria-label="Recommencer le minuteur" title="Recommencer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 4.5v4.5H9"/></svg>
+  </button>
+  <div id="remain" role="timer" aria-label="Temps restant">00:00</div>
+  <button class="ib" id="btnSound" type="button" aria-pressed="false" aria-label="Son" title="Son">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3.5l4.5 3.5v-11L7.5 10z"/><g class="on"><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></g><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+  </button>
+  <button class="ib" id="btnFull" type="button" aria-label="Plein écran" title="Plein écran">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+  </button>
+  <button class="ib" id="btnSettings" type="button" aria-label="Retour aux réglages" title="Réglages">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+  </button>
+</div>
+
+<div id="end" aria-live="polite">
+  <h2>Doucement, c'est l'heure.</h2>
+  <p>Le temps est écoulé.</p>
+</div>
+<div id="bar"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= Utilitaires ================= */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const rgba = (c, a) => 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
+function mulberry(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rnd = mulberry(1);
+const $ = id => document.getElementById(id);
+const fmtDur = s => {
+  s = Math.round(s);
+  if (s < 60) return s + ' s';
+  const m = Math.floor(s / 60), r = s % 60;
+  return m + ' min' + (r ? ' ' + r + ' s' : '');
+};
+const fmtClock = s => {
+  s = Math.max(0, Math.ceil(s));
+  const m = Math.floor(s / 60), r = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+};
+
+/* ================= État ================= */
+const DURS = [30, 300, 600, 900, 1200, 1800, 2700];
+const SCENES = [['jelly', 'Méduses'], ['butterfly', 'Papillons']];
+const S = { scene: 'jelly', dur: 1200, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
+try {
+  const saved = JSON.parse(localStorage.getItem('lumora.v2') || 'null');
+  if (saved) {
+    if (SCENES.some(s => s[0] === saved.scene)) S.scene = saved.scene;
+    if (DURS.includes(saved.dur)) S.dur = saved.dur;
+  }
+} catch (e) {}
+const persist = () => { try { localStorage.setItem('lumora.v2', JSON.stringify({ scene: S.scene, dur: S.dur })); } catch (e) {} };
+
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOT = reduceMotion ? 0.5 : 1;
+
+function elapsed() {
+  if (S.phase === 'running') return S.accum + (performance.now() - S.startTs) / 1000;
+  if (S.phase === 'setup') return 0;
+  return S.accum;
+}
+function wakeAmount() {
+  if (S.phase !== 'done') return 0;
+  return clamp((performance.now() - S.doneAt) / 1000 / 40, 0, 1) * 0.85;
+}
+
+/* ================= Canvas ================= */
+const cv = $('scene');
+const ctx = cv.getContext('2d');
+let W = 800, H = 600;
+function resize() {
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+}
+const minWH = () => Math.min(W, H);
+
+/* ================= Fonds ================= */
+const BG = {
+  jelly: {
+    off: [0, 0.5, 1],
+    a: [hex('#0d4257'), hex('#08232f'), hex('#030b13')],
+    alt: [hex('#1a2f66'), hex('#0d1d44'), hex('#060a20')],
+    b: [hex('#a9dcdc'), hex('#5da3b5'), hex('#1e4d66')]
+  },
+  butterfly: {
+    off: [0, 0.5, 0.78, 1],
+    a: [hex('#121838'), hex('#3a3268'), hex('#bd8089'), hex('#e3a67c')],
+    alt: [hex('#1a1c4c'), hex('#48326e'), hex('#d49a72'), hex('#efb46c')],
+    b: [hex('#88bbe3'), hex('#c9ddef'), hex('#f6e3c8'), hex('#fbe6c4')]
+  }
+};
+const skyTint = () => 0.5 + 0.5 * Math.sin(T * 0.045 + 1.3); // va-et-vient très lent (environ 2 minutes)
+function drawBackgroundFallback(w) {
+  const def = BG[S.scene], tint = skyTint() * 0.8;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  for (let i = 0; i < def.off.length; i++) g.addColorStop(def.off[i], rgba(mixc(mixc(def.a[i], def.alt[i], tint), def.b[i], w), 1));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+function drawRays(w) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const r of rays) {
+    const x0 = (r.x + Math.sin(T * 0.05 + r.ph) * 0.04) * W, wd = r.w * W, dx = r.slant * H;
+    const g = ctx.createLinearGradient(0, 0, 0, H * 0.95);
+    const rc = mixc([150, 232, 242], [185, 180, 255], skyTint());
+    g.addColorStop(0, rgba(rc, ((0.075 + 0.12 * w) * r.a).toFixed(3)));
+    g.addColorStop(1, rgba(rc, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x0, -10); ctx.lineTo(x0 + wd, -10);
+    ctx.lineTo(x0 + dx + wd * 2.2, H * 0.95); ctx.lineTo(x0 + dx, H * 0.95);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawStars(w) {
+  const k = 1 - w * 1.2;
+  if (k <= 0) return;
+  for (const s of stars) {
+    const tw = 0.5 + 0.5 * Math.sin(T * 0.6 + s.ph);
+    ctx.fillStyle = 'rgba(235,240,255,' + ((0.15 + 0.5 * tw) * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.s, 0, TAU); ctx.fill();
+  }
+}
+function drawBokeh(w) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const b of bokeh) {
+    const x = (b.x + Math.sin(T * 0.03 + b.ph) * 0.02) * W, y = b.y * H, r = b.r * minWH();
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(255,200,150,' + (0.05 + 0.04 * w) + ')'); g.addColorStop(1, 'rgba(255,200,150,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawBackground(w) {
+  if (S.scene === 'jelly') { drawBackgroundFallback(w); drawRays(w); return; }   // eau et rayons de lumière : comme la version 1
+  const im = DUSK['decor-prairie-ciel'] || BGI['decor-prairie-ciel'];
+  if (!im) { drawBackgroundFallback(w); return; }
+  const [x, y, dw, dh] = layerRect(true);
+  ctx.drawImage(im, x, y, dw, dh);
+  ctx.fillStyle = 'rgba(255,150,95,' + (0.1 * skyTint()).toFixed(3) + ')';   // le ciel vire lentement vers l'ambre
+  ctx.fillRect(0, 0, W, H);
+  drawStars(w);
+  drawBokeh(w);
+}
+function swayLayer(im, c0, c1, amp, spd, edge, scl, shift) {
+  // calque plein écran qui ondule : chaque bande se penche selon des rafales, pied immobile.
+  // edge : la moitié gauche reste collée au bord gauche et la moitié droite au bord droit (sur téléphone, les plantes des bords restent visibles).
+  // scl : échelle (les plantes sont plus basses sur un écran étroit) ; shift : décalage vers l'extérieur (pour ne montrer qu'un bout d'arbre)
+  const L = layerRect(true), sc = (L[2] / 2560) * (scl || 1), dh = 1440 * sc, y = H - dh, f = im.width / 2560, cw = 32, n = 80, x0 = (W - 2560 * sc) / 2;
+  for (let i = Math.floor(c0 * n); i < Math.ceil(c1 * n); i++) {
+    const xo = i * cw, sw = Math.min(cw + 2, 2560 - xo);
+    const sx = edge ? (xo < 1280 ? xo * sc - (shift || 0) : W - (2560 - xo) * sc + (shift || 0)) : x0 + xo * sc;
+    if (sx > W + 40 || sx + sw * sc < -40) continue;
+    const k = amp * (0.011 * Math.sin(T * 0.4 * spd + xo * 0.0042) + 0.005 * Math.sin(T * 0.9 * spd + xo * 0.011 + 1.7)
+      + 0.012 * Math.pow(Math.max(0, Math.sin(T * 0.18 * spd - xo * 0.0021)), 2));   // brise très légère + rares souffles
+    ctx.save();
+    ctx.transform(1, 0, -k, 1, k * H, 0);
+    ctx.drawImage(im, xo * f, 0, sw * f, im.height, sx, y, sw * sc, dh);
+    ctx.restore();
+  }
+}
+function drawHillsImg() {
+  const far = DUSK['decor-prairie-arbres-lointains'];
+  const [x, y, dw, dh] = layerRect(true);
+  if (far) ctx.drawImage(far, x, y, dw, dh);   // bosquets lointains, juste derrière les collines
+  const im = DUSK['decor-prairie-collines'] || BGI['decor-prairie-collines'];
+  if (!im) return;
+  ctx.drawImage(im, x, y, dw, dh);
+}
+function drawGrassImg() {   // herbes dans le vent
+  const im = DUSK['decor-prairie-herbes'] || BGI['decor-prairie-herbes'];
+  if (im) swayLayer(im, 0, 1, 1, 1, false, 1);
+}
+function drawPlant(name, X, footY, hs, ph, sp, amp, alpha, tint) {
+  // une plante entière (pied en X, footY), découpée en rangées (une tous les 14 pixels environ) qui oscillent chacune un peu après la précédente :
+  // elle plie vraiment, de façon indépendante des autres, et le pied reste immobile
+  const s = SPR[name];
+  if (!s) return false;
+  const k = hs / (s.py - s.by), n = clamp(Math.round(hs / 7), 12, 40), src = tint !== undefined ? tinted(name, tint) : s.cv, rh = src.height / n, bh = s.bh / n;
+  ctx.globalAlpha = alpha;
+  for (let j = 0; j < n; j++) {
+    const t = (n - 1 - j + 0.5) / n;   // hauteur de la rangée (0 = pied, 1 = bout)
+    const off = amp * hs * 0.17 * Math.pow(t, 1.6) * (Math.sin(T * sp + ph - t * 2.4) + 0.35 * Math.sin(T * sp * 1.9 + ph * 2 - t * 3.7));
+    ctx.drawImage(src, 0, j * rh, src.width, rh + 0.3, X + (s.bx - s.px) * k + off, footY - (s.py - (s.by + j * bh)) * k, s.bw * k, bh * k + 0.5);
+  }
+  ctx.globalAlpha = 1;
+  return true;
+}
+const PLANTS = (() => {   // algues réparties sur trois plans : peu nombreuses, petites au loin, un peu plus grandes sur les bords
+  const r = mulberry(2024), L = [], names = ['plante-eau-varech-01', 'plante-eau-varech-02', 'plante-eau-herbe-marine-01', 'plante-eau-herbe-marine-02', 'plante-eau-branchue-01'];
+  const add = (n, layer, hLo, hHi, xf, al) => { for (let i = 0; i < n; i++) L.push({ name: names[Math.floor(r() * 5)], layer, x: xf(i), h: lerp(hLo, hHi, r()), ph: r() * TAU, sp: lerp(0.55, 0.95, r()), al }); };
+  add(7, 0, 0.17, 0.26, i => (i + 0.5) / 7 + (r() - 0.5) * 0.06, 0.3);
+  add(5, 1, 0.23, 0.33, i => (i + 0.5) / 5 + (r() - 0.5) * 0.08, 0.5);
+  add(4, 2, 0.3, 0.4, i => [0.04, 0.96, 0.87, 0.14][i] + (r() - 0.5) * 0.02, 0.85);
+  return L;
+})();
+function drawAlgae(layer, w) {   // si les images manquent, les algues dessinées par le code les remplacent
+  const k = 1 - w * 0.9;
+  if (k <= 0.02) return;
+  let any = false;
+  const sc = W / H < 0.8 ? 0.75 : 1;
+  for (const p of PLANTS) { if (p.layer === layer && drawPlant(p.name, p.x * W, H + 4, p.h * H * sc, p.ph, p.sp, 1, p.al * k)) any = true; }
+  if (!any && !SPR[PLANTS[0].name]) drawKelp(layer, w);
+}
+const DAISIES = Array.from({ length: 12 }, (_, i) => ({ name: 'fleur-marguerite-0' + (1 + (i * 3) % 5), x: 0.5, y: 0.9, h: 0.1, ph: (i * 2.399) % TAU, sp: 0.6 + (i * 0.137) % 0.5, busy: -1e9 }));
+let daisyKey = '';
+function layoutDaisies() {   // répartition régulière : jamais deux fleurs collées (l'écart tient compte de leur taille)
+  const key = W + 'x' + H;
+  if (key === daisyKey) return;
+  daisyKey = key;
+  const r = mulberry(77), placed = [];
+  for (const d of DAISIES) {
+    let best = null, bs = -1e9;
+    for (let a = 0; a < 80; a++) {
+      const x = lerp(0.03, 0.97, r()), y = lerp(0.76, 0.97, r()), t = (y - 0.76) / 0.21, h = lerp(0.1, 0.21, t) * (0.9 + 0.2 * r());
+      const hw = 0.36 * h * H;
+      let md = 1e9;
+      for (const q of placed) md = Math.min(md, Math.hypot((x - q.x) * W, (y - q.y) * H) / (1.15 * (hw + q.hw)));
+      if (md > bs) { bs = md; best = { x, y, h, hw }; }
+      if (md >= 1) break;
+    }
+    d.x = best.x; d.y = best.y; d.h = best.h; placed.push(best);
+  }
+  DAISIES.sort((a, b) => a.y - b.y);
+}
+function daisyHead(d) {   // position écran du centre de la fleur (qui se balance avec sa tige)
+  const s = SPR[d.name], hs = d.h * H, k = hs / (s.py - s.by), t = 0.85;
+  const off = 0.5 * hs * 0.17 * Math.pow(t, 1.6) * (Math.sin(T * d.sp + d.ph - t * 2.4) + 0.35 * Math.sin(T * d.sp * 1.9 + d.ph * 2 - t * 3.7));
+  return [d.x * W + (s.bx + s.bw / 2 - s.px) * k + off, d.y * H - 0.82 * hs];
+}
+function daisyHeadW(d) { return 0.36 * d.h * H; }   // largeur approximative de la fleur
+function pickLanding(c, el) {   // une fleur proche du trajet du papillon, libre à ce moment-là
+  const t0 = c.s + c.T * lerp(0.25, 0.55, Math.random());
+  if (t0 < el + 3) return null;
+  if (t0 < c.tin + 12) return null;   // pas avant d'être bien arrivé
+  let ts = lerp(6, 12, Math.random());
+  const ta = lerp(4.5, 6.5, Math.random()), td = lerp(2, 3.5, Math.random());
+  ts = Math.min(ts, c.s + c.T * 0.92 - t0 - ta - td);   // il doit être reparti avant la fin de son passage
+  if (ts < 3) return null;
+  const t1 = t0 + ta + ts + td;
+  // jamais plus de deux papillons sur des fleurs en même temps ; et deux fleurs occupées ne sont jamais voisines
+  const busyFlowers = [];
+  for (const q of live) {
+    if (q === c || q.kind !== 'b' || !q.land) continue;
+    const L = q.land;
+    if (L.t0 < t1 + 1 && L.t0 + L.ta + L.ts + L.td > t0 - 1) busyFlowers.push(L.flower);
+  }
+  if (busyFlowers.length >= 2) return null;
+  const u0 = clamp((t0 - c.s) / c.T, 0, 1), mg = 0.1 * W;
+  const px = c.P1 ? lerp(c.P1[0], c.P2[0], u0) : lerp(c.x0, c.x1, u0) * W;
+  let best = null, bd = 1e9;
+  for (const d of DAISIES) {
+    if (!SPR[d.name] || d.busy > t0 - 6) continue;
+    if (busyFlowers.some(f => Math.hypot((f.x - d.x) * W, (f.y - d.y) * H) < 1.5 * 0.83 * (daisyHeadW(f) + daisyHeadW(d)))) continue;   // deux papillons posés ne se touchent jamais
+    const dist = Math.abs(d.x * W - px);
+    if (dist < bd) { bd = dist; best = d; }
+  }
+  if (!best) return null;
+  best.busy = t1;
+  return { t0, ta, ts, td, flower: best };
+}
+function drawDaisies() {   // entre les papillons et les herbes du premier plan (les herbes cachent le pied des tiges)
+  layoutDaisies();
+  if (!TINTC[40]) TINTC[40] = [205, 178, 210];   // teinte du crépuscule
+  for (const d of DAISIES) drawPlant(d.name, d.x * W, d.y * H, d.h * H, d.ph, d.sp, 0.5, 1, 40);
+}
+function drawMotes(w) {   // graines et poussières qui dérivent avec le vent
+  const k = 1 - w * 1.3;
+  if (k <= 0) return;
+  const sc = clamp(minWH() / 760, 0.7, 1.5);
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 26; i++) {
+    const sp = 0.012 + (i % 5) * 0.004, ph = i * 1.7;
+    const x = ((i * 0.137 + T * sp * 0.5) % 1.1 - 0.05) * W;
+    const y = (0.3 + 0.6 * ((i * 0.618) % 1) + Math.sin(T * 0.4 + ph) * 0.02) * H;
+    ctx.fillStyle = 'rgba(255,235,200,' + (0.2 * k * (0.6 + 0.4 * Math.sin(T * 0.8 + ph))).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(x, y, (1.2 + (i % 3) * 0.7) * sc, 0, TAU); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawWake(w) { // fin du temps : la lumière monte doucement
+  if (w <= 0) return;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = S.scene === 'jelly' ? 'rgba(170,228,228,' + (0.62 * w).toFixed(3) + ')' : 'rgba(255,226,190,' + (0.78 * w).toFixed(3) + ')';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawVignette(w) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, minWH() * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6);
+  g.addColorStop(0, 'rgba(2,6,12,0)');
+  g.addColorStop(1, 'rgba(2,6,12,' + (0.55 * (1 - 0.75 * w)).toFixed(3) + ')');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/* ================= Éléments d'ambiance (fractions de l'écran) ================= */
+let snow = [], rays = [], stars = [], grass = [], flies = [], bokeh = [];
+function buildAmbient() {
+  const r = mulberry(99);
+  snow = Array.from({ length: 150 }, () => ({ x: r(), y: r(), s: lerp(0.6, 1.9, r()), v: lerp(0.004, 0.016, r()), ph: r() * TAU, z: r() }));
+  rays = Array.from({ length: 6 }, (_, i) => ({ x: lerp(-0.1, 0.95, i / 5) + (r() - 0.5) * 0.1, w: lerp(0.04, 0.1, r()), slant: lerp(-0.12, 0.2, r()), ph: r() * TAU, a: lerp(0.5, 1, r()) }));
+  stars = Array.from({ length: 80 }, () => ({ x: r(), y: r() * 0.5, s: lerp(0.5, 1.5, r()), ph: r() * TAU }));
+  grass = Array.from({ length: 360 }, (_, i) => {
+    const layer = i % 3 === 0 ? 1 : 0;
+    return { x: r() * 1.04 - 0.02, h: layer ? lerp(0.1, 0.22, r()) : lerp(0.05, 0.13, r()), w: layer ? lerp(1.6, 3, r()) : lerp(1, 2, r()), lean: (r() - 0.5) * 0.5, ph: r() * TAU, layer };
+  });
+  flies = Array.from({ length: 14 }, () => ({ seed: r() * 100, per: lerp(5, 10, r()), dur: lerp(1.2, 2.2, r()), off: r() * 20, tint: r(), z: r() }));
+  bokeh = Array.from({ length: 9 }, () => ({ x: r(), y: lerp(0.05, 0.6, r()), r: lerp(0.04, 0.11, r()), ph: r() * TAU }));
+}
+
+let T = 0; // temps d'animation (s)
+
+function drawSnow(near) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of snow) {
+    if ((p.z > 0.55) !== near) continue;
+    const x = ((p.x + Math.sin(T * 0.15 + p.ph) * 0.01) % 1 + 1) % 1 * W;
+    const y = p.y * H;
+    const tw = 0.5 + 0.5 * Math.sin(T * 0.8 + p.ph * 3);
+    ctx.fillStyle = 'rgba(190,240,255,' + (0.12 + 0.3 * tw * p.z).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(x, y, p.s * (0.6 + p.z * 0.7), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+function updateSnow(dt) { for (const p of snow) { p.y += p.v * dt * (0.5 + p.z); if (p.y > 1.02) { p.y = -0.02; } } }
+
+
+/* ================= Méduses ================= */
+const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222], [255, 222, 150], [150, 255, 190], [215, 160, 255], [255, 165, 150]];
+const JWHITE = [205, 222, 245];
+function pickColorIdx() {   // des indices dans JPAL ; JPAL.length désigne le blanc. Quatre familles : fantômes blanches, unies, à deux ou trois teintes, et à quatre teintes qui changent tout au long du trajet
+  const n = JPAL.length, q = rnd(), c0 = Math.floor(rnd() * n);
+  const other = a => (a + 1 + Math.floor(rnd() * (n - 1))) % n;
+  if (q < 0.2) return [n, c0, n];
+  if (q < 0.35) return [c0, c0, c0];
+  const c1 = other(c0), c2 = other(c1);
+  if (q < 0.65) return [c0, c1, rnd() < 0.3 ? n : c2];
+  return [c0, c1, c2, other(c2)];
+}
+function pathColor(cols, u) { // couleur le long du trajet : bleue au départ, mauve au milieu, parfois blanche à la fin
+  const x = u * (cols.length - 1), i = Math.min(cols.length - 2, Math.floor(x));
+  return mixc(cols[i], cols[i + 1], smooth(x - i));
+}
+/* ================= Illustrations (dossier assets/) ================= */
+const ASSET_BASE = '../../assets/';
+const AUDIO_BASE = '../../audio/';
+const SCENE_FILES = {
+  jelly: ['plante-eau-varech-01', 'plante-eau-varech-02', 'plante-eau-herbe-marine-01', 'plante-eau-herbe-marine-02', 'plante-eau-branchue-01'].concat(['lune', 'haute', 'fantomatique'].flatMap(t =>
+    ['ombrelle-01', 'bras-oraux', 'lueur-interne'].map(p => 'meduse-' + t + '-' + p))),
+  butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes', 'decor-prairie-arbres-lointains', 'fleur-marguerite-01', 'fleur-marguerite-02', 'fleur-marguerite-03', 'fleur-marguerite-04', 'fleur-marguerite-05'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
+    ['aile-avant', 'aile-arriere', 'corps'].map(p => 'papillon-' + s + '-' + p)))
+};
+const DUSK = {};   // calques de la prairie assombris à la tombée de la nuit (calculés une fois au chargement)
+function shrinkFrame(im) {   // les grands calques sont gardés en 1600 px de large : quatre fois moins de mémoire, important sur téléphone
+  const q = Math.min(1, 1600 / im.width), c = document.createElement('canvas');
+  c.width = Math.round(im.width * q); c.height = Math.round(im.height * q);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  return c;
+}
+function makeDusk(name, im) {
+  if (name.indexOf('prairie') < 0) return;
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d');
+  g.drawImage(im, 0, 0);
+  g.globalCompositeOperation = 'multiply';
+  const gr = g.createLinearGradient(0, 0, 0, c.height);
+  if (name === 'decor-prairie-ciel') {
+    gr.addColorStop(0, 'rgb(62,66,150)'); gr.addColorStop(0.5, 'rgb(140,104,162)'); gr.addColorStop(0.8, 'rgb(205,140,138)'); gr.addColorStop(1, 'rgb(110,92,128)');
+  } else if (name === 'decor-prairie-collines') {
+    gr.addColorStop(0, 'rgb(150,122,172)'); gr.addColorStop(0.5, 'rgb(142,112,165)'); gr.addColorStop(0.75, 'rgb(105,92,140)'); gr.addColorStop(1, 'rgb(70,70,112)');
+  } else if (name === 'decor-prairie-arbres-lointains') {   // bosquets lointains : bleutés, noyés dans la brume du soir
+    gr.addColorStop(0, 'rgb(130,112,178)'); gr.addColorStop(1, 'rgb(92,84,138)');
+  } else if (name === 'decor-prairie-marguerites') {   // les pétales restent lisibles à la tombée de la nuit
+    gr.addColorStop(0, 'rgb(225,195,215)'); gr.addColorStop(0.6, 'rgb(160,135,175)'); gr.addColorStop(1, 'rgb(110,98,150)');
+  } else if (name.indexOf('arbre-premier-plan') >= 0) {   // grands arbres du premier plan
+    gr.addColorStop(0, 'rgb(185,150,185)'); gr.addColorStop(0.6, 'rgb(130,108,152)'); gr.addColorStop(1, 'rgb(78,72,118)');
+  } else {   // herbes : plus sombres vers le pied ; le bout des brins est éclairé plus bas (voir plus loin)
+    gr.addColorStop(0, 'rgb(190,150,175)'); gr.addColorStop(0.5, 'rgb(150,120,155)'); gr.addColorStop(1, 'rgb(85,82,120)');
+  }
+  g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
+  if (name === 'decor-prairie-herbes') {   // la dernière lueur du couchant éclaire le bout des brins (éclaircissement)
+    g.globalCompositeOperation = 'screen';
+    const lit = g.createLinearGradient(0, 0, 0, c.height);
+    lit.addColorStop(0.22, 'rgba(0,0,0,0)'); lit.addColorStop(0.36, 'rgba(215,135,150,0.85)'); lit.addColorStop(0.60, 'rgba(130,90,125,0.6)');
+    lit.addColorStop(0.85, 'rgba(55,50,90,0.3)'); lit.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = lit; g.fillRect(0, 0, c.width, c.height);
+  }
+  if (name !== 'decor-prairie-ciel') { g.globalCompositeOperation = 'destination-in'; g.drawImage(im, 0, 0); }
+  if (name.indexOf('arbre-premier-plan') >= 0) {   // le haut du feuillage se fond doucement (il est coupé par le bord de l'image)
+    g.globalCompositeOperation = 'destination-out';
+    const fd = g.createLinearGradient(0, 0, 0, c.height * 0.12);
+    fd.addColorStop(0, 'rgba(0,0,0,1)'); fd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = fd; g.fillRect(0, 0, c.width, c.height * 0.12);
+  }
+  DUSK[name] = c;
+}
+const RIM_N = 41;
+const GEOM = {"meduse-fantomatique-bras-oraux":{"bb":[335,61,689,939]},"meduse-fantomatique-lueur-interne":{"bb":[164,62,861,748]},"meduse-fantomatique-ombrelle-01":{"bb":[63,495,961,760],"rim":[-74,-65,-55,-51,-46,-48,-37,-31,-25,-25,-32,-16,-13,-14,-25,-18,-10,-4,-3,-6,-14,-5,-3,-4,-12,-20,-23,-13,-13,-17,-30,-25,-25,-31,-38,-47,-47,-52,-55,-65,-75],"rx0":65,"rw":894},"meduse-fantomatique-ombrelle-02":{"bb":[81,474,943,760],"rim":[-76,-64,-49,-46,-41,-43,-39,-31,-25,-25,-30,-18,-13,-14,-20,-19,-8,-3,-3,-6,-16,-6,-3,-3,-8,-19,-19,-13,-13,-17,-28,-24,-24,-30,-39,-45,-41,-47,-50,-65,-77],"rx0":83,"rw":858},"meduse-fantomatique-ombrelle-03":{"bb":[113,453,911,760],"rim":[-75,-60,-51,-45,-47,-37,-27,-24,-26,-24,-15,-13,-14,-20,-21,-15,-6,-3,-3,-6,-15,-8,-4,-3,-4,-9,-18,-25,-16,-13,-14,-19,-32,-26,-26,-34,-40,-47,-49,-62,-74],"rx0":115,"rw":794},"meduse-fantomatique-ombrelle-04":{"bb":[154,430,871,759],"rim":[-74,-62,-55,-43,-38,-40,-35,-27,-25,-27,-26,-16,-13,-14,-20,-14,-6,-4,-4,-9,-21,-9,-4,-4,-7,-14,-20,-14,-14,-17,-27,-28,-26,-28,-36,-41,-39,-44,-56,-63,-75],"rx0":156,"rw":713},"meduse-haute-bras-oraux":{"bb":[251,60,774,940]},"meduse-haute-lueur-interne":{"bb":[308,65,714,904]},"meduse-haute-ombrelle-01":{"bb":[63,260,961,760],"rim":[-89,-76,-52,-47,-47,-40,-41,-34,-24,-24,-31,-18,-6,-3,-5,-16,-22,-14,-10,-13,-17,-11,-11,-18,-25,-13,-5,-5,-10,-26,-27,-23,-26,-39,-46,-44,-51,-54,-59,-81,-97],"rx0":65,"rw":894},"meduse-haute-ombrelle-02":{"bb":[81,221,943,759],"rim":[-122,-107,-78,-69,-64,-54,-53,-48,-34,-31,-35,-28,-10,-4,-4,-14,-21,-11,-6,-8,-16,-7,-7,-13,-23,-12,-4,-4,-11,-30,-33,-30,-34,-48,-55,-54,-64,-70,-79,-112,-131],"rx0":83,"rw":858},"meduse-haute-ombrelle-03":{"bb":[113,181,912,759],"rim":[-101,-88,-58,-54,-52,-45,-46,-42,-30,-28,-32,-22,-8,-4,-5,-16,-25,-16,-12,-14,-19,-13,-12,-18,-28,-13,-6,-5,-11,-29,-30,-27,-31,-45,-47,-47,-56,-57,-62,-91,-107],"rx0":115,"rw":795},"meduse-haute-ombrelle-04":{"bb":[153,137,871,759],"rim":[-102,-83,-66,-45,-41,-45,-39,-41,-33,-23,-22,-30,-21,-7,-4,-6,-19,-24,-16,-15,-24,-17,-16,-21,-29,-12,-5,-5,-12,-30,-25,-22,-25,-40,-43,-43,-44,-47,-62,-84,-101],"rx0":155,"rw":714},"meduse-lune-bras-oraux":{"bb":[228,60,796,939]},"meduse-lune-lueur-interne":{"bb":[180,62,845,624]},"meduse-lune-ombrelle-01":{"bb":[63,350,961,759],"rim":[-107,-77,-69,-63,-45,-39,-42,-29,-19,-17,-20,-21,-25,-21,-9,-5,-5,-3,-3,-7,-21,-13,-5,-3,-4,-5,-8,-20,-27,-20,-17,-15,-18,-31,-40,-40,-45,-63,-69,-77,-107],"rx0":65,"rw":894},"meduse-lune-ombrelle-02":{"bb":[81,317,943,760],"rim":[-123,-109,-76,-73,-54,-45,-45,-40,-27,-23,-24,-26,-31,-24,-11,-6,-4,-4,-3,-5,-16,-18,-7,-4,-4,-6,-8,-14,-32,-30,-25,-24,-26,-40,-47,-47,-55,-74,-77,-111,-127],"rx0":83,"rw":858},"meduse-lune-ombrelle-03":{"bb":[113,285,912,759],"rim":[-106,-78,-69,-52,-43,-43,-34,-22,-18,-19,-21,-24,-27,-14,-7,-5,-5,-3,-4,-8,-18,-13,-5,-3,-3,-5,-5,-11,-23,-25,-20,-18,-17,-20,-31,-43,-42,-48,-71,-79,-107],"rx0":115,"rw":795},"meduse-lune-ombrelle-04":{"bb":[153,249,871,759],"rim":[-110,-77,-71,-71,-52,-43,-43,-34,-22,-18,-19,-22,-31,-23,-11,-6,-5,-3,-3,-7,-16,-19,-7,-3,-3,-5,-7,-13,-26,-28,-21,-18,-18,-25,-45,-43,-46,-64,-71,-76,-109],"rx0":155,"rw":714},"papillon-azure-commun-aile-arriere":{"bb":[53,110,970,915]},"papillon-azure-commun-aile-avant":{"bb":[57,63,966,961]},"papillon-azure-commun-corps":{"bb":[356,61,668,527]},"papillon-lune-aile-arriere":{"bb":[182,63,842,961]},"papillon-lune-aile-avant":{"bb":[53,95,971,929]},"papillon-lune-corps":{"bb":[357,62,667,620]},"papillon-machaon-aile-arriere":{"bb":[122,63,901,961]},"papillon-machaon-aile-avant":{"bb":[53,82,971,942]},"papillon-machaon-corps":{"bb":[357,62,667,689]},"papillon-monarque-aile-arriere":{"bb":[53,130,971,893]},"papillon-monarque-aile-avant":{"bb":[53,83,971,940]},"papillon-monarque-corps":{"bb":[356,61,668,631]},"papillon-morpho-bleu-aile-arriere":{"bb":[68,63,954,961]},"papillon-morpho-bleu-aile-avant":{"bb":[53,64,971,959]},"papillon-morpho-bleu-corps":{"bb":[357,62,667,850]}};
+Object.assign(GEOM, {"plante-eau-varech-01":{"bb":[340,51,713,2048]},"plante-eau-varech-02":{"bb":[290,51,738,2048]},"plante-eau-herbe-marine-01":{"bb":[237,51,789,2048]},"plante-eau-herbe-marine-02":{"bb":[190,51,833,2048]},"plante-eau-branchue-01":{"bb":[179,51,876,2048]},"fleur-marguerite-01":{"bb":[179,38,849,1536]},"fleur-marguerite-02":{"bb":[258,38,904,1536]},"fleur-marguerite-03":{"bb":[143,38,674,1536]},"fleur-marguerite-04":{"bb":[333,38,637,1536]},"fleur-marguerite-05":{"bb":[191,38,845,1536]}});
+const BGI = {};            // décors en pleine image
+const SPR = {};            // créatures : image recadrée et réduite, avec ses repères
+let MAN = null;
+const loadPromises = {};
+const sceneReady = {};
+function prepSprite(name, img, cs) {
+  // Emprise visible et contour du bord : mesurés à l'avance (GEOM), sans lire les pixels dans le navigateur.
+  const g = GEOM[name], pv = MAN[name].pivot;
+  const bx = g.bb[0], by = g.bb[1], bw = g.bb[2] - g.bb[0], bh = g.bb[3] - g.bb[1];
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(bw * cs)); cv.height = Math.max(1, Math.round(bh * cs));
+  const c2 = cv.getContext('2d');
+  c2.imageSmoothingQuality = 'high';
+  c2.drawImage(img, bx, by, bw, bh, 0, 0, cv.width, cv.height);
+  SPR[name] = { cv, bx, by, bw, bh, px: pv[0], py: pv[1], tints: {} };
+  if (g.rim) { SPR[name].rim = Float32Array.from(g.rim); SPR[name].rx0 = g.rx0; SPR[name].rw = g.rw; }
+}
+function loadOne(name, tries) {
+  tries = tries || 0;
+  const meta = MAN[name];
+  return new Promise((ok, no) => {
+    const im = new Image();
+    im.onload = () => {
+      try {
+        if (meta.fullFrame) { const sm = shrinkFrame(im); makeDusk(name, sm); if (!DUSK[name]) BGI[name] = sm; } else prepSprite(name, im, name.indexOf('meduse') === 0 ? 0.625 : 0.45);
+      } catch (e) { /* mémoire insuffisante sur cet appareil : on continue avec ce qui est déjà prêt */ }
+      ok();
+    };
+    im.onerror = () => {
+      if (tries < 3) setTimeout(() => loadOne(name, tries + 1).then(ok, no), 700 * (tries + 1)); // nouvel essai
+      else no(new Error(name));
+    };
+    im.src = ASSET_BASE + meta.webp;
+  });
+}
+function loadScene(scene) {
+  if (loadPromises[scene]) return loadPromises[scene];
+  loadPromises[scene] = (async () => {
+    if (!MAN) {
+      const r = await fetch(ASSET_BASE + 'manifest.json');
+      if (!r.ok) throw new Error('manifest');
+      const j = await r.json();
+      MAN = {}; for (const a of j.assets) MAN[a.name] = a;
+    }
+    await Promise.all(SCENE_FILES[scene].map(n => loadOne(n)));
+    sceneReady[scene] = true;
+  })();
+  loadPromises[scene].catch(() => { delete loadPromises[scene]; });
+  return loadPromises[scene];
+}
+function ensureScene() {
+  const sc = S.scene, btn = $('start');
+  if (sceneReady[sc]) { btn.disabled = false; btn.textContent = 'Commencer'; return; }
+  btn.disabled = true; btn.textContent = 'Chargement des illustrations…';
+  const guard = setTimeout(() => {   // si le chargement traîne, le bouton ne reste jamais bloqué
+    if (S.scene === sc && btn.disabled) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations lentes à charger : elles apparaîtront dès qu\u2019elles sont prêtes.'); }
+  }, 12000);
+  loadScene(sc).then(() => {
+    clearTimeout(guard);
+    if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; }
+  }).catch(() => {
+    clearTimeout(guard);
+    if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations non chargées : décor simplifié.'); }
+  });
+}
+// Teinte : les méduses sont en gris translucide ; on les multiplie par la couleur, en gardant la transparence.
+const TINTC = JPAL.concat([JWHITE]).map(c => mixc(c, [255, 255, 255], 0.1));
+function tinted(name, ci) {
+  const sp = SPR[name];
+  let t = sp.tints[ci];
+  if (t) return t;
+  t = document.createElement('canvas'); t.width = sp.cv.width; t.height = sp.cv.height;
+  const g = t.getContext('2d');
+  g.drawImage(sp.cv, 0, 0);
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = rgba(TINTC[ci], 1);
+  g.fillRect(0, 0, t.width, t.height);
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(sp.cv, 0, 0);
+  return (sp.tints[ci] = t);
+}
+function colorBlend(ci, u) { // couleur le long du trajet, entre deux couleurs voisines
+  const x = clamp(u, 0, 1) * (ci.length - 1), i = Math.min(ci.length - 2, Math.floor(x));
+  return { a: ci[i], b: ci[i + 1], t: smooth(x - i) };
+}
+function drawTinted(name, cp, alpha, k, ox, oy) {
+  const sp = SPR[name];
+  const parts = cp.t < 0.02 ? [[cp.a, 1]] : cp.t > 0.98 ? [[cp.b, 1]] : [[cp.a, 1 - cp.t], [cp.b, cp.t]];
+  for (const [ci, wgt] of parts) {
+    ctx.globalAlpha = alpha * wgt;
+    ctx.drawImage(tinted(name, ci), ox + (sp.bx - sp.px) * k, oy + (sp.by - sp.py) * k, sp.bw * k, sp.bh * k);
+  }
+}
+function drawTintedAt(name, cp, alpha, cx, cy, w, h) { // dessin centré en (cx, cy), à la taille w x h
+  const parts = cp.t < 0.02 ? [[cp.a, 1]] : cp.t > 0.98 ? [[cp.b, 1]] : [[cp.a, 1 - cp.t], [cp.b, cp.t]];
+  for (const [ci, wgt] of parts) {
+    ctx.globalAlpha = alpha * wgt;
+    ctx.drawImage(tinted(name, ci), cx - w / 2, cy - h / 2, w, h);
+  }
+}
+function rimAnchor(c, u, b) { // point d'attache d'un filament sur le bord réel de l'ombrelle, déformée comme à l'écran
+  const A = SPR['meduse-' + c.type + '-ombrelle-01'];
+  if (!A || !A.rim) return null;
+  const k = (2 * c.R) / 894, sx = 1 - 0.22 * b, sy = 1 + 0.235 * b;
+  const frac = clamp((u + 1) / 2, 0, 1), pos = frac * (RIM_N - 1), j = Math.min(RIM_N - 2, Math.floor(pos)), fr = pos - j;
+  const ry = lerp(A.rim[j], A.rim[j + 1], fr);
+  const xo = A.rx0 + frac * A.rw - A.px;
+  return { lx: xo * k * sx, ly: (ry - 10) * k * sy };   // légèrement à l'intérieur du bord, pour que le filament touche l'ombrelle
+}
+function drawSpr(sp, k, ox, oy) {
+  ctx.drawImage(sp.cv, ox + (sp.bx - sp.px) * k, oy + (sp.by - sp.py) * k, sp.bw * k, sp.bh * k);
+}
+// Les décors partagent tous le même cadre 2560 x 1440 : on les superpose sans recadrage individuel.
+function layerRect(alignBottom) {
+  const s = Math.max(W / 2560, H / 1440), dw = 2560 * s, dh = 1440 * s;
+  return [(W - dw) / 2, alignBottom ? H - dh : (H - dh) / 2, dw, dh];
+}
+
+const KSEG = 12;
+
+function placeHomes(n, y0, y1) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    let best = null, bd = -1;
+    for (let k = 0; k < 40; k++) {
+      const p = { x: lerp(0.1, 0.9, rnd()), y: lerp(y0, y1, rnd()) };
+      let d = 1e9;
+      for (const q of pts) d = Math.min(d, Math.hypot((p.x - q.x) * 1.6, (p.y - q.y)));
+      if (d > bd) { bd = d; best = p; }
+    }
+    pts.push(best);
+  }
+  return pts;
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function makeJelly(d) {
+  // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
+  const q = rnd();
+  // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
+  const szf = d.n > 20 ? 0.75 : d.n > 12 ? 0.85 : 1;
+  const sz = szf * (d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.085, 0.115, rnd()) : 0.027 * Math.pow(4.5, rnd()));
+  const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
+  const tents = [];
+  const nThin = d.n > 12 && sz < 0.05 ? 8 : 16, nArm = 4;   // moins de filaments pour les petites quand elles sont très nombreuses
+  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  const ci = pickColorIdx();
+  const cols = ci.map(i => i === JPAL.length ? JWHITE : JPAL[i]);
+  const tq = rnd();
+  const type = tq < 0.45 ? 'lune' : tq < 0.75 ? 'haute' : 'fantomatique';
+  return {
+    kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols, ci, type, u: 0,
+    rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
+    fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
+    giant: !!d.giant, tin: d.giant || JELLY_MODE === 'stream' ? 0 : arrivalTime(d), side: d.side, y0f: d.y0f, y1f: d.y1f,
+    hx: lerp(0.1, 0.9, frac(d.k * 0.618034 + 0.17)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
+    modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
+    x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant || d.big ? 0.8 : 1
+  };
+}
+
+// Mode d'affichage des méduses : false = elles traversent l'écran du bas vers le haut, de moins en moins nombreuses avec le temps ;
+// true = « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin).
+const JELLY_MODE = 'loop';   // 'loop' : elles montent sans cesse, sortent par le haut et reviennent par le bas, une de moins chaque minute ; 'aquarium' ; 'stream'
+const JELLY_AQUARIUM = JELLY_MODE === 'aquarium';
+function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
+  let best = null, bs = -1e9;
+  for (let k = 0; k < 14; k++) {
+    const x = lerp(0.08, 0.92, Math.random()) * W, y = lerp(0.14, 0.86, Math.random()) * H;
+    let md = 1e9;
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null) continue;
+      md = Math.min(md, Math.hypot(x - o.x, y - o.y));
+      if (o.wp) md = Math.min(md, Math.hypot(x - o.wp[0], y - o.wp[1]));
+    }
+    const sc = md - 0.15 * Math.hypot(x - c.x, y - c.y);
+    if (sc > bs) { bs = sc; best = [x, y]; }
+  }
+  return best;
+}
+// distance à parcourir depuis (px, py), dans la direction (dx, dy), pour être entièrement hors de l'écran (marges mx, my)
+function distToOutside(px, py, dx, dy, mx, my) {
+  let s = 0;
+  while (s < 5000 && px + dx * s > -mx && px + dx * s < W + mx && py + dy * s > -my && py + dy * s < H + my) s += 8;
+  return s;
+}
+// nouvelle traversée d'une méduse : direction au hasard (vers le haut, de côté, ou en diagonale), entrée par le bord de l'écran d'où elle vient
+function newJellyPass(c, R, first) {
+  const r = first ? 0.25 + 0.75 * Math.random() : Math.random();   // au début, surtout des arrivées par les côtés : l'écran se remplit sur toute sa hauteur
+  let ang;   // angle depuis la verticale (0 = vers le haut, + = vers la droite) ; jamais vers le bas
+  if (r < 0.35) ang = (Math.random() - 0.5) * 0.9;                                           // surtout vers le haut
+  else if (r < 0.7) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.2, 1.5, Math.random());   // de gauche à droite ou de droite à gauche
+  else ang = (Math.random() < 0.5 ? 1 : -1) * lerp(0.55, 1.1, Math.random());               // en diagonale
+  c.ang = ang; c.dx = Math.sin(ang); c.dy = -Math.cos(ang);
+  c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
+  const mx = R * 2.6, my = R * 3.4;
+  const Mx = lerp(0.12, 0.88, Math.random()) * W, My = lerp(0.12, 0.92, Math.random()) * H;   // un point de l'écran par où elle passera
+  const s = distToOutside(Mx, My, -c.dx, -c.dy, mx, my);                                    // on remonte sa route jusqu'au bord : c'est son entrée
+  c.x = c.ex = Mx - c.dx * s; c.y = c.ey = My - c.dy * s;
+  c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
+  c.seen = false; c.passT = 0;
+  for (const t of c.tents) t.init = false;
+}
+function updateJelly(c, dt, el) {
+  const R = c.R = c.rf * minWH();
+  // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
+  let u = clamp((el - c.s) / c.T, 0, 1);
+  const uc = JELLY_MODE === 'loop' && !c.giant ? clamp(el / Math.max(1, c.e), 0, 1) : u;   // la couleur change lentement pendant toute la durée
+  let tx, ty, gvx = 0, exitQ = 0, stx = 0, sty = 0, freeFlight = false, vUp = 0, thrAng = 0;
+  if (c.giant) {
+    // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
+    const xa = c.side < 0 ? W + R * 1.6 : -R * 1.6, xb = c.side < 0 ? -R * 1.6 : W + R * 1.6;
+    tx = lerp(xa, xb, u);
+    gvx = (xb - xa) / c.T;   // vitesse moyenne de la traversée
+    ty = lerp(c.y0f, c.y1f, u) * H;
+  } else if (JELLY_MODE === 'loop') {
+    // elle nage librement et traverse l'écran dans une direction au hasard (par le bas, par un côté, en diagonale), sort d'un côté puis revient d'un autre.
+    // Seul son dernier passage est guidé, pour qu'elle sorte exactement à son instant c.e.
+    const Tw = Math.min(55, Math.max(5, c.e * 0.9)), tw = c.e - Tw;
+    if (c.x === null) newJellyPass(c, R, true);
+    if (el >= tw) {   // dernier passage : de là où elle est jusqu'au bord de l'écran, dans sa direction
+      if (c.yw === undefined) {
+        c.xw = c.x; c.yw = c.y;
+        const sx = distToOutside(c.x, c.y, c.dx, c.dy, R * 2.8, R * 3.6);
+        c.xe = c.x + c.dx * sx; c.ye = c.y + c.dy * sx;
+      }
+      u = clamp((el - tw) / Tw, 0, 1);
+      tx = lerp(c.xw, c.xe, u); ty = lerp(c.yw, c.ye, u);
+      const u2 = Math.min(1, u + 0.12);
+      stx = lerp(c.xw, c.xe, u2); sty = lerp(c.yw, c.ye, u2);
+      thrAng = Math.atan2(stx - c.x, c.y - sty);
+    } else {   // vol libre
+      c.arr = 1 - smooth(clamp((el - c.tin) / 22, 0, 1));   // à l'arrivée, elle va plus vite pour que l'écran se remplisse en une trentaine de secondes
+      freeFlight = true;
+      c.vtx = c.dx * c.spd * (1 + 1.5 * c.arr); c.vty = c.dy * c.spd * (1 + 1.5 * c.arr);
+      u = 0; tx = c.x + c.dx * 300; ty = c.y + c.dy * 300; stx = tx; sty = ty; thrAng = c.ang;
+      if (c.x > -R && c.x < W + R && c.y > -R && c.y < H + R) c.seen = true;
+      c.passT += dt;
+      const outside = c.x < -R * 2.6 || c.x > W + R * 2.6 || c.y < -R * 3.4 || c.y > H + R * 2.6;
+      if (el >= c.tin && ((c.seen && outside) || c.passT > 240)) newJellyPass(c, R);   // elle est sortie : nouvelle traversée, par un autre bord
+    }
+  } else if (!JELLY_AQUARIUM) {
+    tx = lerp(c.x0, c.x1, u) * W;
+    ty = lerp(H + R * 1.8, -R * 4.4, u);
+    const u2 = Math.min(1, u + 0.12);   // point un peu plus loin sur le trajet, vers lequel elle s'oriente
+    stx = lerp(c.x0, c.x1, u2) * W; sty = lerp(H + R * 1.8, -R * 4.4, u2);
+  } else {
+    // aquarium : la méduse nage dans l'écran autour de son coin, et ne le quitte que pendant sa dernière minute (c.e = son instant de sortie)
+    exitQ = smooth(clamp((el - (c.e - c.exitT)) / c.exitT, 0, 1));
+    // elle se choisit un but quelque part dans l'aquarium, nage vers lui, puis en choisit un autre
+    if (!c.wp || el >= c.wpT || (Math.hypot(c.wp[0] - c.x, c.wp[1] - c.y) < R * 1.5 && el > c.wpT - 12)) {
+      c.wp = pickWaypoint(c);
+      c.wpT = el + lerp(18, 40, Math.random());
+    }
+    tx = c.wp[0];
+    ty = lerp(clamp(c.wp[1], R * 1.5, H - R), -R * 4.4, exitQ);
+    stx = tx; sty = ty;
+  }
+  if (c.x === null) { c.x = tx; c.y = ty; }
+  // évitement : si une autre méduse est sur son chemin, elle se détourne (cible déplacée sur le côté, corps incliné dans ce sens)
+  let avm = 0;
+  if (!c.giant) {
+    let avx = 0, avy = 0;
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15) continue;
+      let dx = c.x - o.x; const dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 2.2;
+      if (d < mn) {
+        if (Math.abs(dx) < (R + o.R) * 0.4) dx = (c.avSide || (c.avSide = Math.random() < 0.5 ? -1 : 1)) * d;   // pile derrière elle : elle choisit un côté et le garde
+        const wgt = (mn - d) / mn; avx += dx / d * wgt; avy += dy / d * wgt;
+      }
+    }
+    avm = Math.hypot(avx, avy);
+    if (avm > 0.02) { tx += avx * R * 3; stx += avx * R * 5; if (JELLY_AQUARIUM) ty += avy * R * 2; if (freeFlight) { c.vx += avx * minWH() * 0.06 * dt; c.vy += avy * minWH() * 0.03 * dt; } }
+  }
+  // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
+  c.modeT -= dt;
+  if (c.modeT <= 0) {
+    const r = Math.random();
+    if (c.giant) {
+      // la géante nage vraiment : chaque battement la pousse dans le sens de sa traversée, et elle ne reste jamais longtemps immobile
+      if (r < 0.7) { c.thrustK = 1.1; c.perK = 1; c.pulsing = true; c.modeT = lerp(8, 18, Math.random()); }
+      else if (r < 0.95) { c.thrustK = 0.7; c.perK = 1.15; c.pulsing = true; c.modeT = lerp(6, 12, Math.random()); }
+      else { c.pulsing = false; c.modeT = lerp(2, 4, Math.random()); }
+    } else if (r < 0.4) { c.thrustK = 1; c.perK = 1; c.pulsing = true; c.modeT = lerp(6, 16, Math.random()); }          // nage régulière
+    else if (r < 0.65) { c.thrustK = 0.35; c.perK = 1.25; c.pulsing = true; c.modeT = lerp(5, 12, Math.random()); }    // sur place
+    else if (r < 0.85) { c.pulsing = false; c.modeT = lerp(3, 8, Math.random()); }                                      // plané
+    else { c.thrustK = 1.35; c.perK = 0.55; c.pulsing = true; c.modeT = lerp(3, 7, Math.random()); }                     // rafale
+    c.tiltN = c.giant ? c.side * lerp(0.6, 0.95, Math.random()) : (Math.random() - 0.5) * 1.1;   // nouvelle inclinaison : elle ne sera prise qu'au prochain battement (on tourne en poussant)
+    if (JELLY_MODE === 'loop' && !c.giant) { c.pulsing = true; c.thrustK = Math.max(c.thrustK, 0.9); }   // en boucle, jamais de pause ni de sur-place : elles continuent toujours d'avancer
+    if (!c.pulsing && c.pp === 0) c.tiltT = c.tiltN;
+  }
+  if (c.pulsing || c.pp > 0) {
+    c.pp += dt / (c.period * c.perK);
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.65, 0.65) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
+  }
+  const s = c.pp;
+  const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
+  const db = b - c.b; c.b = b;
+  if (db > 0) {
+    // elle nage plus fort quand elle prend du retard sur son trajet, moins fort quand elle est en avance : ce sont les battements qui la font avancer
+    // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
+    const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
+    const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2)
+      : freeFlight ? 1 + 1.3 * (c.arr || 0)
+      : JELLY_AQUARIUM ? clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1)
+      : JELLY_MODE === 'loop' ? clamp(1 + ((tx - c.x) * c.dx + (ty - c.y) * c.dy) / (minWH() * 0.35), 0.2, 2.2)
+      : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
+    const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * boost;
+    const thr = c.giant ? c.side * 1.3 : JELLY_MODE === 'loop' ? clamp(thrAng, -1.45, 1.45) : c.tilt;   // en traversée, la poussée suit la direction du trajet, même presque horizontale   // la géante pousse presque à l'horizontale, dans le sens de sa traversée
+    c.vx += Math.sin(thr) * f;
+    c.vy -= Math.cos(thr) * f;
+  }
+  // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
+  const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
+  // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
+  const guide = c.giant || !JELLY_AQUARIUM ? smooth((u - 0.8) / 0.2) : exitQ;
+  const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
+  const kx = lerp((c.giant ? 0.12 : JELLY_AQUARIUM ? 0.1 : 0.05) * (0.5 + 0.5 * loose) * (freeFlight ? 0 : 1), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose * (freeFlight ? 0 : 1), c.giant ? 0.06 : 2.5, guide);
+  const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
+  // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
+  const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
+  const kperp = c.giant || JELLY_MODE === 'loop' ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0) + (freeFlight ? (c.vtx - c.vx) * 0.5 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0) + (freeFlight ? (c.vty - c.vy) * 0.5 : 0)) * dt;
+  if (!c.giant) {   // elles s'écartent doucement les unes des autres
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null || o.alpha < 0.15) continue;
+      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.25;
+      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.05 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
+    }
+  }
+  if (JELLY_AQUARIUM && !c.giant && exitQ < 0.02) {   // les parois de l'aquarium
+    const mx = R * 1.1, my0 = R * 1.5, my1 = H - R;
+    if (c.x < mx) c.vx += (mx - c.x) * 1.5 * dt; else if (c.x > W - mx) c.vx -= (c.x - (W - mx)) * 1.5 * dt;
+    if (c.y < my0) c.vy += (my0 - c.y) * 1.5 * dt; else if (c.y > my1) c.vy -= (c.y - my1) * 1.5 * dt;
+  }
+  if (el < c.tin && c.ex !== undefined) { c.vx = 0; c.vy = 0; c.x = c.ex; c.y = c.ey; }   // pas encore arrivée : elle attend hors de l'écran, à son point d'entrée
+  if (!c.giant) c.vx += Math.sin(T * 0.9 + c.ph * 3) * minWH() * 0.012 * dt;   // balancement latéral : elle ne glisse jamais en ligne droite
+  c.x += c.vx * dt; c.y += c.vy * dt;
+  if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
+  c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.1 + Math.sin(T * 0.6 + c.ph) * 0.07) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
+  if (c.alpha0 === undefined) c.alpha0 = c.alpha;
+  c.X = c.x; c.Y = c.y;
+  c.col = pathColor(c.cols, uc);
+  c.u = uc;
+  // tentacules : suiveurs de chaîne
+  const w = R * (1 - 0.22 * b);
+  const seg0 = R / KSEG;
+  for (const t of c.tents) {
+    const ca = Math.cos(c.tilt), sa = Math.sin(c.tilt);
+    let lx = t.u * w, ly = R * 0.08;
+    if (!t.arm) { const an = rimAnchor(c, t.u, b); if (an) { lx = an.lx; ly = an.ly; } }
+    const ax = c.X + lx * ca - ly * sa, ay = c.Y + lx * sa + ly * ca;
+    const seg = Math.min(t.len * R, minWH() * 0.38) / KSEG, q = t.pts;
+    if (!t.init) {
+      for (let k = 0; k <= KSEG; k++) { q[2 * k] = ax; q[2 * k + 1] = ay + seg * k; }
+      t.init = true;
+    }
+    q[0] = ax; q[1] = ay;
+    const an = t.ang || (t.ang = new Float32Array(KSEG).fill(Math.PI / 2));
+    const h = Math.min(dt, 0.05);
+    const trx = -clamp(c.vx * 0.02, -0.7, 0.7), try_ = -clamp(c.vy * 0.008, -0.4, 0.4);
+    let prev = Math.atan2(ca, -sa);
+    for (let k = 1; k <= KSEG; k++) {
+      const gk = Math.pow(k / KSEG, 1.2);                       // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous la gravité)
+      const ux = -sa * (1 - gk) + trx * gk, uy = ca * (1 - gk) + gk + try_ * gk;
+      const sway = Math.sin(T * 1.1 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.6 : 2.0);
+      const target = Math.atan2(uy, ux) + sway;
+      let d = target - an[k - 1]; d -= TAU * Math.round(d / TAU);
+      an[k - 1] += d * (1 - Math.exp(-h * lerp(9, 3.5, k / KSEG)));       // chaque segment tourne doucement, le bout est plus lent
+      let bend = an[k - 1] - prev; bend -= TAU * Math.round(bend / TAU);
+      bend = clamp(bend, -0.3, 0.3);                                       // pas de pli net entre deux segments
+      an[k - 1] = prev + bend;
+      prev = an[k - 1];
+      q[2 * k] = q[2 * k - 2] + Math.cos(prev) * seg;
+      q[2 * k + 1] = q[2 * k - 1] + Math.sin(prev) * seg;
+    }
+  }
+}
+
+function chainPath(p) {
+  ctx.moveTo(p[0], p[1]);
+  for (let k = 1; k < KSEG; k++) {
+    ctx.quadraticCurveTo(p[2 * k], p[2 * k + 1], (p[2 * k] + p[2 * k + 2]) / 2, (p[2 * k + 1] + p[2 * k + 3]) / 2);
+  }
+  ctx.lineTo(p[2 * KSEG], p[2 * KSEG + 1]);
+}
+
+/* ================= Algues (profondeur du décor des méduses) ================= */
+let KELP = null;
+function makeKelp() {
+  const r = mulberry(4242), L = [];
+  const add = (n, layer, hLo, hHi, wLo, wHi, xs) => {
+    for (let i = 0; i < n; i++) L.push({ layer, x: xs ? xs(i) : lerp(0.02, 0.98, r()), h: lerp(hLo, hHi, r()), w: lerp(wLo, wHi, r()), ph: r() * TAU, sp: lerp(0.3, 0.6, r()), leaf: r() < 0.75 });
+  };
+  add(9, 0, 0.35, 0.65, 0.006, 0.010);                                        // lointaines : petites, pâles
+  add(7, 1, 0.30, 0.55, 0.008, 0.013);                                        // intermédiaires
+  add(6, 2, 0.45, 0.85, 0.012, 0.02, i => i % 2 ? lerp(0, 0.16, r()) : lerp(0.84, 1, r()));   // proches, sombres, sur les bords : elles passent devant les méduses
+  return L;
+}
+function drawKelp(layer, w) {
+  if (!KELP) KELP = makeKelp();
+  const k = 1 - w * 0.9;
+  if (k <= 0.02) return;
+  const m = minWH(), N = 16;
+  const col = layer === 0 ? [34, 92, 120] : layer === 1 ? [22, 92, 104] : [4, 24, 34];
+  ctx.fillStyle = rgba(col, (layer === 0 ? 0.26 : layer === 1 ? 0.36 : 0.85) * k);
+  const amp = layer === 0 ? 0.03 : layer === 1 ? 0.05 : 0.08;
+  for (const s of KELP) {
+    if (s.layer !== layer) continue;
+    const bx = s.x * W, hh = s.h * H, ww = s.w * m;
+    const px = [], py = [], hw = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      px.push(bx + Math.sin(T * s.sp + s.ph + t * 3.2 + s.x * 5) * amp * m * Math.pow(t, 1.4) + Math.sin(T * 0.17 + s.ph) * 0.02 * m * t);
+      py.push(H + 12 - t * hh);
+      hw.push(ww * (1 - 0.8 * t));
+    }
+    ctx.beginPath();
+    ctx.moveTo(px[0] - hw[0], py[0]);
+    for (let i = 1; i <= N; i++) ctx.lineTo(px[i] - hw[i], py[i]);
+    for (let i = N; i >= 0; i--) ctx.lineTo(px[i] + hw[i], py[i]);
+    ctx.closePath();
+    if (s.leaf) {   // petites feuilles le long de la tige
+      for (let i = 3; i < N - 1; i += 2) {
+        const side = (i % 4 < 2) ? 1 : -1, len = ww * (4.5 - i * 0.2);
+        ctx.moveTo(px[i], py[i]);
+        ctx.quadraticCurveTo(px[i] + side * len * 0.9, py[i] - len * 0.2, px[i] + side * len * 0.8, py[i] - len * 1.2);
+        ctx.quadraticCurveTo(px[i] + side * len * 0.2, py[i] - len * 0.6, px[i], py[i]);
+      }
+    }
+    ctx.fill();
+  }
+}
+function drawJelly(c) {
+  const a = c.alpha * lerp(0.7, 1, c.z);
+  if (a <= 0.003) return;
+  const R = c.R, X = c.X, Y = c.Y, col = c.col, b = c.b;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = a;
+  // halo
+  const hr = R * 1.45, hy = Y - R * 0.4;   // halo resserré autour de l'ombrelle, un peu aplati comme elle
+  let g = ctx.createRadialGradient(0, 0, 0, 0, 0, hr);
+  g.addColorStop(0, rgba(col, 0.13 + 0.05 * b));
+  g.addColorStop(0.5, rgba(col, 0.05 + 0.02 * b));
+  g.addColorStop(1, rgba(col, 0));
+  ctx.save();
+  ctx.translate(X, hy); ctx.rotate(c.tilt); ctx.scale(1, 0.8);
+  ctx.fillStyle = g;
+  ctx.fillRect(-hr, -hr, hr * 2, hr * 2);
+  ctx.restore();
+  // tentacules
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const gt = ctx.createLinearGradient(0, Y, 0, Y + Math.min(R * 2.6, minWH() * 0.38));
+  gt.addColorStop(0, rgba(col, 0.55)); gt.addColorStop(1, rgba(col, 0));
+  const ga = ctx.createLinearGradient(0, Y, 0, Y + R * 2.2);
+  ga.addColorStop(0, rgba(col, 0.3)); ga.addColorStop(1, rgba(col, 0));
+  ctx.strokeStyle = gt; ctx.lineWidth = Math.max(0.7, R * 0.02);
+  ctx.beginPath();
+  for (const t of c.tents) if (!t.arm) chainPath(t.pts);
+  ctx.stroke();
+  // ombrelle : l'illustration « détendue » est déformée en continu (se resserre et s'allonge), comme dans la version 1
+  const tp = 'meduse-' + c.type + '-';
+  const s1 = SPR[tp + 'ombrelle-01'], gl = SPR[tp + 'lueur-interne'];
+  if (!s1 || !gl || !SPR[tp + 'bras-oraux']) { ctx.restore(); return; }
+  const k = (2 * R) / 894;                         // pixels d'origine -> écran (ombrelle détendue = 2R de large)
+  const sx = 1 - 0.22 * b, sy = 1 + 0.235 * b;     // mêmes valeurs que l'ombrelle dessinée de la version 1
+  const bellH0 = s1.bh * k;
+  const cp = colorBlend(c.ci, c.u);
+  ctx.translate(X, Y);
+  ctx.rotate(c.tilt);
+  ctx.globalCompositeOperation = 'lighter';
+  // bras oraux : ondulent comme un rideau (cisaillement qui augmente avec la longueur) et suivent le courant
+  ctx.save();
+  ctx.translate(0, -bellH0 * sy * 0.32);
+  // les bras ne se tortillent plus : ils glissent lentement vers le côté opposé au déplacement, avec un très léger balancement
+  const dts = Math.min(0.1, Math.max(0, T - (c.shT === undefined ? T : c.shT))); c.shT = T;
+  const shTarget = -clamp(c.vx * 0.005, -0.35, 0.35) + Math.sin(T * 0.7 + c.ph) * 0.1 + Math.sin(c.pp * TAU) * 0.07;
+  c.sh = (c.sh || 0) + (shTarget - (c.sh || 0)) * (1 - Math.exp(-dts * 1.1));
+  const sh = c.sh;
+  ctx.transform(1 + 0.05 * b, 0, sh, 1 - 0.12 * b, 0, 0);
+  drawTinted(tp + 'bras-oraux', cp, a * 0.6, k, 0, 0);
+  ctx.restore();
+  // ombrelle et lueur interne se déforment ensemble
+  ctx.save();
+  ctx.scale(sx, sy);
+  drawTinted(tp + 'ombrelle-01', cp, a * 0.95, k, 0, 0);
+  const gs = { lune: 0.5, haute: 0.6, fantomatique: 0.31 }[c.type];
+  const gw = gl.bw * k * gs, gh = gl.bh * k * gs;
+  const gcy = c.type === 'haute' ? -bellH0 * 0.9 + gh / 2 : -bellH0 * 0.5;
+  drawTintedAt(tp + 'lueur-interne', cp, a * (0.32 + 0.25 * b), 0, gcy, gw, gh);
+  ctx.restore();
+  ctx.restore();
+}
+
+/* ================= Papillons (inspirés d'espèces réelles) ================= */
+/* Monarque, Morpho bleu, Azuré commun, Machaon, Papillon de lune (Actias luna). */
+const SPECIES = [
+  { id: 'monarque', w: 3, size: 1.0, flap: 0.9, a: [232, 108, 18], b: [250, 152, 44], border: [16, 11, 10], bw: 0.085,
+    vein: { w: 0.03, a: 0.95, col: [16, 11, 10] }, dots: { col: 'rgba(255,255,255,0.92)', k: 1 }, tail: 0, body: '#0b0a0c' },
+  { id: 'morpho', w: 1.2, size: 0.95, flap: 0.8, a: [8, 36, 170], b: [34, 120, 240], hi: [150, 230, 255], border: [6, 9, 28], bw: 0.05,
+    vein: { w: 0.01, a: 0.25, col: [4, 8, 40] }, tail: 0, shimmer: true, body: '#0a0c18' },
+  { id: 'azure', w: 1.6, size: 0.62, flap: 1.5, a: [92, 108, 214], b: [156, 176, 248], border: [46, 46, 84], bw: 0.02,
+    vein: { w: 0.008, a: 0.2, col: [40, 40, 90] }, fringe: true, tail: 0, body: '#15172a' },
+  { id: 'machaon', w: 3, size: 1.05, flap: 1.0, a: [244, 212, 56], b: [253, 238, 140], border: [14, 12, 10], bw: 0.1,
+    vein: { w: 0.022, a: 0.92, col: [14, 12, 10] }, dots: { col: 'rgba(250,226,96,0.95)', k: 1.2 }, band: true, eye: 'machaon', tail: 0.55, body: '#0c0a08' },
+  { id: 'lune', w: 2, size: 1.1, flap: 0.65, a: [158, 222, 168], b: [208, 246, 208], border: [150, 122, 156], bw: 0.03,
+    vein: { w: 0.01, a: 0.3, col: [90, 130, 90] }, eye: 'lune', tail: 1.0, body: '#eceee2' }
+];
+const SPECIES_TOTAL = SPECIES.reduce((n, s) => n + s.w, 0);
+function pickSpecies() {
+  let r = rnd() * SPECIES_TOTAL;
+  for (const s of SPECIES) { r -= s.w; if (r <= 0) return s; }
+  return SPECIES[0];
+}
+
+// instant d'arrivée de chaque créature : étalé sur les 30 premières secondes, la première dans la seconde qui suit le départ (les cinq premières en moins de 6 s)
+function arrivalTime(d) {
+  const N = d.n || 1, f = j => frac(j * 0.618034 + 0.3), fk = f(d.k);
+  let r = 0;
+  for (let j = 0; j < N; j++) if (f(j) < fk) r++;
+  return Math.min(1 + (Math.min(30, S.dur * 0.4) - 1) * r / Math.max(1, N - 1), d.e * 0.5);
+}
+const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
+function makeButterfly(d) {
+  const sp = pickSpecies();
+  const z = lerp(0.5, 1, rnd());
+  const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
+  return {
+    kind: 'b', k: d.k, loop: !!d.loop, tin: d.loop ? arrivalTime(d) : 0, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
+    far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.22, 0.8, frac(d.k * 0.618034 + 0.3)), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
+    ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
+    X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
+  };
+}
+
+function updateButterfly(c, dt, el) {
+  const Sz = c.sf * minWH() * c.sp.size;
+  // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
+  let u;
+  if (BFLY_LOOP && c.loop) {
+    // passages successifs, chacun différent ; le dernier se termine exactement à l'instant de sortie c.e
+    const q = (el - c.e) / c.T + 1e-6, n = Math.floor(q);
+    u = q - n;
+    if (c.pass !== n) {
+      c.pass = n; c.s = c.e + n * c.T; c.land = undefined; c.init = false;
+      const h = j => hash1(c.k * 12.9 + n * 7.7 + j * 3.3);
+      // chaque passage : entrée par un bord au hasard (gauche, droite, bas ou haut), sortie par un autre, donc de côté, en diagonale, vers le haut ou vers le bas
+      const rt = h(1), mgp = Math.max(0.08 * W, Sz * 2.2);
+      c.far = rt < 0.15; c.rise = false;
+      const edge = w => w < 0.3 ? 0 : w < 0.6 ? 1 : w < 0.85 ? 2 : 3;   // 0 gauche, 1 droite, 2 bas, 3 haut
+      const e1 = edge(h(2)), e2 = h(3) < 0.6 ? [1, 0, 3, 2][e1] : (e1 + 1 + Math.floor(h(4) * 3)) % 4;
+      const pt = (e, f) => e === 0 ? [-mgp, lerp(0.12, 0.85, f) * H] : e === 1 ? [W + mgp, lerp(0.12, 0.85, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + mgp] : [lerp(0.08, 0.92, f) * W, -mgp];
+      c.P1 = pt(e1, h(5)); c.P2 = pt(e2, h(6));
+      c.farY = lerp(0.5, 0.62, h(8)); c.x0 = h(6) * 1.1 - 0.05; c.x1 = clamp(c.x0 + (h(7) - 0.5) * 0.3, -0.08, 1.08);
+    }
+  } else u = clamp((el - c.s) / c.T, 0, 1);
+  // certains papillons s'éloignent au lointain : ils rapetissent vers l'horizon et s'effacent, au lieu de monter vers le ciel
+  c.S = c.far ? Sz * lerp(1, 0.16, smooth(u)) : Sz;
+  c.fade = (c.far ? 1 - smooth((u - 0.8) / 0.2) : 1) * smooth(clamp((el - c.tin) / 0.8, 0, 1));   // invisible avant son arrivée (caché derrière les herbes)
+  const calm = 1 - smooth((u - 0.85) / 0.15);
+  const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
+  const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
+  const cross = !c.far;   // trajet en ligne : entre un bord et un autre
+  const tp = smooth(u / 0.12);
+  // en traversée : de côté à côté, avec des montées et des descentes douces, à vitesse qui varie un peu
+  const ue = clamp(u + 0.06 * Math.sin(Math.PI * u) * Math.sin(u * TAU * 3 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
+  const X = cross ? lerp(c.P1[0], c.P2[0], ue) + wx * W * 0.3 * tp
+    : (lerp(c.x0, lerp(c.x1, 0.5, 0.45), u) + wx * lerp(1, 0.3, u)) * W;
+  const Y = cross ? lerp(c.P1[1], c.P2[1], ue) + wy * H * 1.2 * tp
+    : lerp(H + Sz * 2.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u);
+  // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
+  let Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
+  let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  // atterrissage : certains papillons se posent sur une marguerite (scène de la prairie), y restent un moment en battant lentement des ailes, puis repartent
+  if (c.land === undefined) c.land = (typeof pickLanding === 'function' && !c.far && c.T > 24 && Math.random() < 0.55) ? pickLanding(c, el) : null;
+  let wL = 0, wW = 0, dep = 0;   // wL : lien avec la fleur (position, taille) ; wW : battement lent des ailes posées ; dep : décollage
+  if (c.land) {
+    const L = c.land, tt = el - L.t0;
+    if (tt >= 0) {
+      // approche : il continue de battre vite des ailes (il ne plane pas), puis ralentit son battement seulement une fois posé
+      if (tt < L.ta + L.ts) { wL = tt < L.ta ? smooth(tt / L.ta) : 1; wW = smooth(clamp((tt - (L.ta - 0.4)) / 1.4, 0, 1)); }
+      else if (tt < L.ta + L.ts + L.td) {   // décollage : les ailes se mettent à battre vite d'abord, puis il quitte la fleur
+        const x = tt - L.ta - L.ts;
+        wW = 1 - smooth(clamp(x / 0.7, 0, 1));
+        wL = 1 - smooth(clamp((x - 0.5) / (L.td - 0.5), 0, 1));
+        dep = 1 - x / L.td;
+      }
+    }
+    if (wL > 0) {
+      const hp = daisyHead(L.flower);
+      Xp = lerp(Xp, hp[0], wL); Yp = lerp(Yp, hp[1], wL);
+      c.S = lerp(c.S, 0.83 * daisyHeadW(L.flower) * c.sp.size, wL);   // à la taille de la fleur : un papillon posé fait environ deux fois la largeur de la fleur
+    }
+  }
+  c.wL = wL;
+  // jamais de chevauchement : deux papillons qui se croisent se détournent l'un de l'autre (écart qui s'efface ensuite)
+  if (c.ox === undefined) { c.ox = 0; c.oy = 0; }
+  if (wL < 0.97 && Xp > -50 && Xp < W + 50 && Yp > -50 && Yp < H + 50) {
+    let pxs = 0, pys = 0;
+    for (const o of live) {
+      if (o === c || o.kind !== 'b' || !o.init || o.fade < 0.2) continue;
+      const dx = Xp + c.ox - o.X, dy = Yp + c.oy - o.Y, d = Math.hypot(dx, dy) || 0.01, mn = 1.5 * (c.S + o.S), hard = 1.3 * (c.S + o.S);
+      if (d < mn) { const f = (mn - d) / mn; pxs += dx / d * f; pys += dy / d * f; }
+      if (d < hard) { const kk = o.wL > 0.9 ? 1 : 0.5; c.ox += dx / d * (hard - d) * kk; c.oy += dy / d * (hard - d) * kk; }   // trop près : écart immédiat (entier face à un papillon posé)
+    }
+    c.ox += pxs * c.S * 18 * dt; c.oy += pys * c.S * 18 * dt;
+  }
+  const om = Math.hypot(c.ox, c.oy), omax = c.S * 10;
+  if (om > omax) { c.ox *= omax / om; c.oy *= omax / om; }
+  c.ox *= Math.exp(-dt * 0.5); c.oy *= Math.exp(-dt * 0.5);
+  Xp += c.ox; Yp += c.oy;
+  if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
+  const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
+  c.px = Xp; c.py = Yp;
+  const hw = smooth(clamp((wL - 0.92) / 0.08, 0, 1));   // il garde le nez dans le sens du vol pendant l'approche, et ne se tourne qu'une fois presque posé
+  if (hw > 0.01) {   // il se pose : il se tourne tête en haut, progressivement (jamais à reculons)
+    let d = -c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    c.head += d * Math.min(1, dt * 1.6 * hw);
+  } else if (Math.hypot(vx, vy) > 6) {
+    const tgt = Math.atan2(vx, -vy);
+    let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    c.head += d * Math.min(1, dt * 3.2);
+  }
+  // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
+  // à son propre rythme (indépendant des autres), et plus vite quand il monte.
+  const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
+  // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
+  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wW) + 2.6 * dep * (1 - wW) + 1.6 * wL * (1 - wW) * (dep > 0 ? 0 : 1);   // posé : il ouvre et ferme lentement les ailes ; au décollage, il bat vite
+  c.fph += dt * TAU * rate;
+  const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
+  const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
+  c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
+  c.fp = p; c.fa = lerp(amp, 1, Math.max(wW, dep));   // phase du battement et amplitude, pour le dessin des ailes qui se plient
+  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2 * (1 - wL);   // le corps monte un peu à chaque battement
+}
+
+
+
+const BFILE = { monarque: 'monarque', morpho: 'morpho-bleu', azure: 'azure-commun', machaon: 'machaon', lune: 'lune' };
+function darkSprite(sp) {   // version assombrie du dessin (même forme), pour l'ombre portée sur les parties de l'aile tournées à l'écart de la lumière
+  if (sp.dark) return sp.dark;
+  const d = document.createElement('canvas'); d.width = sp.cv.width; d.height = sp.cv.height;
+  const g = d.getContext('2d');
+  g.drawImage(sp.cv, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  g.fillStyle = 'rgba(14,8,34,0.88)';
+  g.fillRect(0, 0, d.width, d.height);
+  return (sp.dark = d);
+}
+const WL = (() => { const v = [-0.3, -0.45, 0.84], n = Math.hypot(v[0], v[1], v[2]); return v.map(a => a / n); })();
+function drawWing3D(sp, k, ox, oy, ph, fa, alpha, S, pitch) {
+  // L'aile est une surface en 3D : elle pivote autour du corps (le bout retarde sur la base), la caméra la regarde un peu d'en haut,
+  // la perspective agrandit ce qui se rapproche, et chaque morceau est éclairé selon son inclinaison.
+  const gx = S > 60 ? 8 : S > 35 ? 6 : 4, gy = S > 60 ? 3 : 2;   // moins de morceaux pour les petits papillons
+  const cw = sp.cv.width, ch = sp.cv.height, span = sp.bw * k, Dd = 10 * S;
+  const cp = Math.cos(pitch), sp_ = Math.sin(pitch);
+  const V = [];
+  for (let j = 0; j <= gy; j++) for (let i = 0; i <= gx; i++) {
+    const lam = -(((sp.bx + sp.bw * i / gx) - sp.px) * k + ox);      // distance au corps, vers l'extérieur
+    const y = ((sp.by + sp.bh * j / gy) - sp.py) * k + oy;           // vers l'arrière
+    const fr = clamp(lam / span, 0, 1);
+    const th = 0.55 + 0.75 * fa * Math.cos(ph - 0.12 * fr);            // angle de battement : l'aile est RIGIDE, elle pivote d'un bloc autour du corps (presque pas de décalage du bout)
+    const x3 = lam * Math.cos(th), z3 = lam * Math.sin(th);
+    const y4 = y * cp - z3 * sp_, z4 = y * sp_ + z3 * cp;
+    const s = Dd / (Dd - z4);
+    V.push([-x3 * s, y4 * s, x3, y4, z4]);
+  }
+  const M = ctx.getTransform(), dk = darkSprite(sp), e = 1.1;
+  const w = cw / gx, h = ch / gy;
+  ctx.globalAlpha = alpha;
+  for (let j = 0; j < gy; j++) for (let i = 0; i < gx; i++) {
+    const A = V[j * (gx + 1) + i], B = V[j * (gx + 1) + i + 1], C = V[(j + 1) * (gx + 1) + i];
+    const e1 = [B[2] - A[2], B[3] - A[3], B[4] - A[4]], e2 = [C[2] - A[2], C[3] - A[3], C[4] - A[4]];
+    let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+    const nl = Math.hypot(nx, ny, nz) || 1;
+    const shade = clamp(0.82 + 0.22 * Math.abs((nx * WL[0] + ny * WL[1] + nz * WL[2]) / nl), 0, 1);
+    ctx.setTransform(M);
+    ctx.transform(B[0] - A[0], B[1] - A[1], C[0] - A[0], C[1] - A[1], A[0], A[1]);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sp.cv, i * w - e, j * h - e, w + 2 * e, h + 2 * e, -e / w, -e / h, 1 + 2 * e / w, 1 + 2 * e / h);
+    if (shade < 0.94) {
+      ctx.globalAlpha = alpha * Math.min(0.7, (1 - shade) * 1.3);
+      ctx.drawImage(dk, i * w - e, j * h - e, w + 2 * e, h + 2 * e, -e / w, -e / h, 1 + 2 * e / w, 1 + 2 * e / h);
+    }
+  }
+  ctx.setTransform(M);
+  ctx.globalAlpha = alpha;
+}
+function drawWingStrips(sp, k, ox, oy, ph, fa, alpha) {
+  // l'aile est découpée en bandes, de la racine (au corps) vers le bout : chaque bande bat un peu après la précédente,
+  // l'aile se plie donc comme une vraie aile, et s'assombrit un peu quand elle se referme
+  const n = 8, cw = sp.cv.width / n, bwk = sp.bw * k / n, hk = sp.bh * k;
+  let xr = ox + (sp.bx + sp.bw - sp.px) * k;
+  const yb = oy + (sp.by - sp.py) * k;
+  for (let j = 0; j < n; j++) {
+    const sc = 0.1 + 0.9 * fa * (0.5 + 0.5 * Math.cos(ph - 0.42 * j));
+    const wd = bwk * sc;
+    ctx.globalAlpha = alpha * (0.8 + 0.2 * sc);
+    ctx.drawImage(sp.cv, (n - 1 - j) * cw, 0, cw, sp.cv.height, xr - wd, yb - (1 - sc) * hk * 0.06 * (j / n), wd + 0.7, hk);
+    xr -= wd;
+  }
+  ctx.globalAlpha = alpha;
+}
+function drawButterfly(c, w) {
+  const sp = c.sp, S = c.S, fn = 'papillon-' + BFILE[sp.id] + '-';
+  const wf = SPR[fn + 'aile-avant'], wh = SPR[fn + 'aile-arriere'], bd = SPR[fn + 'corps'];
+  if (!wf || !wh || !bd) return;
+  const a = lerp(0.65, 1, c.z) * (c.fade === undefined ? 1 : c.fade), k = (1.2 * S) / 914;   // pixels d'origine -> écran
+  ctx.save();
+  ctx.translate(c.X, c.Y);
+  ctx.rotate(c.head + 0.07 * Math.sin(c.fp || 0));   // léger roulis à chaque battement
+  // halo doux
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = a * 0.5;
+  const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, S * 1.9);
+  hg.addColorStop(0, rgba(sp.b, 0.15 * (1 - w))); hg.addColorStop(1, rgba(sp.b, 0));
+  ctx.fillStyle = hg;
+  ctx.fillRect(-S * 2, -S * 2, S * 4, S * 4);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = a;
+  // ailes gauches, puis leur miroir à droite ; battement = étirement horizontal ; arrière sous l'avant
+  const fp = c.fp === undefined ? 0 : c.fp, fa = c.fa === undefined ? 1 : c.fa;
+  const pitch = 0.3 + 0.08 * Math.sin(fp);   // la caméra voit le papillon un peu d'en haut, et il tangue à chaque battement
+  for (const side of [1, -1]) {
+    ctx.save();
+    ctx.scale(side, 1);
+    const ph = fp + (side < 0 ? 0.14 : 0);   // les deux ailes ne sont jamais parfaitement synchrones
+    drawWing3D(wh, k, S * 0.03, S * 0.08, ph, fa, a, S, pitch);
+    drawWing3D(wf, k, S * 0.03, -S * 0.02, ph - 0.04, fa, a, S, pitch);
+    ctx.restore();
+  }
+  ctx.scale(1, Math.cos(pitch) * 0.98 + 0.05);
+  drawSpr(bd, k, 0, 0);
+  ctx.restore();
+}
+
+function hash1(n) { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); }
+/* ================= Étoiles filantes (ciel de la prairie) ================= */
+let shoot = null, nextShoot = 8 + Math.random() * 20;
+function drawShooting(w) {
+  const k = 1 - w * 1.3;
+  if (k <= 0) return;
+  if (!shoot && T >= nextShoot) {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    shoot = { t0: T, dur: lerp(0.8, 1.4, Math.random()), x: lerp(0.15, 0.85, Math.random()) * W, y: lerp(0.06, 0.32, Math.random()) * H, dir,
+              ang: lerp(0.2, 0.55, Math.random()), len: lerp(0.18, 0.3, Math.random()) * W };
+    nextShoot = T + lerp(25, 70, Math.random());
+  }
+  if (!shoot) return;
+  const q = (T - shoot.t0) / shoot.dur;
+  if (q >= 1) { shoot = null; return; }
+  const vx = shoot.dir * Math.cos(shoot.ang), vy = Math.sin(shoot.ang);
+  const hx = shoot.x + vx * shoot.len * q, hy = shoot.y + vy * shoot.len * q;
+  const tl = shoot.len * 0.35 * Math.min(1, q * 4);
+  const al = Math.sin(Math.PI * q) * 0.8 * k;
+  const g = ctx.createLinearGradient(hx, hy, hx - vx * tl, hy - vy * tl);
+  g.addColorStop(0, 'rgba(255,250,235,' + al.toFixed(3) + ')');
+  g.addColorStop(1, 'rgba(255,250,235,0)');
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - vx * tl, hy - vy * tl); ctx.stroke();
+  const gl = ctx.createRadialGradient(hx, hy, 0, hx, hy, 5);
+  gl.addColorStop(0, 'rgba(255,250,235,' + (al * 0.9).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,250,235,0)');
+  ctx.fillStyle = gl; ctx.fillRect(hx - 5, hy - 5, 10, 10);
+  ctx.globalCompositeOperation = 'source-over';
+}
+function drawFlies(w) {
+  // Quelques lucioles seulement : chacune s'allume doucement une à deux secondes,
+  // puis disparaît plusieurs secondes et se rallume ailleurs.
+  const k = 1 - w * 1.3;
+  if (k <= 0) return;
+  const sc = clamp(minWH() / 760, 0.7, 1.6);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const f of flies) {
+    const u = (T + f.off) / f.per, idx = Math.floor(u), ph = (u - idx) * f.per;
+    if (ph > f.dur) continue;
+    const q = ph / f.dur;
+    const bl = Math.pow(Math.sin(Math.PI * q), 2) * k;
+    if (bl < 0.02) continue;
+    const hx = hash1(idx * 7.31 + f.seed), hy = hash1(idx * 3.17 + f.seed * 1.7);
+    const x = (lerp(0.06, 0.94, hx) + q * 0.015 * (hx < 0.5 ? 1 : -1)) * W;
+    const y = (lerp(0.7, 0.93, hy) - q * 0.015) * H;
+    const r = lerp(6, 11, f.z) * sc;
+    const hc = hash1(idx * 5.13 + f.seed * 2.3);
+    const col = hc < 0.4 ? [100, 255, 120] : hc < 0.75 ? [195, 255, 85] : [255, 218, 70]; // vert, jaune-vert ou jaune
+    let g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.6);
+    g.addColorStop(0, rgba(col, 0.6 * bl));
+    g.addColorStop(0.3, rgba(col, 0.24 * bl));
+    g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r * 2.6, y - r * 2.6, r * 5.2, r * 5.2);
+    g = ctx.createRadialGradient(x, y, 0, x, y, r * 0.45);
+    g.addColorStop(0, rgba(mixc(col, [255, 255, 255], 0.45), 0.9 * bl));
+    g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r * 0.45, y - r * 0.45, r * 0.9, r * 0.9);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ================= Flux de créatures ================= */
+/* Les créatures arrivent en continu pendant toute la durée. Chacune met T secondes à traverser l'écran
+   de bas en haut; la dernière sort par le haut à l'instant exact D (temps = 0). */
+const TRAVEL = { jelly: 90, butterfly: 55 }; // secondes pour traverser l'écran (vitesse de base)
+const frac = x => x - Math.floor(x);
+let sched = [], live = [], hi = 0;
+let fade = 0;
+function travelBase() { return Math.min(TRAVEL[S.scene] * 0.7, S.dur); }
+function build() {
+  // Rien à régler : le nombre de créatures varie tout seul, par vagues lentes (parfois beaucoup, parfois très peu).
+  // Le calendrier est tiré au hasard à chaque lancement. La dernière créature sort toujours à l'instant D.
+  const D = S.dur, T0 = travelBase();
+  const r = mulberry(Math.floor(Math.random() * 1e9));
+  const runSeed = Math.floor(r() * 1e6) * 1000;
+  const lo = S.scene === 'jelly' ? 4 : 7, hiN = S.scene === 'jelly' ? 15 : 19;
+  const ph = [r() * TAU, r() * TAU, r() * TAU], per = [lerp(60, 110, r()), lerp(130, 230, r()), lerp(25, 45, r())];
+  const densW = t => {
+    const n = 0.5 + 0.5 * (0.5 * Math.sin(TAU * t / per[0] + ph[0]) + 0.32 * Math.sin(TAU * t / per[1] + ph[1]) + 0.18 * Math.sin(TAU * t / per[2] + ph[2]));
+    return lerp(lo, hiN, smooth((n - 0.5) * 1.5 + 0.5)); // nombre visé à l'écran à cet instant
+  };
+  // méduses : beaucoup au début, de moins en moins avec le temps, plus aucune à la fin
+  const dens = S.scene === 'jelly' ? (t => lerp(13, 1.5, clamp(t / D, 0, 1))) : densW;
+  sched = [];
+  let e = D;
+  for (let k = 0; (S.scene !== 'jelly' || JELLY_MODE === 'stream') && !(S.scene !== 'jelly' && BFLY_LOOP) && e > 0 && k < 5000; k++) {
+    const Tk = T0 * lerp(0.85, 1.25, r());
+    const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
+    const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
+    sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1 });
+    e -= T0 / dens(e) * lerp(0.7, 1.3, r());
+  }
+  if (S.scene !== 'jelly' && BFLY_LOOP) {
+    // Papillons : autant que de minutes choisies (au plus 30), tous présents dès le départ ; un seul s'en va chaque minute, et le dernier à zéro.
+    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);
+    for (let k = 0; k < N; k++) {
+      const e = D - k * P, tin = arrivalTime({ k, n: N, e }), m = Math.max(1, Math.round((e - tin) / lerp(34, 52, r())));
+      sched.push({ k, seed: runSeed + k, e, T: (e - tin) / m, s: -60, n: N, loop: true, x0: 0.5, x1: 0.5 });   // T : durée d'un passage, choisie pour qu'un passage commence pile à l'arrivée
+    }
+  }
+  if (S.scene === 'jelly' && JELLY_MODE !== 'stream') {
+    // Autant de méduses que de minutes choisies. Aquarium ou boucle : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
+    // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
+    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);   // autant de méduses que de minutes choisies (au plus 30)
+    for (let k = 0; k < N; k++) {
+      const e = D - k * P;
+      sched.push({ k, seed: runSeed + k, e, T: JELLY_AQUARIUM ? e + 30 : lerp(75, 120, r()), s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });   // en boucle, T = durée d'un passage
+    }
+  }
+  if (S.scene === 'jelly' && JELLY_MODE === 'stream') {
+    // De temps en temps, une très grande méduse entre par un côté de l'écran et le traverse lentement.
+    const Tg = Math.min(T0 * 1.6, D), gs = Math.floor(Math.random() * 1e6);
+    let e = D - Tg * lerp(0.1, 0.6, Math.random()), m = 0;
+    while (e > 0) {
+      const Tk = Tg * lerp(0.9, 1.15, Math.random());
+      const y0g = lerp(0.4, 0.75, Math.random());   // la géante monte ou reste à niveau pendant sa traversée, elle ne descend pas
+      sched.push({ k: 100000 + gs + m, e, T: Tk, s: e - Tk, giant: true, side: Math.random() < 0.5 ? -1 : 1,
+                   y0f: y0g, y1f: y0g - lerp(0.05, 0.25, Math.random()) });
+      e -= lerp(70, 150, Math.random());
+      m++;
+    }
+  }
+  sched.sort((a, b) => a.s - b.s);
+  live = []; hi = 0;
+  fade = 0;
+}
+function resetStream() { live = []; hi = 0; try { for (const d of DAISIES) d.busy = -1e9; } catch (e) {} }
+function streamUpdate(el) {
+  while (hi < sched.length && sched[hi].s <= el) {
+    const d = sched[hi++];
+    if (d.e > el) {
+      rnd = mulberry(500 + (d.seed !== undefined ? d.seed : d.k) * 7919 + (S.scene === 'jelly' ? 131 : 262));
+      live.push(S.scene === 'jelly' ? makeJelly(d) : makeButterfly(d));
+    }
+  }
+  live = live.filter(c => el < c.e);
+}
+
+/* ================= Boucle ================= */
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const rdt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+  last = now;
+  const dt = rdt * MOT;
+  T += dt;
+  updateSnow(dt);
+  fade = Math.min(1, fade + rdt / 0.9);
+
+  const D = S.dur;
+  let el = elapsed();
+  if (S.phase === 'running' && el >= D) finish();
+  el = S.phase === 'done' ? D : el;
+  const w = wakeAmount();
+
+  streamUpdate(el);
+  for (const c of live) {
+    if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
+    else updateButterfly(c, Math.max(dt, 1e-4), el);
+  }
+  const sorted = live.slice().sort((a, b) => a.z - b.z);
+
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  drawBackground(w);
+  if (S.scene !== 'jelly') drawShooting(w);
+  if (S.scene === 'jelly') {
+    drawSnow(false);
+    drawAlgae(0, w); drawAlgae(1, w);
+    for (const c of sorted) { try { drawJelly(c); } catch (e) { ctx.restore(); } }
+    drawAlgae(2, w);
+    drawSnow(true);
+  } else {
+    drawHillsImg();
+    drawMotes(w);
+    drawFlies(w);
+    for (const c of sorted) { if (c.wL > 0.4) continue; try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
+    drawDaisies();
+    for (const c of sorted) { if (c.wL > 0.4) { try { drawButterfly(c, w); } catch (e) { ctx.restore(); } } }
+    drawGrassImg();
+  }
+  drawWake(w);
+  drawVignette(w);
+  if (fade < 1) { ctx.fillStyle = 'rgba(3,8,14,' + (1 - fade).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+
+  // interface
+  if (S.phase === 'running' || S.phase === 'paused' || S.phase === 'done') {
+    $('remain').textContent = fmtClock(D - el);
+    $('bar').style.transform = 'scaleX(' + clamp(el / D, 0, 1).toFixed(5) + ')';
+  } else {
+    $('bar').style.transform = 'scaleX(0)';
+  }
+}
+
+/* ================= Phases ================= */
+function setPhase(p) {
+  S.phase = p;
+  document.body.dataset.phase = p;
+  const pauseBtn = $('btnPause');
+  const paused = p === 'paused';
+  pauseBtn.querySelector('.pauseIcon').style.display = paused ? 'none' : '';
+  pauseBtn.querySelector('.playIcon').style.display = paused ? '' : 'none';
+  pauseBtn.setAttribute('aria-label', paused ? 'Reprendre' : 'Mettre en pause');
+  pauseBtn.disabled = p === 'done';
+  if (p === 'setup' || p === 'paused') document.body.classList.remove('idle');
+  audioSync();
+  syncWake();
+  poke();
+}
+function start() {
+  resetStream();
+  S.accum = 0;
+  S.startTs = performance.now();
+  if (S.sound) prepareAudio();
+  setPhase('running');
+}
+function togglePause() {
+  if (S.phase === 'running') { S.accum = elapsed(); setPhase('paused'); }
+  else if (S.phase === 'paused') { S.startTs = performance.now(); setPhase('running'); }
+}
+function finish() {
+  S.accum = S.dur;
+  S.doneAt = performance.now();
+  setPhase('done');
+  chime();
+}
+function backToSetup() { S.accum = 0; setPhase('setup'); }
+
+/* ================= Réglages (puces) ================= */
+function buildChips(host, items, isOn, onPick) {
+  host.innerHTML = '';
+  items.forEach(([val, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(isOn(val)));
+    b.addEventListener('click', () => { onPick(val); refreshSetup(); });
+    host.appendChild(b);
+  });
+}
+function refreshSetup() {
+  buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; build(); audioSync(); ensureScene(); } persist(); });
+  buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? 'Essai 30 s' : (d / 60) + ' min']), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
+}
+
+/* ================= Son ================= */
+let ac = null, master = null, previewTimer = 0;
+const layers = {};
+/* Enregistrements libres de droits (CC0), mis en boucle sans coupure. Chaque calque a son volume. */
+const LAYERS = {
+  jelly: [
+    { id: 'baleines1', url: AUDIO_BASE + 'baleines1.mp3', gain: 1.2 },
+    { id: 'baleines2', url: AUDIO_BASE + 'baleines2.mp3', gain: 0.95 },
+    { id: 'profondeurs', url: AUDIO_BASE + 'profondeurs.mp3', gain: 0.14 }
+  ],
+  butterfly: [
+    { id: 'nuit', url: AUDIO_BASE + 'nuit.mp3', gain: 1 },
+    { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 0.17 }
+  ]
+};
+function audioInit() {
+  if (ac) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  try {
+    ac = new AC();
+    master = ac.createGain(); master.gain.value = 0.9;
+    master.connect(ac.destination);
+  } catch (e) { ac = null; }
+}
+function loadLayer(def) {
+  if (layers[def.id]) return;
+  const g = ac.createGain(); g.gain.value = 0; g.connect(master);
+  const L = layers[def.id] = { g, state: 'loading' };
+  fetch(def.url)
+    .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.arrayBuffer(); })
+    .then(b => new Promise((ok, no) => ac.decodeAudioData(b, ok, no)))
+    .then(buf => {
+      const src = ac.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      src.connect(g);
+      src.start(0, Math.random() * buf.duration);
+      L.state = 'ready';
+      audioSync();
+    })
+    .catch(() => { L.state = 'error'; soundStatus('Impossible de charger le son « ' + def.id + ' ».'); });
+}
+function audioSync() {
+  $('btnSound').setAttribute('aria-pressed', String(S.sound));
+  $('btnSound').setAttribute('aria-label', S.sound ? 'Couper le son' : 'Activer le son');
+  $('soundBox').checked = S.sound;
+  if (!ac) return;
+  const live = S.sound && (S.phase === 'running' || S.phase === 'paused' || S.preview);
+  const t = ac.currentTime;
+  for (const [scene, defs] of Object.entries(LAYERS)) {
+    for (const def of defs) {
+      const want = live && scene === S.scene;
+      if (want && !layers[def.id]) loadLayer(def);
+      const L = layers[def.id];
+      if (L) L.g.gain.setTargetAtTime(want ? def.gain : 0, t, want ? 1.2 : (S.phase === 'done' ? 4 : 0.8));
+    }
+  }
+  if (S.sound && ac.state === 'suspended') ac.resume();
+}
+function previewAmbience(ms) {
+  S.preview = true;
+  audioSync();
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => { S.preview = false; audioSync(); }, ms || 9000);
+}
+/* Fin du temps : une nappe très douce qui monte lentement comme un souffle, sans attaque, sans cloche.
+   Quatre notes graves et arrondies entrent l'une après l'autre, puis s'éteignent doucement (environ 15 s). */
+function chime() {
+  if (!ac || !S.sound) return;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+  lp.connect(ac.destination);
+  const t0 = ac.currentTime + 0.3;
+  [[220, 0.016, 0], [329.63, 0.014, 1.5], [440, 0.009, 3], [554.37, 0.005, 4.5]].forEach(([f, vol, delay]) => {
+    const o = ac.createOscillator(), g = ac.createGain(), t = t0 + delay;
+    o.type = 'sine'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 6;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 11);
+    o.connect(g); g.connect(lp);
+    o.start(t); o.stop(t + 11.2);
+  });
+}
+/* Sur iPhone/iPad, le mode silencieux coupe le son des pages web, sauf si la page joue un média.
+   On joue donc un silence en boucle et on demande à Safari la catégorie « lecture ». */
+let keep = null;
+function silentWav() {
+  const n = 4000, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, n, true);
+  b.fill(128, 44);
+  let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+function unlockAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  try {
+    if (!keep) { keep = new Audio(silentWav()); keep.loop = true; }
+    const pr = keep.play();
+    if (pr && pr.catch) pr.catch(() => {});
+  } catch (e) {}
+}
+function soundStatus(msg) { $('soundState').textContent = msg; }
+function prepareAudio() {
+  audioInit();
+  if (!ac) { soundStatus('Ce navigateur ne permet pas de jouer du son.'); return Promise.resolve(false); }
+  unlockAudio();
+  return Promise.resolve(ac.resume()).catch(() => {}).then(() => {
+    const ok = ac.state === 'running';
+    soundStatus(ok ? 'Son actif. Si vous n\'entendez rien, vérifiez le volume, le mode silencieux et que l\'onglet n\'est pas en sourdine.' : 'Le navigateur bloque le son. Touchez « Tester le son ».');
+    return ok;
+  });
+}
+function setSound(on) {
+  S.sound = on;
+  if (on) {
+    prepareAudio().then(ok => { if (ok) previewAmbience(); }); // aperçu de l'ambiance du décor
+  } else {
+    soundStatus('');
+  }
+  audioSync();
+}
+function testSound() {
+  S.sound = true;
+  prepareAudio().then(ok => { if (ok) { previewAmbience(16000); setTimeout(chime, 2000); } }); // ambiance, puis le carillon de fin
+  audioSync();
+}
+
+/* ================= Écran maintenu allumé, plein écran, masquage ================= */
+let wl = null;
+async function syncWake() {
+  const need = S.phase === 'running' || S.phase === 'paused';
+  try {
+    if (need && !wl && navigator.wakeLock && document.visibilityState === 'visible') {
+      wl = await navigator.wakeLock.request('screen');
+      wl.addEventListener('release', () => { wl = null; });
+    } else if (!need && wl) { await wl.release(); wl = null; }
+  } catch (e) { wl = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncWake(); });
+
+function toggleFull() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  } catch (e) {}
+}
+let idleTimer = 0;
+function poke() {
+  document.body.classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (S.phase === 'running' || S.phase === 'done') document.body.classList.add('idle');
+  }, 3500);
+}
+
+/* ================= Branchements ================= */
+$('start').addEventListener('click', start);
+$('btnPause').addEventListener('click', togglePause);
+$('btnRestart').addEventListener('click', start);
+$('btnSettings').addEventListener('click', backToSetup);
+$('soundTest').addEventListener('click', testSound);
+$('btnSound').addEventListener('click', () => setSound(!S.sound));
+$('soundBox').addEventListener('change', e => setSound(e.target.checked));
+$('btnFull').addEventListener('click', toggleFull);
+if (!document.fullscreenEnabled) $('btnFull').hidden = true;
+['pointermove', 'pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, poke, { passive: true }));
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && (S.phase === 'running' || S.phase === 'paused') && !/^(BUTTON|INPUT)$/.test(e.target.tagName)) {
+    e.preventDefault(); togglePause();
+  }
+});
+window.addEventListener('resize', resize);
+
+resize();
+buildAmbient();
+build();
+refreshSetup();
+setPhase('setup');
+ensureScene();
+fade = 0;
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
