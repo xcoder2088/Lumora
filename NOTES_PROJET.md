@@ -53,4 +53,4 @@ Vrai iPhone, vrai tableau blanc, son à l'oreille, fluidité réelle.
 4. Retours attendus après essai sur le tableau blanc.
 
 ## Page de démonstration privée
-Version 5 : la page de démonstration privée est dans la liste des pages publiées du propriétaire.
+Version 5 : la page de démonstration privée est dans la liste des pages publiées du propriétaire (titre « Lumora »).
