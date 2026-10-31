@@ -1,10 +1,475 @@
 {
-  "assets": 41,
+  "assets": 60,
   "allChecksPassed": true,
-  "waterThemeBytes": 2867400,
-  "meadowThemeBytes": 2593328,
-  "totalWebpBytes": 5460728,
-  "totalPngBytes": 26758070,
+  "waterThemeBytes": 5343510,
+  "meadowThemeBytes": 5025906,
+  "totalWebpBytes": 10369416,
+  "totalPngBytes": 49295593,
   "animationPreview": "apercus/controle-pulsation.webp",
-  "repositoryDelivery": "Les 41 PNG et 41 WebP sont déposés individuellement; les ZIP et générations brutes ne sont pas dupliqués dans Git."
+  "repositoryDelivery": "Les 60 PNG et 60 WebP sont deposes individuellement ; les apercus sont exclus du budget de chargement. Les pages, les sons et les anciennes images sont inchanges.",
+  "depthDelivery": {
+    "assets": 19,
+    "additionalWaterThemeBytes": 2476110,
+    "additionalMeadowThemeBytes": 2432578,
+    "budgetPerSceneBytes": 2500000,
+    "waterBudgetPassed": true,
+    "meadowBudgetPassed": true,
+    "checks": [
+      {
+        "name": "decor-eau-algues-lointaines",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": false,
+        "bbox": [
+          0,
+          508,
+          2560,
+          1440
+        ],
+        "maxAlpha": 122,
+        "metadataRemoved": true,
+        "heightFraction": 0.6472222222222223,
+        "webpAlphaMaxError": 5,
+        "webpAlphaRmsError": 1.4748
+      },
+      {
+        "name": "decor-eau-algues-moyennes",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": false,
+        "bbox": [
+          0,
+          648,
+          2560,
+          1440
+        ],
+        "maxAlpha": 191,
+        "metadataRemoved": true,
+        "heightFraction": 0.55,
+        "webpAlphaMaxError": 8,
+        "webpAlphaRmsError": 1.8104
+      },
+      {
+        "name": "decor-eau-algues-premier-plan",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": false,
+        "bbox": [
+          0,
+          216,
+          2560,
+          1440
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "centralThirdClear": true,
+        "heightFraction": 0.85,
+        "webpAlphaMaxError": 6,
+        "webpAlphaRmsError": 0.825
+      },
+      {
+        "name": "plante-eau-varech-01",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          340,
+          51,
+          713,
+          2048
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "plante-eau-varech-02",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          290,
+          51,
+          738,
+          2048
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "plante-eau-herbe-marine-01",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          230,
+          51,
+          782,
+          2048
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "plante-eau-herbe-marine-02",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          190,
+          51,
+          833,
+          2048
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "plante-eau-branchue-01",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          172,
+          51,
+          868,
+          2048
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "plante-eau-bulles-01",
+        "dimensions": [
+          1024,
+          2048
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          464,
+          904,
+          560,
+          1144
+        ],
+        "maxAlpha": 36,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "decor-eau-sol",
+        "dimensions": [
+          2560,
+          600
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          0,
+          289,
+          2560,
+          600
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "decor-prairie-arbres-lointains",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          50,
+          799,
+          2475,
+          1071
+        ],
+        "maxAlpha": 254,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "decor-prairie-arbre-premier-plan",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          0,
+          0,
+          1093,
+          1440
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0,
+        "centreTransparent": true
+      },
+      {
+        "name": "decor-prairie-arbre-premier-plan-droite",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          1690,
+          432,
+          2560,
+          1440
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0,
+        "centreTransparent": true
+      },
+      {
+        "name": "fleur-marguerite-01",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          179,
+          38,
+          849,
+          1536
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "fleur-marguerite-02",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          258,
+          38,
+          904,
+          1536
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "fleur-marguerite-03",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          143,
+          38,
+          674,
+          1536
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "fleur-marguerite-04",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          333,
+          38,
+          637,
+          1536
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "fleur-marguerite-05",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          191,
+          38,
+          845,
+          1536
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "footAtBottom": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      },
+      {
+        "name": "decor-prairie-marguerites",
+        "dimensions": [
+          2560,
+          1440
+        ],
+        "pngRgba8": true,
+        "sRgbDeclared": true,
+        "zeroRgbUnderZeroAlpha": true,
+        "webpAlphaIdentical": true,
+        "bbox": [
+          0,
+          624,
+          2560,
+          1440
+        ],
+        "maxAlpha": 255,
+        "metadataRemoved": true,
+        "webpAlphaMaxError": 0,
+        "webpAlphaRmsError": 0.0
+      }
+    ],
+    "pngTransparentRgbZeroRequired": true,
+    "webpEncoding": "RVB avec pertes de qualite elevee ; alpha exact pour les sprites, erreur maximale controlee pour les trois calques aquatiques.",
+    "motionPreview": {
+      "path": "apercus/profondeur/controle-ondulation.webp",
+      "frames": 32,
+      "durationMs": 8000,
+      "bottomRowUnchanged": true
+    },
+    "previewsExcludedFromBudget": true,
+    "allChecksPassed": true,
+    "existingFilesUnchangedExceptRequestedJson": true,
+    "existingFilesChecked": 120,
+    "checkedItems": [
+      "decor-eau-algues-lointaines",
+      "decor-eau-algues-moyennes",
+      "decor-eau-algues-premier-plan",
+      "plante-eau-varech-01",
+      "plante-eau-varech-02",
+      "plante-eau-herbe-marine-01",
+      "plante-eau-herbe-marine-02",
+      "plante-eau-branchue-01",
+      "plante-eau-bulles-01",
+      "decor-eau-sol",
+      "decor-prairie-arbres-lointains",
+      "decor-prairie-arbre-premier-plan",
+      "decor-prairie-arbre-premier-plan-droite",
+      "fleur-marguerite-01",
+      "fleur-marguerite-02",
+      "fleur-marguerite-03",
+      "fleur-marguerite-04",
+      "fleur-marguerite-05",
+      "decor-prairie-marguerites"
+    ],
+    "visualReview": {
+      "waterLayers": true,
+      "neutralMeadowAssets": true,
+      "cleanEdgesOnDarkBackground": true,
+      "horizonPlacement": true,
+      "noNewCreaturesOrTextInIllustrations": true
+    }
+  }
 }

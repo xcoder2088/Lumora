@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "validation visuelle requise avant intégration",
   "colorSpace": "sRGB",
   "alpha": "straight / non prémultiplié",
@@ -13,8 +13,8 @@
   ],
   "filament": "étirable ; pas de garantie de raccord de texture répété",
   "totalsBytes": {
-    "png": 26758070,
-    "webp": 5460728
+    "png": 49295593,
+    "webp": 10369416
   },
   "assets": [
     {
@@ -713,8 +713,373 @@
       "partialAlphaPixels": 74077,
       "pngSha256": "52ad593d2315cb652b07e3d2df2cd4744436037160523fec83af9ad84a0e9265",
       "webpSha256": "daeca7e425a0a451ac8b72c17b1319277426f52a27ce1ae3587dbaa68f556ecc"
+    },
+    {
+      "name": "decor-eau-algues-lointaines",
+      "png": "decors/decor-eau-algues-lointaines.png",
+      "webp": "decors/decor-eau-algues-lointaines.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 3136078,
+      "webpBytes": 564640,
+      "transparentPixels": 2120834,
+      "partialAlphaPixels": 1565566,
+      "pngSha256": "ec02bbfa6da158c7eebd04421f8daca4876a0105f4b83f15e0a5624110c48a15",
+      "webpSha256": "d003af7f234c3314a0c3a7fc106c5269a8a67d334035ca7cff28985248330577"
+    },
+    {
+      "name": "decor-eau-algues-moyennes",
+      "png": "decors/decor-eau-algues-moyennes.png",
+      "webp": "decors/decor-eau-algues-moyennes.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2578044,
+      "webpBytes": 416196,
+      "transparentPixels": 2397223,
+      "partialAlphaPixels": 1289177,
+      "pngSha256": "69f66e7abd7ba1cf5d77734940a41e021f24d28e51e3d428bfab7dd710b37954",
+      "webpSha256": "f9f484ffab67430ca7673bce97d1830685306fbdebaa142d091a98df3216fa1a"
+    },
+    {
+      "name": "decor-eau-algues-premier-plan",
+      "png": "decors/decor-eau-algues-premier-plan.png",
+      "webp": "decors/decor-eau-algues-premier-plan.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 1359750,
+      "webpBytes": 256952,
+      "transparentPixels": 2763073,
+      "partialAlphaPixels": 918841,
+      "pngSha256": "694029f07323b00cb1ef8c6a0ae99631829edac3c7ddbf931340e826096c722d",
+      "webpSha256": "07c90d3827ea157461a026f19d5f571156720cc6d1cbfce4353d99f07bc6e56e"
+    },
+    {
+      "name": "plante-eau-varech-01",
+      "png": "plantes/plante-eau-varech-01.png",
+      "webp": "plantes/plante-eau-varech-01.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        2047
+      ],
+      "pngBytes": 679842,
+      "webpBytes": 88922,
+      "transparentPixels": 1758323,
+      "partialAlphaPixels": 337801,
+      "pngSha256": "388fb001785772c7150672e6f05fccfa5b180e80f7b66960c31ff070b9c60137",
+      "webpSha256": "b8f2287b3bb2eaa2b5fc7c4b914fb5d2d429a820fd558ba2d151f68ab34abdbf"
+    },
+    {
+      "name": "plante-eau-varech-02",
+      "png": "plantes/plante-eau-varech-02.png",
+      "webp": "plantes/plante-eau-varech-02.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        2047
+      ],
+      "pngBytes": 804484,
+      "webpBytes": 116050,
+      "transparentPixels": 1708129,
+      "partialAlphaPixels": 387836,
+      "pngSha256": "ecfe47f49ed8e0fa92bff480b7e4af835e5b18ee53d74496f3f8290816d5ee29",
+      "webpSha256": "25bfb994e6315471e092cc539575262f452582a9cca572910101860fe3e091a9"
+    },
+    {
+      "name": "plante-eau-herbe-marine-01",
+      "png": "plantes/plante-eau-herbe-marine-01.png",
+      "webp": "plantes/plante-eau-herbe-marine-01.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        2047
+      ],
+      "pngBytes": 663289,
+      "webpBytes": 158460,
+      "transparentPixels": 1799462,
+      "partialAlphaPixels": 294813,
+      "pngSha256": "3ecc49c2a2ed08c897ed1bd05ad974e1739f0efbfd0c9172ee7d8831c889f3e6",
+      "webpSha256": "cf0b3d54a932769a15917b2ae8a4a366dd2d32289dfe2e59a8484ddf6aaee1d8"
+    },
+    {
+      "name": "plante-eau-herbe-marine-02",
+      "png": "plantes/plante-eau-herbe-marine-02.png",
+      "webp": "plantes/plante-eau-herbe-marine-02.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        2047
+      ],
+      "pngBytes": 758743,
+      "webpBytes": 218430,
+      "transparentPixels": 1759324,
+      "partialAlphaPixels": 334050,
+      "pngSha256": "7e8075b0bbae2ef04f388bf9be8e66cf029325fbd532a8d236e118f35181481c",
+      "webpSha256": "945c9dcd27a5352d1b5b666384e8de53fa14130462b8dc89e90d2a88b6bc0a22"
+    },
+    {
+      "name": "plante-eau-branchue-01",
+      "png": "plantes/plante-eau-branchue-01.png",
+      "webp": "plantes/plante-eau-branchue-01.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        2047
+      ],
+      "pngBytes": 1749204,
+      "webpBytes": 537112,
+      "transparentPixels": 1376724,
+      "partialAlphaPixels": 720357,
+      "pngSha256": "0117e4a61d4f8a12eabfd8268319647c531baf860ce46bd9a8a4087733df01a9",
+      "webpSha256": "7d9e97acd5aaa6b7798eeffdd81e08741bd2a573954fd579027a674b6a15d8df"
+    },
+    {
+      "name": "plante-eau-bulles-01",
+      "png": "plantes/plante-eau-bulles-01.png",
+      "webp": "plantes/plante-eau-bulles-01.webp",
+      "width": 1024,
+      "height": 2048,
+      "pivot": [
+        512,
+        1024
+      ],
+      "optional": true,
+      "pngBytes": 26272,
+      "webpBytes": 9778,
+      "transparentPixels": 2092227,
+      "partialAlphaPixels": 4925,
+      "pngSha256": "83e04337f35f35634ec48fa0b8ea3d042f84d57051d4654d1959acde8f0d66c2",
+      "webpSha256": "ea9e2cf02c6593d2507d04a38f1950153b9ac51866a7205ac402d68859b5f009",
+      "notes": [
+        "Groupe facultatif ; reflet tres discret, alpha maximal reduit."
+      ]
+    },
+    {
+      "name": "decor-eau-sol",
+      "png": "decors/decor-eau-sol.png",
+      "webp": "decors/decor-eau-sol.webp",
+      "width": 2560,
+      "height": 600,
+      "pivot": [
+        1280,
+        599
+      ],
+      "placement": "bord bas",
+      "optional": true,
+      "pngBytes": 1044286,
+      "webpBytes": 109570,
+      "transparentPixels": 869657,
+      "partialAlphaPixels": 665269,
+      "pngSha256": "1f7fe6e48f7dc4154521951b5fc74d02aa099cabad691633f7cdb59ef8ce66e5",
+      "webpSha256": "a31acb42573aaae17f471d0b19386a7f8abf36f7d9367065fe31f8fd0998a576"
+    },
+    {
+      "name": "decor-prairie-arbres-lointains",
+      "png": "decors/decor-prairie-arbres-lointains.png",
+      "webp": "decors/decor-prairie-arbres-lointains.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 460091,
+      "webpBytes": 131158,
+      "transparentPixels": 3522369,
+      "partialAlphaPixels": 164031,
+      "pngSha256": "f6074e8bb6ec8271863b25db043cb4c544235dcba9f1b9b84a7860c286edd937",
+      "webpSha256": "10f184bbfeeb7be97f86a5af42cbceacc13e3d204427a360f2b1d4468445c368",
+      "notes": [
+        "Bosquets places sur le profil des collines existantes ; bases masquees par ce calque."
+      ]
+    },
+    {
+      "name": "decor-prairie-arbre-premier-plan",
+      "png": "decors/decor-prairie-arbre-premier-plan.png",
+      "webp": "decors/decor-prairie-arbre-premier-plan.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2644237,
+      "webpBytes": 574272,
+      "transparentPixels": 2565415,
+      "partialAlphaPixels": 1120432,
+      "pngSha256": "c9b8ae732bf9fa3088c90712843a4f267d4b30e39da757dd4984faebabcaa851",
+      "webpSha256": "5aa315ead653b2aa8b7b01b89cba9d7d81d50c2a9b18ee4b22bedf17fabee245"
+    },
+    {
+      "name": "decor-prairie-arbre-premier-plan-droite",
+      "png": "decors/decor-prairie-arbre-premier-plan-droite.png",
+      "webp": "decors/decor-prairie-arbre-premier-plan-droite.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "optional": true,
+      "pngBytes": 1421982,
+      "webpBytes": 353758,
+      "transparentPixels": 3122768,
+      "partialAlphaPixels": 563309,
+      "pngSha256": "7d5f082a7503c868bd9fd49fe15c37ea7b9ea91f1a47c7b3116d714f282c3749",
+      "webpSha256": "71196b30711be5ee6b5d8a340adf4a627bc5fecc9bc78aa8c2398bfedff38ad9"
+    },
+    {
+      "name": "fleur-marguerite-01",
+      "png": "fleurs/fleur-marguerite-01.png",
+      "webp": "fleurs/fleur-marguerite-01.webp",
+      "width": 1024,
+      "height": 1536,
+      "pivot": [
+        512,
+        1535
+      ],
+      "pngBytes": 621176,
+      "webpBytes": 102728,
+      "transparentPixels": 1266765,
+      "partialAlphaPixels": 305056,
+      "pngSha256": "16e35b2ceb4378429f1fa3a6b2dd16199ba498e1c8bca1cdd7f7e548f49d8e4d",
+      "webpSha256": "5c88b13b179b7f0fd89bc5f469a91de7dad0fadd5dd4d5a9a1da9a473b9c14b1"
+    },
+    {
+      "name": "fleur-marguerite-02",
+      "png": "fleurs/fleur-marguerite-02.png",
+      "webp": "fleurs/fleur-marguerite-02.webp",
+      "width": 1024,
+      "height": 1536,
+      "pivot": [
+        512,
+        1535
+      ],
+      "pngBytes": 499799,
+      "webpBytes": 93388,
+      "transparentPixels": 1353658,
+      "partialAlphaPixels": 217950,
+      "pngSha256": "f02f7714395c39ac49b4ff806ae4560063346a42c0f518ed9ad8719f6cf56285",
+      "webpSha256": "f813a08305a4d022c5e9f2759a5197bf9a2fcacdd2cd32b46c0cb6846b4576c6"
+    },
+    {
+      "name": "fleur-marguerite-03",
+      "png": "fleurs/fleur-marguerite-03.png",
+      "webp": "fleurs/fleur-marguerite-03.webp",
+      "width": 1024,
+      "height": 1536,
+      "pivot": [
+        512,
+        1535
+      ],
+      "pngBytes": 330530,
+      "webpBytes": 75714,
+      "transparentPixels": 1438574,
+      "partialAlphaPixels": 133068,
+      "pngSha256": "669a384b554d9aeb8c0456e9413b4c3b0d0fa55e4d6ee34960ece932d768053e",
+      "webpSha256": "e60013dfb72c5e01a1552e8ff47481fe3bb7e27dda0214a69020d2da6621173b"
+    },
+    {
+      "name": "fleur-marguerite-04",
+      "png": "fleurs/fleur-marguerite-04.png",
+      "webp": "fleurs/fleur-marguerite-04.webp",
+      "width": 1024,
+      "height": 1536,
+      "pivot": [
+        512,
+        1535
+      ],
+      "pngBytes": 251453,
+      "webpBytes": 65872,
+      "transparentPixels": 1491009,
+      "partialAlphaPixels": 81286,
+      "pngSha256": "e90f5e30826a50927956447984278e5e005d9bc0d266adeb6fd6c64c22dbad8e",
+      "webpSha256": "bdfdffe8ae6ebd9751570ae98ce9a76aa8de2e0a4a99db37af34b06471ce5975"
+    },
+    {
+      "name": "fleur-marguerite-05",
+      "png": "fleurs/fleur-marguerite-05.png",
+      "webp": "fleurs/fleur-marguerite-05.webp",
+      "width": 1024,
+      "height": 1536,
+      "pivot": [
+        512,
+        1535
+      ],
+      "pngBytes": 681144,
+      "webpBytes": 131440,
+      "transparentPixels": 1278675,
+      "partialAlphaPixels": 292932,
+      "pngSha256": "7612828215018aea73d2eb8d5f294a1b608ad8dff539c796ae95d194ac97550f",
+      "webpSha256": "6594a3b30579b1540e3e26b31a4e9d87427d775ae9bef9319bb03d8e5659d988"
+    },
+    {
+      "name": "decor-prairie-marguerites",
+      "png": "decors/decor-prairie-marguerites.png",
+      "webp": "decors/decor-prairie-marguerites.webp",
+      "width": 2560,
+      "height": 1440,
+      "fullFrame": true,
+      "pngBytes": 2827119,
+      "webpBytes": 904248,
+      "transparentPixels": 2481316,
+      "partialAlphaPixels": 1205071,
+      "pngSha256": "efc387cae65261c1e2ad1e09a23361380ae2d7c42c605e983c4f00f70793002b",
+      "webpSha256": "d2c816fbbf9a53f96d11f2273684744ff2164de71a528573cad0e9e1b06d6b69"
     }
   ],
   "basePath": "assets/",
-  "previewsExcludedFromRuntimeBudget": true
+  "previewsExcludedFromRuntimeBudget": true,
+  "depthDelivery": {
+    "names": [
+      "decor-eau-algues-lointaines",
+      "decor-eau-algues-moyennes",
+      "decor-eau-algues-premier-plan",
+      "plante-eau-varech-01",
+      "plante-eau-varech-02",
+      "plante-eau-herbe-marine-01",
+      "plante-eau-herbe-marine-02",
+      "plante-eau-branchue-01",
+      "plante-eau-bulles-01",
+      "decor-eau-sol",
+      "decor-prairie-arbres-lointains",
+      "decor-prairie-arbre-premier-plan",
+      "decor-prairie-arbre-premier-plan-droite",
+      "fleur-marguerite-01",
+      "fleur-marguerite-02",
+      "fleur-marguerite-03",
+      "fleur-marguerite-04",
+      "fleur-marguerite-05",
+      "decor-prairie-marguerites"
+    ],
+    "provenance": "illustrations produites avec l'aide d'une intelligence artificielle",
+    "contactSheet": "apercus/profondeur/planche-contact.png",
+    "waterPreview": "apercus/profondeur/apercu-eau.png",
+    "meadowPreview": "apercus/profondeur/apercu-prairie.png",
+    "pivotOrigin": "haut gauche ; coordonnees en pixels",
+    "neutralDaylight": [
+      "arbres",
+      "marguerites"
+    ],
+    "waterLayerOrder": [
+      "decor-eau-profonde",
+      "decor-eau-sol",
+      "decor-eau-algues-lointaines",
+      "decor-eau-algues-moyennes",
+      "meduses existantes",
+      "decor-eau-algues-premier-plan"
+    ],
+    "meadowLayerOrder": [
+      "decor-prairie-ciel",
+      "decor-prairie-arbres-lointains",
+      "decor-prairie-collines",
+      "papillons existants",
+      "decor-prairie-arbre-premier-plan",
+      "decor-prairie-arbre-premier-plan-droite",
+      "decor-prairie-marguerites",
+      "decor-prairie-herbes"
+    ],
+    "animatedPreview": "apercus/profondeur/controle-ondulation.webp",
+    "previewNote": "Apercus assembles avec les anciens decors ; multiplication de teinte uniquement dans la prairie de controle, les nouvelles images restent en lumiere neutre.",
+    "license": "LICENCE.md"
+  }
 }
