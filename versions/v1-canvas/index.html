@@ -454,11 +454,11 @@ function makeJelly(d) {
   // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
   const q = rnd();
   // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
-  const szf = d.n > 12 ? 0.85 : 1;
+  const szf = d.n > 20 ? 0.75 : d.n > 12 ? 0.85 : 1;
   const sz = szf * (d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.085, 0.115, rnd()) : 0.027 * Math.pow(4.5, rnd()));
   const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
-  const nThin = 16, nArm = 4;
+  const nThin = d.n > 12 && sz < 0.05 ? 8 : 16, nArm = 4;   // moins de filaments pour les petites quand elles sont très nombreuses
   for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(2.0, 3.6, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
   for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
   const ci = pickColorIdx();
@@ -476,7 +476,7 @@ function makeJelly(d) {
 
 // Mode d'affichage des méduses : false = elles traversent l'écran du bas vers le haut, de moins en moins nombreuses avec le temps ;
 // true = « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin).
-const JELLY_AQUARIUM = false;
+const JELLY_AQUARIUM = true;
 function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
   let best = null, bs = -1e9;
   for (let k = 0; k < 14; k++) {
@@ -1054,7 +1054,7 @@ function build() {
   if (S.scene === 'jelly' && JELLY_AQUARIUM) {
     // Aquarium : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
     // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
-    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 20);   // autant de méduses que de minutes choisies (au plus 20)
+    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);   // autant de méduses que de minutes choisies (au plus 30)
     for (let k = 0; k < N; k++) {
       const e = D - k * P;
       sched.push({ k, seed: runSeed + k, e, T: e + 30, s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });
