@@ -468,7 +468,7 @@ function makeJelly(d) {
     rf: sz, period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
-    hx: lerp(0.12, 0.88, hash1(d.k * 2.31 + 0.7)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
+    hx: lerp(0.1, 0.9, frac(d.k * 0.618034 + 0.17)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
     modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
     x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant || d.big ? 0.8 : 1
   };
@@ -476,7 +476,8 @@ function makeJelly(d) {
 
 // Mode d'affichage des méduses : false = elles traversent l'écran du bas vers le haut, de moins en moins nombreuses avec le temps ;
 // true = « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin).
-const JELLY_AQUARIUM = true;
+const JELLY_MODE = 'loop';   // 'loop' : elles montent sans cesse, sortent par le haut et reviennent par le bas, une de moins chaque minute ; 'aquarium' ; 'stream'
+const JELLY_AQUARIUM = JELLY_MODE === 'aquarium';
 function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
   let best = null, bs = -1e9;
   for (let k = 0; k < 14; k++) {
@@ -495,7 +496,8 @@ function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquariu
 function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
-  const u = clamp((el - c.s) / c.T, 0, 1);
+  let u = clamp((el - c.s) / c.T, 0, 1);
+  const uc = JELLY_MODE === 'loop' && !c.giant ? clamp(el / Math.max(1, c.e), 0, 1) : u;   // la couleur change lentement pendant toute la durée
   let tx, ty, gvx = 0, exitQ = 0, stx = 0, sty = 0;
   if (c.giant) {
     // entre par un côté, traverse l'écran en dérivant, sort par l'autre côté
@@ -503,6 +505,18 @@ function updateJelly(c, dt, el) {
     tx = lerp(xa, xb, u);
     gvx = (xb - xa) / c.T;   // vitesse moyenne de la traversée
     ty = lerp(c.y0f, c.y1f, u) * H;
+  } else if (JELLY_MODE === 'loop') {
+    // elle monte sans cesse, sort par le haut, revient par le bas ; le dernier passage se termine exactement à son instant de sortie c.e
+    const ph = (((el - c.e) / c.T) % 1 + 1) % 1;
+    if (c.lastPh !== undefined && ph < c.lastPh - 0.5 && c.x !== null) {   // elle vient de sortir par le haut : elle réapparaît sous l'écran
+      c.x = c.hx * W; c.y = H + R * 1.1; c.vx = 0; c.vy = 0;
+      for (const t of c.tents) t.init = false;
+    }
+    c.lastPh = ph; u = ph;
+    const sway = (p) => (c.hx + 0.09 * Math.sin(T * c.fx * 0.6 + c.ph + p * 2)) * W;
+    tx = sway(u); ty = lerp(H + R * 1.1, -R * 2.9, u);
+    const u2 = Math.min(1, u + 0.12);
+    stx = sway(u2); sty = lerp(H + R * 1.1, -R * 2.9, u2);
   } else if (!JELLY_AQUARIUM) {
     tx = lerp(c.x0, c.x1, u) * W;
     ty = lerp(H + R * 1.8, -R * 4.4, u);
@@ -583,7 +597,7 @@ function updateJelly(c, dt, el) {
   c.x += c.vx * dt; c.y += c.vy * dt;
   c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.4);
   c.X = c.x; c.Y = c.y;
-  c.col = pathColor(c.cols, u);
+  c.col = pathColor(c.cols, uc);
   // tentacules : suiveurs de chaîne
   const w = R * (1 - 0.22 * b);
   const seg0 = R / KSEG;
@@ -1044,23 +1058,23 @@ function build() {
   const dens = S.scene === 'jelly' ? (t => lerp(13, 1.5, clamp(t / D, 0, 1))) : densW;
   sched = [];
   let e = D;
-  for (let k = 0; (S.scene !== 'jelly' || !JELLY_AQUARIUM) && e > 0 && k < 5000; k++) {
+  for (let k = 0; (S.scene !== 'jelly' || JELLY_MODE === 'stream') && e > 0 && k < 5000; k++) {
     const Tk = T0 * lerp(0.85, 1.25, r());
     const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
     const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
     sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1 });
     e -= T0 / dens(e) * lerp(0.7, 1.3, r());
   }
-  if (S.scene === 'jelly' && JELLY_AQUARIUM) {
-    // Aquarium : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
+  if (S.scene === 'jelly' && JELLY_MODE !== 'stream') {
+    // Autant de méduses que de minutes choisies. Aquarium ou boucle : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
     // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
     const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);   // autant de méduses que de minutes choisies (au plus 30)
     for (let k = 0; k < N; k++) {
       const e = D - k * P;
-      sched.push({ k, seed: runSeed + k, e, T: e + 30, s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });
+      sched.push({ k, seed: runSeed + k, e, T: JELLY_AQUARIUM ? e + 30 : lerp(75, 120, r()), s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });   // en boucle, T = durée d'un passage
     }
   }
-  if (S.scene === 'jelly' && !JELLY_AQUARIUM) {
+  if (S.scene === 'jelly' && JELLY_MODE === 'stream') {
     // De temps en temps, une très grande méduse entre par un côté de l'écran et le traverse lentement.
     const Tg = Math.min(T0 * 1.6, D), gs = Math.floor(Math.random() * 1e6);
     let e = D - Tg * lerp(0.1, 0.6, Math.random()), m = 0;
