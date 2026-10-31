@@ -43,7 +43,7 @@ Puis ouvrir <http://localhost:8000>.
 ## Structure et versions
 
 ```
-index.html           la version courante de l'application (HTML, CSS et JavaScript)
+index.html           la version courante de l'application (identique à versions/v5-traversees/index.html, avec les chemins adaptés)
 audio/               les trois boucles sonores (MP3)
 assets/              illustrations (méduses, papillons, décors), voir assets/LISEZMOI.md
 versions/v1-canvas/  COPIE FIGÉE de la version 1, dessinée par le code. Ne pas modifier.
