@@ -1038,19 +1038,25 @@ function distToOutside(px, py, dx, dy, mx, my) {
   while (s < 5000 && px + dx * s > -mx && px + dx * s < W + mx && py + dy * s > -my && py + dy * s < H + my) s += 8;
   return s;
 }
-// nouvelle traversée d'une méduse : direction au hasard (vers le haut, de côté, ou en diagonale), entrée par le bord de l'écran d'où elle vient
+// nouvelle traversée d'une méduse : elle entre par la gauche, la droite ou le bas (jamais par le haut), et sort par un autre bord au hasard.
+// La direction en découle : verticale, horizontale ou oblique, vers le haut ou en descendant doucement.
 function newJellyPass(c, R, first) {
-  const r = first ? 0.15 + 0.85 * Math.random() : Math.random();   // au début, surtout des arrivées par les côtés : l'écran se remplit sur toute sa hauteur
-  let ang;   // angle depuis la verticale (0 = vers le haut, + = vers la droite) ; jamais vers le bas
-  if (r < 0.35) ang = (Math.random() - 0.5) * 0.3;                                           // à la verticale (presque droit vers le haut)
-  else if (r < 0.65) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.4, 1.56, Math.random());   // de gauche à droite ou de droite à gauche, presque à l'horizontale
-  else ang = (Math.random() < 0.5 ? 1 : -1) * lerp(0.55, 1.1, Math.random());               // en diagonale
-  c.ang = ang; c.dx = Math.sin(ang); c.dy = -Math.cos(ang);
+  const mx = R * 2.6, my = R * 3.4, rr = Math.random();
+  const e1 = first ? (rr < 0.4 ? 0 : rr < 0.8 ? 1 : 2) : (rr < 0.33 ? 0 : rr < 0.66 ? 1 : 2);   // 0 gauche, 1 droite, 2 bas
+  const pt = (e, f) => e === 0 ? [-mx, lerp(0.08, 0.9, f) * H] : e === 1 ? [W + mx, lerp(0.08, 0.9, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + my] : [lerp(0.08, 0.92, f) * W, -my];
+  const E = pt(e1, Math.random());
+  let dx = 0, dy = -1;
+  for (let k = 0; k < 12; k++) {
+    const e2 = e1 === 2 && Math.random() < 0.5 ? 3 : [0, 1, 2, 3].filter(v => v !== e1)[Math.floor(Math.random() * 3)];   // du bas, une sur deux va droit vers le haut
+    const X = pt(e2, Math.random());
+    const l = Math.hypot(X[0] - E[0], X[1] - E[1]) || 1;
+    dx = (X[0] - E[0]) / l; dy = (X[1] - E[1]) / l;
+    if (dy < 0.5) break;   // pas de descente trop raide
+  }
+  if (dy > 0.5) { dy = 0.5; const l = Math.hypot(dx, dy); dx /= l; dy /= l; }
+  c.dx = dx; c.dy = dy; c.ang = Math.atan2(dx, -dy);
   c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
-  const mx = R * 2.6, my = R * 3.4;
-  const Mx = lerp(0.12, 0.88, Math.random()) * W, My = lerp(0.12, 0.92, Math.random()) * H;   // un point de l'écran par où elle passera
-  const s = distToOutside(Mx, My, -c.dx, -c.dy, mx, my);                                    // on remonte sa route jusqu'au bord : c'est son entrée
-  c.x = c.ex = Mx - c.dx * s; c.y = c.ey = My - c.dy * s;
+  c.x = c.ex = E[0]; c.y = c.ey = E[1];
   c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
   c.seen = false; c.passT = 0;
   for (const t of c.tents) t.init = false;
@@ -1427,7 +1433,7 @@ function updateButterfly(c, dt, el) {
       const rt = h(1), mgp = Math.max(0.08 * W, Sz * 2.2);
       c.far = rt < 0.15; c.rise = false;
       const edge = w => w < 0.35 ? 0 : w < 0.7 ? 1 : 2;   // entrée : 0 gauche, 1 droite, 2 bas (jamais par le haut) ; la sortie peut se faire par n'importe quel bord
-      const e1 = edge(h(2)), e2 = h(3) < 0.6 ? [1, 0, 3, 2][e1] : (e1 + 1 + Math.floor(h(4) * 3)) % 4;
+      const e1 = edge(h(2)), e2 = (e1 + 1 + Math.floor(h(4) * 3)) % 4;   // sortie par n'importe quel autre bord
       const pt = (e, f) => e === 0 ? [-mgp, lerp(0.12, 0.85, f) * H] : e === 1 ? [W + mgp, lerp(0.12, 0.85, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + mgp] : [lerp(0.08, 0.92, f) * W, -mgp];
       c.P1 = pt(e1, h(5)); c.P2 = pt(e2, h(6));
       c.farY = lerp(0.5, 0.62, h(8)); c.x0 = h(6) * 1.1 - 0.05; c.x1 = clamp(c.x0 + (h(7) - 0.5) * 0.3, -0.08, 1.08);
