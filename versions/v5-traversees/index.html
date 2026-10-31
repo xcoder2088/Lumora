@@ -64,6 +64,11 @@ body.idle { cursor: none; }
   stroke-linejoin: round;
 }
 .welcome-trace--glow { stroke-width: 6; opacity: 0.2; filter: url(#welcome-soft-glow); }
+/* Une fois « Lumora » écrit, le mot s'illumine une seule fois, puis revient à sa lueur douce. */
+#welcome.is-glowing .welcome-trace--glow { animation: welcome-glow 1500ms ease-in-out 1; }
+#welcome.is-glowing .welcome-trace:not(.welcome-trace--glow) { animation: welcome-bright 1500ms ease-in-out 1; }
+@keyframes welcome-glow { 0% { opacity: 0.2; stroke-width: 6; } 45% { opacity: 0.95; stroke-width: 13; } 100% { opacity: 0.2; stroke-width: 6; } }
+@keyframes welcome-bright { 0%, 100% { stroke: #e6dfb8; } 45% { stroke: #fffbe0; } }
 #welcomeFly { opacity: 0; transition: opacity 400ms ease; }
 #welcomeFly.is-visible { opacity: 1; }
 .welcome-wing { fill: #dbe5d0; opacity: 0.4; }
@@ -95,6 +100,7 @@ body.welcome-active #bar { visibility: hidden !important; pointer-events: none !
 @media (prefers-reduced-motion: reduce) {
   #welcome, #welcomeFly { transition: none; }
   .welcome-wing { animation: none; }
+  #welcome.is-glowing .welcome-trace, #welcome.is-glowing .welcome-trace--glow { animation: none; }
 }
 
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -424,6 +430,7 @@ img { max-width: 100%; }
     const started = performance.now();
     const delay = 250;
     const duration = 3800;
+    let glowed = false;
     function draw(now) {
       if (closed) return;
       const elapsed = now - started;
@@ -434,7 +441,8 @@ img { max-width: 100%; }
       const departure = Math.max(0, Math.min(1, (elapsed - delay - duration) / 750));
       fly.setAttribute('transform', 'translate(' + (point.x + departure * 32) + ' ' + (point.y - departure * 28) + ')');
       fly.classList.toggle('is-visible', elapsed > 80 && departure < 0.65);
-      if (elapsed >= delay + duration + 800) { reveal(); return; }
+      if (progress >= 1 && !glowed) { glowed = true; welcome.classList.add('is-glowing'); }   // le mot est écrit : il s'illumine une fois
+      if (elapsed >= delay + duration + 1900) { reveal(); return; }
       animation = requestAnimationFrame(draw);
     }
     animation = requestAnimationFrame(draw);
@@ -1032,10 +1040,10 @@ function distToOutside(px, py, dx, dy, mx, my) {
 }
 // nouvelle traversée d'une méduse : direction au hasard (vers le haut, de côté, ou en diagonale), entrée par le bord de l'écran d'où elle vient
 function newJellyPass(c, R, first) {
-  const r = first ? 0.25 + 0.75 * Math.random() : Math.random();   // au début, surtout des arrivées par les côtés : l'écran se remplit sur toute sa hauteur
+  const r = first ? 0.15 + 0.85 * Math.random() : Math.random();   // au début, surtout des arrivées par les côtés : l'écran se remplit sur toute sa hauteur
   let ang;   // angle depuis la verticale (0 = vers le haut, + = vers la droite) ; jamais vers le bas
-  if (r < 0.35) ang = (Math.random() - 0.5) * 0.9;                                           // surtout vers le haut
-  else if (r < 0.7) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.4, 1.56, Math.random());   // de gauche à droite ou de droite à gauche, presque à l'horizontale
+  if (r < 0.35) ang = (Math.random() - 0.5) * 0.3;                                           // à la verticale (presque droit vers le haut)
+  else if (r < 0.65) ang = (Math.random() < 0.5 ? 1 : -1) * lerp(1.4, 1.56, Math.random());   // de gauche à droite ou de droite à gauche, presque à l'horizontale
   else ang = (Math.random() < 0.5 ? 1 : -1) * lerp(0.55, 1.1, Math.random());               // en diagonale
   c.ang = ang; c.dx = Math.sin(ang); c.dy = -Math.cos(ang);
   c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
