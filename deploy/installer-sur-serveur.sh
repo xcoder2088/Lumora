@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# À lancer SUR LE PORTABLE, depuis une copie à jour du dépôt Lumora :  bash deploy/installer-sur-portable.sh
+# À lancer SUR LE SERVEUR, depuis une copie à jour du dépôt Lumora :  bash deploy/installer-sur-serveur.sh
 # Prépare le site, le copie dans /var/www/lumora (en gardant l'ancienne version), installe et démarre le petit serveur.
 set -euo pipefail
 cd "$(dirname "$0")/.."

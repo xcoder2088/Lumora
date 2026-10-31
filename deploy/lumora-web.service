@@ -1,4 +1,4 @@
-# Petit serveur web local pour Lumora (même principe que PhoenixWire : il n'écoute que sur le portable,
+# Petit serveur web local pour Lumora (même principe que PixelDrop : il n'écoute que sur le serveur,
 # c'est le tunnel Cloudflare existant qui le rend public).
 [Unit]
 Description=Lumora (site statique)
