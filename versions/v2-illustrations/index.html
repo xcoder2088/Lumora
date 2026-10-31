@@ -695,6 +695,21 @@ function updateJelly(c, dt, el) {
     stx = tx; sty = ty;
   }
   if (c.x === null) { c.x = tx; c.y = ty; }
+  // évitement : si une autre méduse est sur son chemin, elle se détourne (cible déplacée sur le côté, corps incliné dans ce sens)
+  let avm = 0;
+  if (!c.giant) {
+    let avx = 0, avy = 0;
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null || o.giant) continue;
+      let dx = c.x - o.x; const dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 2.2;
+      if (d < mn) {
+        if (Math.abs(dx) < (R + o.R) * 0.4) dx = (c.avSide || (c.avSide = Math.random() < 0.5 ? -1 : 1)) * d;   // pile derrière elle : elle choisit un côté et le garde
+        const wgt = (mn - d) / mn; avx += dx / d * wgt; avy += dy / d * wgt;
+      }
+    }
+    avm = Math.hypot(avx, avy);
+    if (avm > 0.02) { tx += avx * R * 3; stx += avx * R * 5; if (JELLY_AQUARIUM) ty += avy * R * 2; }
+  }
   // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
   c.modeT -= dt;
   if (c.modeT <= 0) {
@@ -755,7 +770,8 @@ function updateJelly(c, dt, el) {
     if (c.y < my0) c.vy += (my0 - c.y) * 1.5 * dt; else if (c.y > my1) c.vy -= (c.y - my1) * 1.5 * dt;
   }
   c.x += c.vx * dt; c.y += c.vy * dt;
-  c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * 0.4);
+  if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
+  c.tilt += (c.tiltT * (1 - guide) + Math.sin(c.pp * TAU) * 0.04 - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.4));
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
   c.u = uc;
@@ -802,6 +818,52 @@ function chainPath(p) {
   ctx.lineTo(p[2 * KSEG], p[2 * KSEG + 1]);
 }
 
+/* ================= Algues (profondeur du décor des méduses) ================= */
+let KELP = null;
+function makeKelp() {
+  const r = mulberry(4242), L = [];
+  const add = (n, layer, hLo, hHi, wLo, wHi, xs) => {
+    for (let i = 0; i < n; i++) L.push({ layer, x: xs ? xs(i) : lerp(0.02, 0.98, r()), h: lerp(hLo, hHi, r()), w: lerp(wLo, wHi, r()), ph: r() * TAU, sp: lerp(0.3, 0.6, r()), leaf: r() < 0.75 });
+  };
+  add(9, 0, 0.35, 0.65, 0.006, 0.010);                                        // lointaines : petites, pâles
+  add(7, 1, 0.30, 0.55, 0.008, 0.013);                                        // intermédiaires
+  add(6, 2, 0.45, 0.85, 0.012, 0.02, i => i % 2 ? lerp(0, 0.16, r()) : lerp(0.84, 1, r()));   // proches, sombres, sur les bords : elles passent devant les méduses
+  return L;
+}
+function drawKelp(layer, w) {
+  if (!KELP) KELP = makeKelp();
+  const k = 1 - w * 0.9;
+  if (k <= 0.02) return;
+  const m = minWH(), N = 16;
+  const col = layer === 0 ? [34, 92, 120] : layer === 1 ? [22, 92, 104] : [4, 24, 34];
+  ctx.fillStyle = rgba(col, (layer === 0 ? 0.26 : layer === 1 ? 0.36 : 0.85) * k);
+  const amp = layer === 0 ? 0.03 : layer === 1 ? 0.05 : 0.08;
+  for (const s of KELP) {
+    if (s.layer !== layer) continue;
+    const bx = s.x * W, hh = s.h * H, ww = s.w * m;
+    const px = [], py = [], hw = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      px.push(bx + Math.sin(T * s.sp + s.ph + t * 3.2 + s.x * 5) * amp * m * Math.pow(t, 1.4) + Math.sin(T * 0.17 + s.ph) * 0.02 * m * t);
+      py.push(H + 12 - t * hh);
+      hw.push(ww * (1 - 0.8 * t));
+    }
+    ctx.beginPath();
+    ctx.moveTo(px[0] - hw[0], py[0]);
+    for (let i = 1; i <= N; i++) ctx.lineTo(px[i] - hw[i], py[i]);
+    for (let i = N; i >= 0; i--) ctx.lineTo(px[i] + hw[i], py[i]);
+    ctx.closePath();
+    if (s.leaf) {   // petites feuilles le long de la tige
+      for (let i = 3; i < N - 1; i += 2) {
+        const side = (i % 4 < 2) ? 1 : -1, len = ww * (4.5 - i * 0.2);
+        ctx.moveTo(px[i], py[i]);
+        ctx.quadraticCurveTo(px[i] + side * len * 0.9, py[i] - len * 0.2, px[i] + side * len * 0.8, py[i] - len * 1.2);
+        ctx.quadraticCurveTo(px[i] + side * len * 0.2, py[i] - len * 0.6, px[i], py[i]);
+      }
+    }
+    ctx.fill();
+  }
+}
 function drawJelly(c) {
   const a = c.alpha * lerp(0.5, 1, c.z);
   if (a <= 0.003) return;
@@ -1198,7 +1260,9 @@ function frame(now) {
   if (S.scene !== 'jelly') drawShooting(w);
   if (S.scene === 'jelly') {
     drawSnow(false);
+    drawKelp(0, w); drawKelp(1, w);
     for (const c of sorted) { try { drawJelly(c); } catch (e) { ctx.restore(); } }
+    drawKelp(2, w);
     drawSnow(true);
   } else {
     drawHillsImg();
