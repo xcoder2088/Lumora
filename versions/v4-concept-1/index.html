@@ -471,10 +471,32 @@ const DAISIES = (() => {   // petites marguerites dans l'herbe : plus petites ve
   const r = mulberry(77), L = [];
   for (let i = 0; i < 14; i++) {
     const y = lerp(0.76, 0.97, r()), t = (y - 0.76) / 0.21;
-    L.push({ name: 'fleur-marguerite-0' + (1 + Math.floor(r() * 5)), x: lerp(0.03, 0.97, r()), y, h: lerp(0.06, 0.13, t) * (0.85 + 0.3 * r()), ph: r() * TAU, sp: lerp(0.6, 1.1, r()) });
+    L.push({ name: 'fleur-marguerite-0' + (1 + Math.floor(r() * 5)), x: lerp(0.03, 0.97, r()), y, h: lerp(0.075, 0.16, t) * (0.85 + 0.3 * r()), ph: r() * TAU, sp: lerp(0.6, 1.1, r()), busy: -1e9 });
   }
   return L.sort((a, b) => a.y - b.y);
 })();
+function daisyHead(d) {   // position écran du centre de la fleur (qui se balance avec sa tige)
+  const s = SPR[d.name], hs = d.h * H, k = hs / (s.py - s.by), t = 0.85;
+  const off = 0.5 * hs * 0.17 * Math.pow(t, 1.6) * (Math.sin(T * d.sp + d.ph - t * 2.4) + 0.35 * Math.sin(T * d.sp * 1.9 + d.ph * 2 - t * 3.7));
+  return [d.x * W + (s.bx + s.bw / 2 - s.px) * k + off, d.y * H - 0.82 * hs];
+}
+function daisyHeadW(d) { return 0.36 * d.h * H; }   // largeur approximative de la fleur
+function pickLanding(c, el) {   // une fleur proche du trajet du papillon, libre à ce moment-là
+  const t0 = c.s + c.T * lerp(0.25, 0.55, Math.random());
+  if (t0 < el + 3) return null;
+  const u0 = clamp((t0 - c.s) / c.T, 0, 1), mg = 0.1 * W;
+  const px = (!c.far && !c.rise) ? lerp(c.side < 0 ? W + mg : -mg, c.side < 0 ? -mg : W + mg, u0) : lerp(c.x0, c.x1, u0) * W;
+  let best = null, bd = 1e9;
+  for (const d of DAISIES) {
+    if (!SPR[d.name] || d.busy > t0 - 6) continue;
+    const dist = Math.abs(d.x * W - px);
+    if (dist < bd) { bd = dist; best = d; }
+  }
+  if (!best) return null;
+  const ts = lerp(6, 12, Math.random()), ta = lerp(4.5, 6.5, Math.random()), td = lerp(2, 3.5, Math.random());
+  best.busy = t0 + ta + ts + td;
+  return { t0, ta, ts, td, flower: best };
+}
 function drawDaisies() {   // entre les papillons et les herbes du premier plan (les herbes cachent le pied des tiges)
   if (!TINTC[40]) TINTC[40] = [205, 178, 210];   // teinte du crépuscule
   for (const d of DAISIES) drawPlant(d.name, d.x * W, d.y * H, d.h * H, d.ph, d.sp, 0.5, 1, 40);
@@ -1120,12 +1142,28 @@ function updateButterfly(c, dt, el) {
   const Y = cross ? (lerp(c.ya, clamp(c.ya + c.yb, 0.12, 0.85), u) + wy * 2.2) * H
     : c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
-  const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
-  const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  let Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
+  let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  // atterrissage : certains papillons se posent sur une marguerite (scène de la prairie), y restent un moment en battant lentement des ailes, puis repartent
+  if (c.land === undefined) c.land = (typeof pickLanding === 'function' && !c.far && c.T > 30 && Math.random() < 0.55) ? pickLanding(c, el) : null;
+  let wL = 0;
+  if (c.land) {
+    const L = c.land, tt = el - L.t0;
+    wL = tt < 0 ? 0 : tt < L.ta ? smooth(tt / L.ta) : tt < L.ta + L.ts ? 1 : tt < L.ta + L.ts + L.td ? 1 - smooth((tt - L.ta - L.ts) / L.td) : 0;
+    if (wL > 0) {
+      const hp = daisyHead(L.flower);
+      Xp = lerp(Xp, hp[0], wL); Yp = lerp(Yp, hp[1], wL);
+      c.S = lerp(c.S, 0.83 * daisyHeadW(L.flower) * c.sp.size, wL);   // à la taille de la fleur : un papillon posé fait environ deux fois la largeur de la fleur
+    }
+  }
+  c.wL = wL;
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
-  if (Math.hypot(vx, vy) > 6) {
+  if (wL > 0.6) {   // posé : il se tourne tête en haut
+    let d = -c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    c.head += d * Math.min(1, dt * 1.5);
+  } else if (Math.hypot(vx, vy) > 6) {
     const tgt = Math.atan2(vx, -vy);
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
     c.head += d * Math.min(1, dt * 3.2);
@@ -1134,13 +1172,13 @@ function updateButterfly(c, dt, el) {
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
   // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
-  const rate = Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2)));
+  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wL);   // posé : il ouvre et ferme lentement les ailes
   c.fph += dt * TAU * rate;
   const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
   c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
-  c.fp = p; c.fa = amp;   // phase du battement et amplitude, pour le dessin des ailes qui se plient
-  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2;   // le corps monte un peu à chaque battement
+  c.fp = p; c.fa = lerp(amp, 1, wL);   // phase du battement et amplitude, pour le dessin des ailes qui se plient
+  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2 * (1 - wL);   // le corps monte un peu à chaque battement
 }
 
 
@@ -1364,7 +1402,7 @@ function build() {
   live = []; hi = 0;
   fade = 0;
 }
-function resetStream() { live = []; hi = 0; }
+function resetStream() { live = []; hi = 0; try { for (const d of DAISIES) d.busy = -1e9; } catch (e) {} }
 function streamUpdate(el) {
   while (hi < sched.length && sched[hi].s <= el) {
     const d = sched[hi++];
@@ -1414,8 +1452,9 @@ function frame(now) {
     drawHillsImg();
     drawMotes(w);
     drawFlies(w);
-    for (const c of sorted) { try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
+    for (const c of sorted) { if (c.wL > 0.4) continue; try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
     drawDaisies();
+    for (const c of sorted) { if (c.wL > 0.4) { try { drawButterfly(c, w); } catch (e) { ctx.restore(); } } }
     drawGrassImg();
   }
   drawWake(w);

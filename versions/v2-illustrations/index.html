@@ -975,12 +975,28 @@ function updateButterfly(c, dt, el) {
   const Y = cross ? (lerp(c.ya, clamp(c.ya + c.yb, 0.12, 0.85), u) + wy * 2.2) * H
     : c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
-  const Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
-  const Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  let Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
+  let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  // atterrissage : certains papillons se posent sur une marguerite (scène de la prairie), y restent un moment en battant lentement des ailes, puis repartent
+  if (c.land === undefined) c.land = (typeof pickLanding === 'function' && !c.far && c.T > 30 && Math.random() < 0.55) ? pickLanding(c, el) : null;
+  let wL = 0;
+  if (c.land) {
+    const L = c.land, tt = el - L.t0;
+    wL = tt < 0 ? 0 : tt < L.ta ? smooth(tt / L.ta) : tt < L.ta + L.ts ? 1 : tt < L.ta + L.ts + L.td ? 1 - smooth((tt - L.ta - L.ts) / L.td) : 0;
+    if (wL > 0) {
+      const hp = daisyHead(L.flower);
+      Xp = lerp(Xp, hp[0], wL); Yp = lerp(Yp, hp[1], wL);
+      c.S = lerp(c.S, 0.83 * daisyHeadW(L.flower) * c.sp.size, wL);   // à la taille de la fleur : un papillon posé fait environ deux fois la largeur de la fleur
+    }
+  }
+  c.wL = wL;
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
-  if (Math.hypot(vx, vy) > 6) {
+  if (wL > 0.6) {   // posé : il se tourne tête en haut
+    let d = -c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    c.head += d * Math.min(1, dt * 1.5);
+  } else if (Math.hypot(vx, vy) > 6) {
     const tgt = Math.atan2(vx, -vy);
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
     c.head += d * Math.min(1, dt * 3.2);
@@ -989,13 +1005,13 @@ function updateButterfly(c, dt, el) {
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
   // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
-  const rate = Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2)));
+  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wL);   // posé : il ouvre et ferme lentement les ailes
   c.fph += dt * TAU * rate;
   const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
   c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
-  c.fp = p; c.fa = amp;   // phase du battement et amplitude, pour le dessin des ailes qui se plient
-  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2;   // le corps monte un peu à chaque battement
+  c.fp = p; c.fa = lerp(amp, 1, wL);   // phase du battement et amplitude, pour le dessin des ailes qui se plient
+  c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2 * (1 - wL);   // le corps monte un peu à chaque battement
 }
 
 
@@ -1268,7 +1284,7 @@ function frame(now) {
   } else {
     drawHillsImg();
     drawFlies(w);
-    for (const c of sorted) { try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
+    for (const c of sorted) { if (c.wL > 0.4) continue; try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
     drawGrassImg();
   }
   drawWake(w);

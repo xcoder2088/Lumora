@@ -20,6 +20,7 @@ L'éducateur n'a que quatre choses à faire : choisir le **décor** (méduses ou
 - **Pendant le minuteur :** les contrôles (pause, recommencer, temps restant, son, plein écran, réglages) s'effacent après 3,5 secondes sans toucher. Un toucher ou un mouvement de souris les ramène. La barre d'espace met en pause. L'écran reste allumé.
 - **Méduses :** elles traversent l'écran du bas vers le haut, de plus en plus rares au fil du temps (une douzaine au début, plus aucune à zéro). Un mode « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin, une par minute) existe aussi dans le code : il suffit de mettre `JELLY_AQUARIUM = true`.
 - **Papillons :** ils traversent l'écran de côté, s'éloignent au loin ou montent vers le ciel. De temps en temps, une étoile filante passe dans le ciel.
+- **Papillons qui se posent (version 4) :** de temps en temps, un papillon descend vers une marguerite, s'y pose à la bonne taille, ouvre et ferme lentement les ailes, puis repart.
 - **Fin du temps :** la dernière créature sort de l'écran à l'instant où le temps tombe à zéro. La scène s'éclaircit lentement, sans alarme. Un carillon très doux, une nappe de quelques notes graves, est joué si le son est activé.
 
 Dans la version 1, les créatures et les décors sont dessinés par le code (canvas 2D), donc la page est légère et rien ne se répète exactement. Les choix de décor et de durée sont mémorisés dans le navigateur.
