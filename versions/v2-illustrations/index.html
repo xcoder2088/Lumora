@@ -988,10 +988,10 @@ function updateButterfly(c, dt, el) {
   // Un papillon ne plane jamais : il bat toujours des ailes, tantôt plus vite, tantôt plus lentement,
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
-  // battement lent et irrégulier, comme un papillon (pas un oiseau) : environ 1,5 à 3 battements par seconde, qui s'accélèrent un peu en montée
-  const rate = Math.max(0.9, c.fl * 1.1 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2)));
+  // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
+  const rate = Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2)));
   c.fph += dt * TAU * rate;
-  const amp = 0.5 + 0.45 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
+  const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
   c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
   c.fp = p; c.fa = amp;   // phase du battement et amplitude, pour le dessin des ailes qui se plient
@@ -1016,14 +1016,14 @@ function drawWing3D(sp, k, ox, oy, ph, fa, alpha, S, pitch) {
   // L'aile est une surface en 3D : elle pivote autour du corps (le bout retarde sur la base), la caméra la regarde un peu d'en haut,
   // la perspective agrandit ce qui se rapproche, et chaque morceau est éclairé selon son inclinaison.
   const gx = S > 60 ? 8 : S > 35 ? 6 : 4, gy = S > 60 ? 3 : 2;   // moins de morceaux pour les petits papillons
-  const cw = sp.cv.width, ch = sp.cv.height, span = sp.bw * k, Dd = 6 * S;
+  const cw = sp.cv.width, ch = sp.cv.height, span = sp.bw * k, Dd = 10 * S;
   const cp = Math.cos(pitch), sp_ = Math.sin(pitch);
   const V = [];
   for (let j = 0; j <= gy; j++) for (let i = 0; i <= gx; i++) {
     const lam = -(((sp.bx + sp.bw * i / gx) - sp.px) * k + ox);      // distance au corps, vers l'extérieur
     const y = ((sp.by + sp.bh * j / gy) - sp.py) * k + oy;           // vers l'arrière
     const fr = clamp(lam / span, 0, 1);
-    const th = 0.62 + 0.8 * fa * Math.cos(ph - 0.42 * 7 * fr);         // angle de battement : de presque à plat à presque fermée
+    const th = 0.55 + 0.75 * fa * Math.cos(ph - 0.12 * fr);            // angle de battement : l'aile est RIGIDE, elle pivote d'un bloc autour du corps (presque pas de décalage du bout)
     const x3 = lam * Math.cos(th), z3 = lam * Math.sin(th);
     const y4 = y * cp - z3 * sp_, z4 = y * sp_ + z3 * cp;
     const s = Dd / (Dd - z4);
@@ -1084,13 +1084,13 @@ function drawButterfly(c, w) {
   ctx.globalAlpha = a;
   // ailes gauches, puis leur miroir à droite ; battement = étirement horizontal ; arrière sous l'avant
   const fp = c.fp === undefined ? 0 : c.fp, fa = c.fa === undefined ? 1 : c.fa;
-  const pitch = 0.42 + 0.12 * Math.sin(fp);   // la caméra voit le papillon un peu d'en haut, et il tangue à chaque battement
+  const pitch = 0.3 + 0.08 * Math.sin(fp);   // la caméra voit le papillon un peu d'en haut, et il tangue à chaque battement
   for (const side of [1, -1]) {
     ctx.save();
     ctx.scale(side, 1);
     const ph = fp + (side < 0 ? 0.14 : 0);   // les deux ailes ne sont jamais parfaitement synchrones
     drawWing3D(wh, k, S * 0.03, S * 0.08, ph, fa, a, S, pitch);
-    drawWing3D(wf, k, S * 0.03, -S * 0.02, ph - 0.12, fa, a, S, pitch);
+    drawWing3D(wf, k, S * 0.03, -S * 0.02, ph - 0.04, fa, a, S, pitch);
     ctx.restore();
   }
   ctx.scale(1, Math.cos(pitch) * 0.98 + 0.05);
