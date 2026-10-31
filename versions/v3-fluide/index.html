@@ -447,7 +447,7 @@ function updateSnow(dt) { for (const p of snow) { p.y += p.v * dt * (0.5 + p.z);
 
 /* ================= Méduses ================= */
 const JPAL = [[110, 215, 255], [100, 150, 255], [176, 142, 255], [255, 132, 205], [112, 255, 222], [255, 222, 150], [150, 255, 190], [215, 160, 255], [255, 165, 150]];
-const JWHITE = [236, 246, 255];
+const JWHITE = [205, 222, 245];
 function pickColorIdx() {   // des indices dans JPAL ; JPAL.length désigne le blanc. Quatre familles : fantômes blanches, unies, à deux ou trois teintes, et à quatre teintes qui changent tout au long du trajet
   const n = JPAL.length, q = rnd(), c0 = Math.floor(rnd() * n);
   const other = a => (a + 1 + Math.floor(rnd() * (n - 1))) % n;
@@ -634,6 +634,21 @@ function makeJelly(d) {
   };
 }
 
+function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
+  let best = null, bs = -1e9;
+  for (let k = 0; k < 14; k++) {
+    const x = lerp(0.08, 0.92, Math.random()) * W, y = lerp(0.14, 0.86, Math.random()) * H;
+    let md = 1e9;
+    for (const o of live) {
+      if (o === c || o.kind !== 'j' || o.x === null) continue;
+      md = Math.min(md, Math.hypot(x - o.x, y - o.y));
+      if (o.wp) md = Math.min(md, Math.hypot(x - o.wp[0], y - o.wp[1]));
+    }
+    const sc = md - 0.15 * Math.hypot(x - c.x, y - c.y);
+    if (sc > bs) { bs = sc; best = [x, y]; }
+  }
+  return best;
+}
 function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
@@ -650,7 +665,7 @@ function updateJelly(c, dt, el) {
     exitQ = smooth(clamp((el - (c.e - c.exitT)) / c.exitT, 0, 1));
     // elle se choisit un but quelque part dans l'aquarium, nage vers lui, puis en choisit un autre
     if (!c.wp || el >= c.wpT || (Math.hypot(c.wp[0] - c.x, c.wp[1] - c.y) < R * 1.5 && el > c.wpT - 12)) {
-      c.wp = [lerp(0.08, 0.92, Math.random()) * W, lerp(0.15, 0.85, Math.random()) * H];
+      c.wp = pickWaypoint(c);
       c.wpT = el + lerp(18, 40, Math.random());
     }
     tx = c.wp[0];
@@ -675,7 +690,7 @@ function updateJelly(c, dt, el) {
   }
   if (c.pulsing || c.pp > 0) {
     c.pp += dt / (c.period * c.perK);
-    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(tx - c.x, c.y - ty), -0.9, 0.9) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(tx - c.x, c.y - ty), -0.6, 0.6) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
   }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
@@ -705,8 +720,8 @@ function updateJelly(c, dt, el) {
   if (!c.giant) {   // elles s'écartent doucement les unes des autres
     for (const o of live) {
       if (o === c || o.kind !== 'j' || o.x === null) continue;
-      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.05;
-      if (d < mn) { const f = (mn - d) * 0.9 * dt; c.vx += dx / d * f; c.vy += dy / d * f * 0.6; }
+      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.25;
+      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * 0.8; }
     }
   }
   if (!c.giant && exitQ < 0.02) {   // les parois de l'aquarium
