@@ -894,12 +894,28 @@ function updateButterfly(c, dt, el) {
   const amp = 0.85 + 0.15 * Math.sin(T * 0.11 + c.ph * 5);
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
   c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
+  c.fp = p; c.fa = amp;   // phase du battement et amplitude, pour le dessin des ailes qui se plient
   c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2;   // le corps monte un peu à chaque battement
 }
 
 
 
 const BFILE = { monarque: 'monarque', morpho: 'morpho-bleu', azure: 'azure-commun', machaon: 'machaon', lune: 'lune' };
+function drawWingStrips(sp, k, ox, oy, ph, fa, alpha) {
+  // l'aile est découpée en bandes, de la racine (au corps) vers le bout : chaque bande bat un peu après la précédente,
+  // l'aile se plie donc comme une vraie aile, et s'assombrit un peu quand elle se referme
+  const n = 8, cw = sp.cv.width / n, bwk = sp.bw * k / n, hk = sp.bh * k;
+  let xr = ox + (sp.bx + sp.bw - sp.px) * k;
+  const yb = oy + (sp.by - sp.py) * k;
+  for (let j = 0; j < n; j++) {
+    const sc = 0.1 + 0.9 * fa * (0.5 + 0.5 * Math.cos(ph - 0.42 * j));
+    const wd = bwk * sc;
+    ctx.globalAlpha = alpha * (0.8 + 0.2 * sc);
+    ctx.drawImage(sp.cv, (n - 1 - j) * cw, 0, cw, sp.cv.height, xr - wd, yb - (1 - sc) * hk * 0.06 * (j / n), wd + 0.7, hk);
+    xr -= wd;
+  }
+  ctx.globalAlpha = alpha;
+}
 function drawButterfly(c, w) {
   const sp = c.sp, S = c.S, fn = 'papillon-' + BFILE[sp.id] + '-';
   const wf = SPR[fn + 'aile-avant'], wh = SPR[fn + 'aile-arriere'], bd = SPR[fn + 'corps'];
@@ -907,7 +923,7 @@ function drawButterfly(c, w) {
   const a = lerp(0.65, 1, c.z) * (c.fade === undefined ? 1 : c.fade), k = (1.2 * S) / 914;   // pixels d'origine -> écran
   ctx.save();
   ctx.translate(c.X, c.Y);
-  ctx.rotate(c.head);
+  ctx.rotate(c.head + 0.07 * Math.sin(c.fp || 0));   // léger roulis à chaque battement
   // halo doux
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = a * 0.5;
@@ -918,11 +934,13 @@ function drawButterfly(c, w) {
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = a;
   // ailes gauches, puis leur miroir à droite ; battement = étirement horizontal ; arrière sous l'avant
+  const fp = c.fp === undefined ? 0 : c.fp, fa = c.fa === undefined ? 1 : c.fa;
   for (const side of [1, -1]) {
     ctx.save();
-    ctx.scale(side * c.sx, 1);
-    drawSpr(wh, k, S * 0.03, S * 0.08);
-    drawSpr(wf, k, S * 0.03, -S * 0.02);
+    ctx.scale(side, 1);
+    const ph = fp + (side < 0 ? 0.14 : 0);   // les deux ailes ne sont jamais parfaitement synchrones
+    drawWingStrips(wh, k, S * 0.03, S * 0.08, ph, fa, a);
+    drawWingStrips(wf, k, S * 0.03, -S * 0.02, ph - 0.12, fa, a);
     ctx.restore();
   }
   drawSpr(bd, k, 0, 0);
