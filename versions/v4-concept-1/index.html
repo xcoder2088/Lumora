@@ -441,7 +441,7 @@ function drawPlant(name, X, footY, hs, ph, sp, amp, alpha, tint) {
   // elle plie vraiment, de façon indépendante des autres, et le pied reste immobile
   const s = SPR[name];
   if (!s) return false;
-  const k = hs / (s.py - s.by), n = clamp(Math.round(hs / 14), 8, 28), src = tint !== undefined ? tinted(name, tint) : s.cv, rh = src.height / n, bh = s.bh / n;
+  const k = hs / (s.py - s.by), n = clamp(Math.round(hs / 7), 12, 40), src = tint !== undefined ? tinted(name, tint) : s.cv, rh = src.height / n, bh = s.bh / n;
   ctx.globalAlpha = alpha;
   for (let j = 0; j < n; j++) {
     const t = (n - 1 - j + 0.5) / n;   // hauteur de la rangée (0 = pied, 1 = bout)
@@ -467,14 +467,27 @@ function drawAlgae(layer, w) {   // si les images manquent, les algues dessinée
   for (const p of PLANTS) { if (p.layer === layer && drawPlant(p.name, p.x * W, H + 4, p.h * H * sc, p.ph, p.sp, 1, p.al * k)) any = true; }
   if (!any && !SPR[PLANTS[0].name]) drawKelp(layer, w);
 }
-const DAISIES = (() => {   // petites marguerites dans l'herbe : plus petites vers l'horizon, plus grandes devant
-  const r = mulberry(77), L = [];
-  for (let i = 0; i < 14; i++) {
-    const y = lerp(0.76, 0.97, r()), t = (y - 0.76) / 0.21;
-    L.push({ name: 'fleur-marguerite-0' + (1 + Math.floor(r() * 5)), x: lerp(0.03, 0.97, r()), y, h: lerp(0.1, 0.21, t) * (0.85 + 0.3 * r()), ph: r() * TAU, sp: lerp(0.6, 1.1, r()), busy: -1e9 });
+const DAISIES = Array.from({ length: 12 }, (_, i) => ({ name: 'fleur-marguerite-0' + (1 + (i * 3) % 5), x: 0.5, y: 0.9, h: 0.1, ph: (i * 2.399) % TAU, sp: 0.6 + (i * 0.137) % 0.5, busy: -1e9 }));
+let daisyKey = '';
+function layoutDaisies() {   // répartition régulière : jamais deux fleurs collées (l'écart tient compte de leur taille)
+  const key = W + 'x' + H;
+  if (key === daisyKey) return;
+  daisyKey = key;
+  const r = mulberry(77), placed = [];
+  for (const d of DAISIES) {
+    let best = null, bs = -1e9;
+    for (let a = 0; a < 80; a++) {
+      const x = lerp(0.03, 0.97, r()), y = lerp(0.76, 0.97, r()), t = (y - 0.76) / 0.21, h = lerp(0.1, 0.21, t) * (0.9 + 0.2 * r());
+      const hw = 0.36 * h * H;
+      let md = 1e9;
+      for (const q of placed) md = Math.min(md, Math.hypot((x - q.x) * W, (y - q.y) * H) / (1.15 * (hw + q.hw)));
+      if (md > bs) { bs = md; best = { x, y, h, hw }; }
+      if (md >= 1) break;
+    }
+    d.x = best.x; d.y = best.y; d.h = best.h; placed.push(best);
   }
-  return L.sort((a, b) => a.y - b.y);
-})();
+  DAISIES.sort((a, b) => a.y - b.y);
+}
 function daisyHead(d) {   // position écran du centre de la fleur (qui se balance avec sa tige)
   const s = SPR[d.name], hs = d.h * H, k = hs / (s.py - s.by), t = 0.85;
   const off = 0.5 * hs * 0.17 * Math.pow(t, 1.6) * (Math.sin(T * d.sp + d.ph - t * 2.4) + 0.35 * Math.sin(T * d.sp * 1.9 + d.ph * 2 - t * 3.7));
@@ -511,6 +524,7 @@ function pickLanding(c, el) {   // une fleur proche du trajet du papillon, libre
   return { t0, ta, ts, td, flower: best };
 }
 function drawDaisies() {   // entre les papillons et les herbes du premier plan (les herbes cachent le pied des tiges)
+  layoutDaisies();
   if (!TINTC[40]) TINTC[40] = [205, 178, 210];   // teinte du crépuscule
   for (const d of DAISIES) drawPlant(d.name, d.x * W, d.y * H, d.h * H, d.ph, d.sp, 0.5, 1, 40);
 }
@@ -1181,10 +1195,19 @@ function updateButterfly(c, dt, el) {
   let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
   // atterrissage : certains papillons se posent sur une marguerite (scène de la prairie), y restent un moment en battant lentement des ailes, puis repartent
   if (c.land === undefined) c.land = (typeof pickLanding === 'function' && !c.far && c.T > 30 && Math.random() < 0.55) ? pickLanding(c, el) : null;
-  let wL = 0;
+  let wL = 0, wW = 0, dep = 0;   // wL : lien avec la fleur (position, taille) ; wW : battement lent des ailes posées ; dep : décollage
   if (c.land) {
     const L = c.land, tt = el - L.t0;
-    wL = tt < 0 ? 0 : tt < L.ta ? smooth(tt / L.ta) : tt < L.ta + L.ts ? 1 : tt < L.ta + L.ts + L.td ? 1 - smooth((tt - L.ta - L.ts) / L.td) : 0;
+    if (tt >= 0) {
+      if (tt < L.ta) wL = wW = smooth(tt / L.ta);
+      else if (tt < L.ta + L.ts) wL = wW = 1;
+      else if (tt < L.ta + L.ts + L.td) {   // décollage : les ailes se mettent à battre vite d'abord, puis il quitte la fleur
+        const x = tt - L.ta - L.ts;
+        wW = 1 - smooth(clamp(x / 0.7, 0, 1));
+        wL = 1 - smooth(clamp((x - 0.5) / (L.td - 0.5), 0, 1));
+        dep = 1 - x / L.td;
+      }
+    }
     if (wL > 0) {
       const hp = daisyHead(L.flower);
       Xp = lerp(Xp, hp[0], wL); Yp = lerp(Yp, hp[1], wL);
@@ -1223,12 +1246,12 @@ function updateButterfly(c, dt, el) {
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
   // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
-  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wL);   // posé : il ouvre et ferme lentement les ailes
+  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wW) + 2.6 * dep * (1 - wW);   // posé : il ouvre et ferme lentement les ailes ; au décollage, il bat vite
   c.fph += dt * TAU * rate;
   const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
   c.sx = 0.1 + 0.9 * amp * (0.5 + 0.5 * Math.cos(p));
-  c.fp = p; c.fa = lerp(amp, 1, wL);   // phase du battement et amplitude, pour le dessin des ailes qui se plient
+  c.fp = p; c.fa = lerp(amp, 1, Math.max(wW, dep));   // phase du battement et amplitude, pour le dessin des ailes qui se plient
   c.X = Xp; c.Y = Yp + Math.sin(p) * c.S * 0.2 * (1 - wL);   // le corps monte un peu à chaque battement
 }
 
@@ -1263,7 +1286,7 @@ function drawWing3D(sp, k, ox, oy, ph, fa, alpha, S, pitch) {
     const s = Dd / (Dd - z4);
     V.push([-x3 * s, y4 * s, x3, y4, z4]);
   }
-  const M = ctx.getTransform(), dk = darkSprite(sp), e = 0.6;
+  const M = ctx.getTransform(), dk = darkSprite(sp), e = 1.1;
   const w = cw / gx, h = ch / gy;
   ctx.globalAlpha = alpha;
   for (let j = 0; j < gy; j++) for (let i = 0; i < gx; i++) {
@@ -1271,7 +1294,7 @@ function drawWing3D(sp, k, ox, oy, ph, fa, alpha, S, pitch) {
     const e1 = [B[2] - A[2], B[3] - A[3], B[4] - A[4]], e2 = [C[2] - A[2], C[3] - A[3], C[4] - A[4]];
     let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
     const nl = Math.hypot(nx, ny, nz) || 1;
-    const shade = clamp(0.66 + 0.38 * Math.abs((nx * WL[0] + ny * WL[1] + nz * WL[2]) / nl), 0, 1);
+    const shade = clamp(0.82 + 0.22 * Math.abs((nx * WL[0] + ny * WL[1] + nz * WL[2]) / nl), 0, 1);
     ctx.setTransform(M);
     ctx.transform(B[0] - A[0], B[1] - A[1], C[0] - A[0], C[1] - A[1], A[0], A[1]);
     ctx.globalAlpha = alpha;
