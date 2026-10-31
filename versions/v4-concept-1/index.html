@@ -493,7 +493,10 @@ function pickLanding(c, el) {   // une fleur proche du trajet du papillon, libre
     if (dist < bd) { bd = dist; best = d; }
   }
   if (!best) return null;
-  const ts = lerp(6, 12, Math.random()), ta = lerp(4.5, 6.5, Math.random()), td = lerp(2, 3.5, Math.random());
+  let ts = lerp(6, 12, Math.random());
+  const ta = lerp(4.5, 6.5, Math.random()), td = lerp(2, 3.5, Math.random());
+  ts = Math.min(ts, c.s + c.T * 0.92 - t0 - ta - td);   // il doit être reparti avant la fin de son passage
+  if (ts < 3) return null;
   best.busy = t0 + ta + ts + td;
   return { t0, ta, ts, td, flower: best };
 }
@@ -1119,12 +1122,13 @@ function pickSpecies() {
   return SPECIES[0];
 }
 
+const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
 function makeButterfly(d) {
   const sp = pickSpecies();
   const z = lerp(0.5, 1, rnd());
   const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
-    kind: 'b', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
+    kind: 'b', k: d.k, loop: !!d.loop, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
     far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.22, 0.8, frac(d.k * 0.618034 + 0.3)), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
@@ -1134,7 +1138,20 @@ function makeButterfly(d) {
 function updateButterfly(c, dt, el) {
   const Sz = c.sf * minWH() * c.sp.size;
   // Trajet : de sous l'écran jusqu'au-dessus de l'écran, en exactement T secondes, sortie à l'instant e.
-  const u = clamp((el - c.s) / c.T, 0, 1);
+  let u;
+  if (BFLY_LOOP && c.loop) {
+    // passages successifs, chacun différent ; le dernier se termine exactement à l'instant de sortie c.e
+    const q = (el - c.e) / c.T, n = Math.floor(q);
+    u = q - n;
+    if (c.pass !== n) {
+      c.pass = n; c.s = c.e + n * c.T; c.land = undefined; c.init = false;
+      const h = j => hash1(c.k * 12.9 + n * 7.7 + j * 3.3);
+      const rt = h(1);
+      c.far = rt < 0.25; c.rise = rt >= 0.25 && rt < 0.4;
+      c.side = h(2) < 0.5 ? -1 : 1; c.ya = lerp(0.22, 0.8, h(3)); c.yb = lerp(-0.2, 0.2, h(4)); c.farY = lerp(0.5, 0.62, h(5));
+      c.x0 = h(6) * 1.1 - 0.05; c.x1 = clamp(c.x0 + (h(7) - 0.5) * 0.3, -0.08, 1.08);
+    }
+  } else u = clamp((el - c.s) / c.T, 0, 1);
   // certains papillons s'éloignent au lointain : ils rapetissent vers l'horizon et s'effacent, au lieu de monter vers le ciel
   c.S = c.far ? Sz * lerp(1, 0.16, smooth(u)) : Sz;
   c.fade = c.far ? 1 - smooth((u - 0.8) / 0.2) : 1;
@@ -1143,11 +1160,11 @@ function updateButterfly(c, dt, el) {
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
   const cross = !c.far && !c.rise;
   // en traversée : de côté à côté, avec des montées et des descentes douces, à vitesse qui varie un peu
-  const ue = clamp(u + 0.045 * Math.sin(u * TAU * 3 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
+  const ue = clamp(u + 0.06 * Math.sin(Math.PI * u) * Math.sin(u * TAU * 3 + c.ph), 0, 1), mg = Math.max(0.08 * W, Sz * 2.2);
   const X = cross ? lerp(c.side < 0 ? W + mg : -mg, c.side < 0 ? -mg : W + mg, ue) + wx * W * 0.3
     : (lerp(c.x0, c.far ? lerp(c.x1, 0.5, 0.45) : c.x1, u) + wx * (c.far ? lerp(1, 0.3, u) : 1)) * W;
   const Y = cross ? (lerp(c.ya, clamp(c.ya + c.yb, 0.12, 0.85), u) + wy * 2.2) * H
-    : c.far ? lerp(H + Sz * 1.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 1.6, -Sz * 2.8, u) + wy * H;
+    : c.far ? lerp(H + Sz * 2.6, c.farY * H, Math.pow(u, 0.75)) + wy * H * lerp(1, 0.25, u) : lerp(H + Sz * 2.6, -Sz * 2.8, u) + wy * H * smooth(u / 0.12);
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
   let Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
   let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
@@ -1376,12 +1393,17 @@ function build() {
   const dens = S.scene === 'jelly' ? (t => lerp(13, 1.5, clamp(t / D, 0, 1))) : densW;
   sched = [];
   let e = D;
-  for (let k = 0; (S.scene !== 'jelly' || JELLY_MODE === 'stream') && e > 0 && k < 5000; k++) {
+  for (let k = 0; (S.scene !== 'jelly' || JELLY_MODE === 'stream') && !(S.scene !== 'jelly' && BFLY_LOOP) && e > 0 && k < 5000; k++) {
     const Tk = T0 * lerp(0.85, 1.25, r());
     const x0 = frac(k * 0.618034 + 0.13) * 1.1 - 0.05;
     const x1 = clamp(x0 + (r() - 0.5) * 0.3, -0.08, 1.08);
     sched.push({ k, seed: runSeed + k, e, T: Tk, s: e - Tk, x0, x1 });
     e -= T0 / dens(e) * lerp(0.7, 1.3, r());
+  }
+  if (S.scene !== 'jelly' && BFLY_LOOP) {
+    // Papillons : autant que de minutes choisies (au plus 30), tous présents dès le départ ; un seul s'en va chaque minute, et le dernier à zéro.
+    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);
+    for (let k = 0; k < N; k++) sched.push({ k, seed: runSeed + k, e: D - k * P, T: lerp(34, 52, r()), s: -60, n: N, loop: true, x0: 0.5, x1: 0.5 });
   }
   if (S.scene === 'jelly' && JELLY_MODE !== 'stream') {
     // Autant de méduses que de minutes choisies. Aquarium ou boucle : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
