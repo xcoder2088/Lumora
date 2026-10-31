@@ -467,7 +467,7 @@ function makeJelly(d) {
     kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols,
     rf: sz, period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
-    giant: !!d.giant, side: d.side, y0f: d.y0f, y1f: d.y1f,
+    giant: !!d.giant, tin: d.giant || JELLY_MODE === 'stream' ? 0 : 0.5 + (Math.min(30, S.dur * 0.4) - 1) * hash1(d.k * 5.3 + 1.7), side: d.side, y0f: d.y0f, y1f: d.y1f,
     hx: lerp(0.1, 0.9, frac(d.k * 0.618034 + 0.17)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
     modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
     x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant || d.big ? 0.8 : 1
@@ -545,7 +545,7 @@ function updateJelly(c, dt, el) {
   if (!c.giant) {
     let avx = 0, avy = 0;
     for (const o of live) {
-      if (o === c || o.kind !== 'j' || o.x === null || o.giant) continue;
+      if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15) continue;
       let dx = c.x - o.x; const dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 2.2;
       if (d < mn) {
         if (Math.abs(dx) < (R + o.R) * 0.4) dx = (c.avSide || (c.avSide = Math.random() < 0.5 ? -1 : 1)) * d;   // pile derrière elle : elle choisit un côté et le garde
@@ -606,7 +606,7 @@ function updateJelly(c, dt, el) {
   c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0) + (freeFlight ? (-vUp - c.vy) * 0.5 : 0)) * dt;
   if (!c.giant) {   // elles s'écartent doucement les unes des autres
     for (const o of live) {
-      if (o === c || o.kind !== 'j' || o.x === null) continue;
+      if (o === c || o.kind !== 'j' || o.x === null || o.alpha < 0.15) continue;
       const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.25;
       if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.05 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
     }
@@ -620,6 +620,8 @@ function updateJelly(c, dt, el) {
   c.x += c.vx * dt; c.y += c.vy * dt;
   if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
   c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.1 + Math.sin(T * 0.6 + c.ph) * 0.07) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
+  if (c.alpha0 === undefined) c.alpha0 = c.alpha;
+  c.alpha = c.alpha0 * smooth(clamp((el - c.tin) / 5, 0, 1));   // au début, elles apparaissent peu à peu pendant les 30 premières secondes
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
   // tentacules : suiveurs de chaîne
@@ -825,7 +827,7 @@ function makeButterfly(d) {
   const z = lerp(0.5, 1, rnd());
   const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
-    kind: 'b', k: d.k, loop: !!d.loop, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
+    kind: 'b', k: d.k, loop: !!d.loop, tin: d.loop ? 0.5 + (Math.min(30, S.dur * 0.4) - 1) * hash1(d.k * 5.3 + 2.9) : 0, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
     far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.22, 0.8, frac(d.k * 0.618034 + 0.3)), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
@@ -851,7 +853,7 @@ function updateButterfly(c, dt, el) {
   } else u = clamp((el - c.s) / c.T, 0, 1);
   // certains papillons s'éloignent au lointain : ils rapetissent vers l'horizon et s'effacent, au lieu de monter vers le ciel
   c.S = c.far ? Sz * lerp(1, 0.16, smooth(u)) : Sz;
-  c.fade = c.far ? 1 - smooth((u - 0.8) / 0.2) : 1;
+  c.fade = (c.far ? 1 - smooth((u - 0.8) / 0.2) : 1) * smooth(clamp((el - c.tin) / 5, 0, 1));   // au début, ils arrivent peu à peu
   const calm = 1 - smooth((u - 0.85) / 0.15);
   const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
@@ -871,8 +873,8 @@ function updateButterfly(c, dt, el) {
   if (c.land) {
     const L = c.land, tt = el - L.t0;
     if (tt >= 0) {
-      if (tt < L.ta) wL = wW = smooth(tt / L.ta);
-      else if (tt < L.ta + L.ts) wL = wW = 1;
+      // approche : il continue de battre vite des ailes (il ne plane pas), puis ralentit son battement seulement une fois posé
+      if (tt < L.ta + L.ts) { wL = tt < L.ta ? smooth(tt / L.ta) : 1; wW = smooth(clamp((tt - (L.ta - 0.4)) / 1.4, 0, 1)); }
       else if (tt < L.ta + L.ts + L.td) {   // décollage : les ailes se mettent à battre vite d'abord, puis il quitte la fleur
         const x = tt - L.ta - L.ts;
         wW = 1 - smooth(clamp(x / 0.7, 0, 1));
@@ -892,7 +894,7 @@ function updateButterfly(c, dt, el) {
   if (wL < 0.97 && Xp > -50 && Xp < W + 50 && Yp > -50 && Yp < H + 50) {
     let pxs = 0, pys = 0;
     for (const o of live) {
-      if (o === c || o.kind !== 'b' || !o.init) continue;
+      if (o === c || o.kind !== 'b' || !o.init || o.fade < 0.2) continue;
       const dx = Xp + c.ox - o.X, dy = Yp + c.oy - o.Y, d = Math.hypot(dx, dy) || 0.01, mn = 1.5 * (c.S + o.S), hard = 1.3 * (c.S + o.S);
       if (d < mn) { const f = (mn - d) / mn; pxs += dx / d * f; pys += dy / d * f; }
       if (d < hard) { const kk = o.wL > 0.9 ? 1 : 0.5; c.ox += dx / d * (hard - d) * kk; c.oy += dy / d * (hard - d) * kk; }   // trop près : écart immédiat (entier face à un papillon posé)
@@ -906,9 +908,10 @@ function updateButterfly(c, dt, el) {
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
-  if (wL > 0.6) {   // posé : il se tourne tête en haut
+  const hw = smooth(clamp((wL - 0.92) / 0.08, 0, 1));   // il garde le nez dans le sens du vol pendant l'approche, et ne se tourne qu'une fois presque posé
+  if (hw > 0.01) {   // il se pose : il se tourne tête en haut, progressivement (jamais à reculons)
     let d = -c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
-    c.head += d * Math.min(1, dt * 1.5);
+    c.head += d * Math.min(1, dt * 1.6 * hw);
   } else if (Math.hypot(vx, vy) > 6) {
     const tgt = Math.atan2(vx, -vy);
     let d = tgt - c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -918,7 +921,7 @@ function updateButterfly(c, dt, el) {
   // à son propre rythme (indépendant des autres), et plus vite quand il monte.
   const climb = clamp(-vy / (minWH() * 0.03), 0, 1);
   // battement assez vif et un peu irrégulier, avec des ailes rigides : environ 2 à 4 battements par seconde, qui s'accélèrent un peu en montée
-  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wW) + 2.6 * dep * (1 - wW);   // posé : il ouvre et ferme lentement les ailes ; au décollage, il bat vite
+  const rate = lerp(Math.max(1.4, c.fl * 1.6 * (0.8 + 0.35 * Math.sin(T * 0.23 + c.ph * 3) + 0.4 * climb + 0.2 * Math.sin(T * 1.1 + c.ph * 7) + 0.12 * Math.sin(T * 2.7 + c.ph * 2))), 0.5, wW) + 2.6 * dep * (1 - wW) + 1.6 * wL * (1 - wW) * (dep > 0 ? 0 : 1);   // posé : il ouvre et ferme lentement les ailes ; au décollage, il bat vite
   c.fph += dt * TAU * rate;
   const amp = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(T * 0.31 + c.ph * 5)) * (0.65 + 0.35 * Math.sin(T * 0.9 + c.ph));   // tantôt de grands battements, tantôt de petits frémissements : les ailes ne se referment pas toujours
   const p = c.fph + 0.5 * Math.sin(c.fph);   // battement asymétrique : l'abaissement des ailes est plus rapide que leur remontée
