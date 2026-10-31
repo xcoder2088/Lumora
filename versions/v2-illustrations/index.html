@@ -627,7 +627,7 @@ function makeJelly(d) {
     kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols, ci, type, u: 0,
     rf: sz, period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
-    giant: !!d.giant, tin: d.giant || JELLY_MODE === 'stream' ? 0 : 0.5 + (Math.min(30, S.dur * 0.4) - 1) * hash1(d.k * 5.3 + 1.7), side: d.side, y0f: d.y0f, y1f: d.y1f,
+    giant: !!d.giant, tin: d.giant || JELLY_MODE === 'stream' ? 0 : arrivalTime(d), side: d.side, y0f: d.y0f, y1f: d.y1f,
     hx: lerp(0.1, 0.9, frac(d.k * 0.618034 + 0.17)), hy: lerp(0.15, 0.85, hash1(d.k * 5.17 + 0.2)), exitT: Math.min(45, Math.max(4, d.e * 0.9)),
     modeT: Math.random() * 3, thrustK: d.giant ? 1.1 : 1, perK: 1, pulsing: true, tiltT: d.giant ? d.side * 0.8 : 0, tiltN: d.giant ? d.side * 0.8 : 0,
     x: null, y: 0, vx: 0, vy: 0, tilt: d.giant ? d.side * 0.8 : 0, X: 0, Y: 0, R: 30, tents, alpha: d.giant || d.big ? 0.8 : 1
@@ -669,7 +669,7 @@ function updateJelly(c, dt, el) {
     // elle monte sans cesse, librement (jamais retenue : plus d'attente) ; sortie par le haut, retour par le bas.
     // Seul son dernier passage est guidé, pour qu'elle sorte exactement à son instant c.e.
     const Tw = Math.min(55, Math.max(5, c.e * 0.9)), tw = c.e - Tw;
-    if (c.x === null) { c.x = c.hx * W; c.y = c.hy * H; }
+    if (c.x === null) { c.x = c.hx * W; c.y = H + R * 2.2; }   // elles arrivent du bas de l'écran, derrière les algues
     const sway = (p) => (c.hx + 0.09 * Math.sin(T * c.fx * 0.6 + c.ph + p * 2)) * W;
     if (el >= tw) {   // dernier passage : de là où elle est jusqu'en haut de l'écran
       if (c.yw === undefined) c.yw = c.y;
@@ -678,7 +678,8 @@ function updateJelly(c, dt, el) {
       const u2 = Math.min(1, u + 0.12);
       stx = sway(u2); sty = lerp(c.yw, -R * 2.9, u2);
     } else {   // vol libre
-      freeFlight = true; vUp = Math.max((H + R * 4) / c.T, minWH() * 0.024);
+      c.arr = 1 - smooth(clamp((el - c.tin) / 22, 0, 1));   // à l'arrivée, elle monte plus vite pour que l'écran se remplisse en une trentaine de secondes
+      freeFlight = true; vUp = Math.max((H + R * 4) / c.T, minWH() * 0.024) * (1 + 1.5 * c.arr);
       u = 0; tx = sway(0); ty = c.y - 300; stx = tx; sty = ty;
       if (c.y < -R * 3.2) { c.y = H + R * 1.1; c.x = c.hx * W; c.vx = 0; c.vy = 0; for (const t of c.tents) t.init = false; }
     }
@@ -744,7 +745,7 @@ function updateJelly(c, dt, el) {
     // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
     const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
     const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2)
-      : freeFlight ? 1
+      : freeFlight ? 1 + 1.3 * (c.arr || 0)
       : JELLY_AQUARIUM ? clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1)
       : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
     const f = db * (minWH() * 0.035 + R * 0.55) * c.thrustK * boost;
@@ -776,12 +777,12 @@ function updateJelly(c, dt, el) {
     if (c.x < mx) c.vx += (mx - c.x) * 1.5 * dt; else if (c.x > W - mx) c.vx -= (c.x - (W - mx)) * 1.5 * dt;
     if (c.y < my0) c.vy += (my0 - c.y) * 1.5 * dt; else if (c.y > my1) c.vy -= (c.y - my1) * 1.5 * dt;
   }
+  if (el < c.tin) { c.vx = 0; c.vy = 0; c.y = H + R * 2.2; }   // pas encore arrivée : elle attend sous l'écran
   if (!c.giant) c.vx += Math.sin(T * 0.9 + c.ph * 3) * minWH() * 0.012 * dt;   // balancement latéral : elle ne glisse jamais en ligne droite
   c.x += c.vx * dt; c.y += c.vy * dt;
   if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
   c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.1 + Math.sin(T * 0.6 + c.ph) * 0.07) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
   if (c.alpha0 === undefined) c.alpha0 = c.alpha;
-  c.alpha = c.alpha0 * smooth(clamp((el - c.tin) / 5, 0, 1));   // au début, elles apparaissent peu à peu pendant les 30 premières secondes
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
   c.u = uc;
@@ -955,13 +956,20 @@ function pickSpecies() {
   return SPECIES[0];
 }
 
+// instant d'arrivée de chaque créature : étalé sur les 30 premières secondes, la première dans la seconde qui suit le départ (les cinq premières en moins de 6 s)
+function arrivalTime(d) {
+  const N = d.n || 1, f = j => frac(j * 0.618034 + 0.3), fk = f(d.k);
+  let r = 0;
+  for (let j = 0; j < N; j++) if (f(j) < fk) r++;
+  return Math.min(1 + (Math.min(30, S.dur * 0.4) - 1) * r / Math.max(1, N - 1), d.e * 0.5);
+}
 const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
 function makeButterfly(d) {
   const sp = pickSpecies();
   const z = lerp(0.5, 1, rnd());
   const rt = rnd();   // trajet : 55 % traversent l'écran de côté, 30 % s'éloignent au loin, 15 % montent vers le ciel
   return {
-    kind: 'b', k: d.k, loop: !!d.loop, tin: d.loop ? 0.5 + (Math.min(30, S.dur * 0.4) - 1) * hash1(d.k * 5.3 + 2.9) : 0, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
+    kind: 'b', k: d.k, loop: !!d.loop, tin: d.loop ? arrivalTime(d) : 0, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, sp, sf: lerp(0.026, 0.039, z),
     far: rt < 0.3, rise: rt >= 0.3 && rt < 0.45, side: rnd() < 0.5 ? -1 : 1, ya: lerp(0.22, 0.8, frac(d.k * 0.618034 + 0.3)), yb: lerp(-0.2, 0.2, rnd()), farY: lerp(0.5, 0.62, rnd()), ph: rnd() * TAU, fl: lerp(1.3, 2.0, rnd()) * sp.flap, fx: lerp(0.1, 0.18, rnd()), fy: lerp(0.15, 0.26, rnd()),
     ax: lerp(0.04, 0.085, rnd()), ay: lerp(0.03, 0.06, rnd()),
     X: 0, Y: 0, head: 0, fph: rnd() * TAU, sx: 1, alpha: 1, init: false, S: 30
@@ -987,7 +995,7 @@ function updateButterfly(c, dt, el) {
   } else u = clamp((el - c.s) / c.T, 0, 1);
   // certains papillons s'éloignent au lointain : ils rapetissent vers l'horizon et s'effacent, au lieu de monter vers le ciel
   c.S = c.far ? Sz * lerp(1, 0.16, smooth(u)) : Sz;
-  c.fade = (c.far ? 1 - smooth((u - 0.8) / 0.2) : 1) * smooth(clamp((el - c.tin) / 5, 0, 1));   // au début, ils arrivent peu à peu
+  c.fade = (c.far ? 1 - smooth((u - 0.8) / 0.2) : 1) * smooth(clamp((el - c.tin) / 0.8, 0, 1));   // invisible avant son arrivée (caché derrière les herbes)
   const calm = 1 - smooth((u - 0.85) / 0.15);
   const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
@@ -1001,6 +1009,11 @@ function updateButterfly(c, dt, el) {
   // un vol qui zigzague et fait des petits bonds, jamais deux fois pareil
   let Xp = X + (Math.sin(T * 0.83 + c.ph * 5) * 0.3 + Math.sin(T * 1.9 + c.ph * 3) * 0.18 + Math.sin(T * 3.3 + c.ph * 4) * 0.1) * c.S * calm;
   let Yp = Y + (Math.sin(T * 0.61 + c.ph * 2) * 0.4 + Math.sin(T * 1.4 + c.ph) * 0.2 + Math.sin(T * 2.6 + c.ph * 3) * 0.14) * c.S * calm;
+  // arrivée : au début, le papillon s'envole de la prairie (derrière les herbes du premier plan) et rejoint son trajet en battant des ailes
+  if (c.loop && el < c.tin + 9) {
+    const ea = smooth(clamp((el - c.tin) / 9, 0, 1)), x0a = lerp(0.08, 0.92, frac(c.k * 0.618034 + 0.17)) * W;
+    Xp = lerp(x0a, Xp, ea); Yp = lerp(H * 0.96, Yp, ea);
+  }
   // atterrissage : certains papillons se posent sur une marguerite (scène de la prairie), y restent un moment en battant lentement des ailes, puis repartent
   if (c.land === undefined) c.land = (typeof pickLanding === 'function' && !c.far && c.T > 30 && Math.random() < 0.55) ? pickLanding(c, el) : null;
   let wL = 0, wW = 0, dep = 0;   // wL : lien avec la fleur (position, taille) ; wW : battement lent des ailes posées ; dep : décollage
