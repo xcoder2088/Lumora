@@ -1003,7 +1003,7 @@ function makeJelly(d) {
   const tq = rnd();
   const type = tq < 0.45 ? 'lune' : tq < 0.75 ? 'haute' : 'fantomatique';
   return {
-    kind: 'j', s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols, ci, type, u: 0,
+    kind: 'j', k: d.k, s: d.s, e: d.e, T: d.T, x0: d.x0, x1: d.x1, z, col: cols[0], cols, ci, type, u: 0,
     rf: sz * (d.giant ? 1 : 1.4), period: d.giant ? lerp(3.8, 5.2, rnd()) : lerp(3.4, 4.8, rnd()) * lerp(0.75, 1.1, clamp((sz - 0.022) / 0.078, 0, 1)), pp: rnd(), b: 0,
     fx: lerp(0.08, 0.16, rnd()), fy: lerp(0.1, 0.2, rnd()), ph: rnd() * TAU, ax: lerp(0.6, 1.4, rnd()), ay: lerp(0.4, 0.9, rnd()),
     giant: !!d.giant, tin: d.giant || JELLY_MODE === 'stream' ? 0 : arrivalTime(d), side: d.side, y0f: d.y0f, y1f: d.y1f,
@@ -1124,7 +1124,29 @@ function updateJelly(c, dt, el) {
       }
     }
     avm = Math.hypot(avx, avy);
-    if (avm > 0.02) { tx += avx * R * 3; stx += avx * R * 5; if (JELLY_AQUARIUM) ty += avy * R * 2; if (freeFlight) { c.vx += avx * minWH() * 0.06 * dt; c.vy += avy * minWH() * 0.03 * dt; } }
+    if (avm > 0.02) { tx += avx * R * 3; stx += avx * R * 5; if (JELLY_AQUARIUM) ty += avy * R * 2; }
+  }
+  // priorités : une méduse laisse passer celles qui ont la priorité au lieu de les bousculer. Elle ralentit jusqu'à ce que le chemin soit libre, puis reprend sa route.
+  // (une méduse en dernier passage passe toujours en premier ; sinon la priorité va à la plus ancienne : aucun blocage possible)
+  if (c.yieldF === undefined) c.yieldF = 1;
+  if (!c.giant) {
+    let wantYield = false;
+    if (freeFlight) {
+      const prio = q => q.yw !== undefined ? -1 : q.k;
+      const vcx = c.dx * c.spd, vcy = c.dy * c.spd;
+      for (const o of live) {
+        if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || !(prio(o) < prio(c))) continue;
+        const dx = o.x - c.x, dy = o.y - c.y, wx = o.vx - vcx, wy = o.vy - vcy, ww = wx * wx + wy * wy;
+        const ts = ww > 1e-6 ? clamp(-(dx * wx + dy * wy) / ww, 0, 5) : 0;
+        const lim = (R + o.R) * 1.15;
+        if (Math.hypot(dx + wx * ts, dy + wy * ts) < lim && (ts > 0 || Math.hypot(dx, dy) < lim)) { wantYield = true; break; }
+      }
+    }
+    // si elle attend depuis trop longtemps, elle repart un moment quand même (jamais de longue attente)
+    if (c.noYield > 0) { c.noYield -= dt; wantYield = false; }
+    else if (wantYield) { c.waitT = (c.waitT || 0) + dt; if (c.waitT > 7) { c.noYield = 6; c.waitT = 0; wantYield = false; } }
+    else c.waitT = Math.max(0, (c.waitT || 0) - dt * 2);
+    c.yieldF += ((wantYield ? 0.05 : 1) - c.yieldF) * Math.min(1, dt * (wantYield ? 2.0 : 1.2));
   }
   // Allure : de temps en temps la méduse change de comportement (nage régulière, sur place, plané, rafale).
   c.modeT -= dt;
@@ -1145,7 +1167,7 @@ function updateJelly(c, dt, el) {
   }
   if (c.pulsing || c.pp > 0) {
     c.pp += dt / (c.period * c.perK);
-    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.85, 0.85) + (Math.random() - 0.5) * 0.3; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
+    if (c.pp >= 1) { c.pp = c.pulsing ? c.pp - 1 : 0; c.tiltT = c.giant ? (c.tiltN === undefined ? 0 : c.tiltN) : clamp(Math.atan2(stx - c.x, c.y - sty), -0.28, 0.28) + (Math.random() - 0.5) * 0.1; }   // elle s'oriente vers son but   // au repos, l'ombrelle finit son cycle puis reste détendue
   }
   const s = c.pp;
   const b = s < 0.28 ? Math.sin(s / 0.28 * Math.PI / 2) : 1 - smooth((s - 0.28) / 0.72);
@@ -1155,7 +1177,7 @@ function updateJelly(c, dt, el) {
     // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
     const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
     const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2)
-      : freeFlight ? 1 + 1.3 * (c.arr || 0)
+      : freeFlight ? (1 + 1.3 * (c.arr || 0)) * Math.max(0.2, c.yieldF)
       : JELLY_AQUARIUM ? clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1)
       : JELLY_MODE === 'loop' ? clamp(1 + ((tx - c.x) * c.dx + (ty - c.y) * c.dy) / (minWH() * 0.35), 0.2, 2.2)
       : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
@@ -1174,12 +1196,12 @@ function updateJelly(c, dt, el) {
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
   const kperp = c.giant || JELLY_MODE === 'loop' ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
-  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0) + (freeFlight ? (c.vtx - c.vx) * 0.5 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
-  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0) + (freeFlight ? (c.vty - c.vy) * 0.5 : 0)) * dt;
+  c.vx += ((tx - c.x) * kx - (c.vx - cur * (1 - guide)) * drag - (c.vx - vpar * axx) * kperp * (1 - guide) + (c.giant ? (gvx - c.vx) * 0.35 : 0) + (freeFlight ? (c.vtx * c.yieldF - c.vx) * 0.5 : 0)) * dt;   // la géante garde toujours une dérive vers l'avant
+  c.vy += ((ty - c.y) * ky - (c.vy - sink) * drag - (c.vy - vpar * axy) * kperp * (1 - guide) - (c.giant ? c.vy * 1.2 : 0) + (freeFlight ? (c.vty * c.yieldF - c.vy) * 0.5 : 0)) * dt;
   if (!c.giant) {   // elles s'écartent doucement les unes des autres
     for (const o of live) {
       if (o === c || o.kind !== 'j' || o.x === null || o.alpha < 0.15) continue;
-      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 1.25;
+      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 0.95;
       if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.05 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
     }
   }
@@ -1191,8 +1213,8 @@ function updateJelly(c, dt, el) {
   if (el < c.tin && c.ex !== undefined) { c.vx = 0; c.vy = 0; c.x = c.ex; c.y = c.ey; }   // pas encore arrivée : elle attend hors de l'écran, à son point d'entrée
   if (!c.giant) c.vx += Math.sin(T * 0.9 + c.ph * 3) * minWH() * 0.012 * dt;   // balancement latéral : elle ne glisse jamais en ligne droite
   c.x += c.vx * dt; c.y += c.vy * dt;
-  if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
-  c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.1 + Math.sin(T * 0.6 + c.ph) * 0.07) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
+  if (avm > 0.25) c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.28, 0.28);   // elle s'incline tout de suite du côté où elle se détourne
+  c.tilt += (c.tiltT * (1 - guide) + (Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04) - c.tilt) * Math.min(1, dt * (avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
   if (c.alpha0 === undefined) c.alpha0 = c.alpha;
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);
