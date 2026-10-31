@@ -21,7 +21,7 @@ Deux scènes : méduses (eau profonde) ou papillons (prairie au crépuscule).
 - `versions/v5-traversees/outils/makev5.py` : script qui a produit la v5 à partir de la v4 (voir « Reconstruire »).
 - `versions/v4-concept-1/` : sauvegarde figée de la v4. Ne pas modifier.
 - `versions/v1-canvas`, `v2-illustrations`, `v3-fluide` : anciennes versions, plus reconstruites.
-- `index.html` (racine) : ancienne page de base, avec l'accueil animé et un seul halo. À remplacer par la v5 quand le propriétaire le décide.
+- `index.html` (racine) : la version courante (copie de la v5 avec chemins adaptés). Si on modifie la v5, refaire la copie.
 - `assets/` : illustrations, décors, plantes, fleurs, sons.
 
 ## État actuel (commit 96e7458)
@@ -46,11 +46,13 @@ Serveur local : `python3 -m http.server 8771` depuis la racine du dépôt. Copie
 ## Pas encore vérifié
 Vrai iPhone, vrai tableau blanc, son à l'oreille, fluidité réelle.
 
-## Décisions en attente du propriétaire
-1. Faire de la v5 la page principale (`index.html` racine) ?
-2. Mettre à jour le texte d'introduction du panneau de départ (« Les créatures montent doucement… » n'est plus exact) ?
-3. Retirer le nom d'outil d'un ancien message de commit de l'outil d'illustration (réécriture d'historique : seulement avec accord et si l'autre outil est inactif) ?
-4. Retours attendus après essai sur le tableau blanc.
+## Décisions déjà prises (31 octobre 2026)
+- La v5 est devenue la page principale (`index.html` racine, chemins `./assets/` et `./audio/`).
+- Texte d'introduction du panneau de départ mis à jour.
+- Historique nettoyé : aucun nom d'outil dans les messages, fichiers ou contenus (poussé en mode forcé avec l'accord du propriétaire). Si l'autre outil d'illustration avait une copie locale ancienne, il doit refaire `git fetch` puis `git reset --hard origin/main` avant de pousser.
+
+## En attente
+- Retours du propriétaire après essai sur le tableau blanc (fluidité, taille de l'interface).
 
 ## Page de démonstration privée
 Version 5 : la page de démonstration privée est dans la liste des pages publiées du propriétaire (titre « Lumora »).
