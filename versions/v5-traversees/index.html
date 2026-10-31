@@ -268,6 +268,8 @@ body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opac
 :root { color-scheme: dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
+#setup, #hud, #end, #welcomeSkip { zoom: var(--ui, 1); }
+.welcome-mark { width: min(82vw, calc(680px * var(--ui, 1))); }
 </style>
 </head>
 <body>
@@ -517,8 +519,10 @@ const cv = $('scene');
 const ctx = cv.getContext('2d');
 let W = 800, H = 600;
 function resize() {
-  const d = Math.min(window.devicePixelRatio || 1, 2);
   W = window.innerWidth; H = window.innerHeight;
+  let d = Math.min(window.devicePixelRatio || 1, 2);
+  if (W * H * d * d > 4.2e6) d = Math.max(0.5, Math.sqrt(4.2e6 / (W * H)));   // très grand écran : le dessin est limité à environ 4 millions de points
+  document.documentElement.style.setProperty('--ui', Math.max(1, Math.min(2.6, Math.min(W, H) / 760)).toFixed(3));   // boutons et textes agrandis sur un grand écran
   cv.width = Math.round(W * d); cv.height = Math.round(H * d);
   ctx.setTransform(d, 0, 0, d, 0, 0);
 }
@@ -1038,28 +1042,32 @@ function distToOutside(px, py, dx, dy, mx, my) {
   while (s < 5000 && px + dx * s > -mx && px + dx * s < W + mx && py + dy * s > -my && py + dy * s < H + my) s += 8;
   return s;
 }
-// nouvelle traversée d'une méduse : elle entre par la gauche, la droite ou le bas (jamais par le haut), et sort par un autre bord au hasard.
-// La direction en découle : verticale, horizontale ou oblique, vers le haut ou en descendant doucement.
+// nouvelle traversée d'une méduse : le type de traversée est tiré au hasard (verticale, oblique vers le haut, horizontale, oblique en descendant doucement),
+// puis l'entrée se fait par le bord d'où elle vient : la gauche, la droite ou le bas, jamais le haut.
+let JELLY_BAG = [];
 function newJellyPass(c, R, first) {
-  const mx = R * 2.6, my = R * 3.4, rr = Math.random();
-  const e1 = first ? (rr < 0.4 ? 0 : rr < 0.8 ? 1 : 2) : (rr < 0.33 ? 0 : rr < 0.66 ? 1 : 2);   // 0 gauche, 1 droite, 2 bas
-  const pt = (e, f) => e === 0 ? [-mx, lerp(0.08, 0.9, f) * H] : e === 1 ? [W + mx, lerp(0.08, 0.9, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + my] : [lerp(0.08, 0.92, f) * W, -my];
-  const E = pt(e1, Math.random());
-  let dx = 0, dy = -1;
-  for (let k = 0; k < 12; k++) {
-    const e2 = e1 === 2 && Math.random() < 0.5 ? 3 : [0, 1, 2, 3].filter(v => v !== e1)[Math.floor(Math.random() * 3)];   // du bas, une sur deux va droit vers le haut
-    const X = pt(e2, Math.random());
-    const l = Math.hypot(X[0] - E[0], X[1] - E[1]) || 1;
-    dx = (X[0] - E[0]) / l; dy = (X[1] - E[1]) / l;
-    if (dy < 0.5) break;   // pas de descente trop raide
+  const mx = R * 2.6, my = R * 3.4;
+  // le type de traversée sort d'un « sac » mélangé (3 verticales, 3 obliques, 3 horizontales, 1 descendante sur 10) : le mélange reste équilibré
+  if (!JELLY_BAG.length) JELLY_BAG = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3].sort(() => Math.random() - 0.5);
+  const type = JELLY_BAG.pop();
+  let dx = 0, dy = -1, E = [W / 2, H + my];
+  for (let k = 0; k < 14; k++) {
+    const sg = Math.random() < 0.5 ? -1 : 1;
+    const deg = type === 0 ? lerp(-12, 12, Math.random()) : type === 1 ? sg * lerp(25, 65, Math.random()) : type === 2 ? sg * lerp(75, 105, Math.random()) : sg * lerp(110, 130, Math.random());
+    const ang = deg / 57.3;
+    dx = Math.sin(ang); dy = -Math.cos(ang);
+    if (type === 3) { E = [dx > 0 ? -mx : W + mx, lerp(0.06, 0.45, Math.random()) * H]; break; }   // en descendant : elle vient d'un côté, dans la partie haute
+    const Mx = lerp(0.1, 0.9, Math.random()) * W, My = lerp(0.1, 0.9, Math.random()) * H;        // un point de l'écran par où elle passera
+    const s = distToOutside(Mx, My, -dx, -dy, mx, my);                                          // on remonte sa route jusqu'au bord : c'est son entrée
+    E = [Mx - dx * s, My - dy * s];
+    if (E[1] > -my * 0.9) break;                                                                // pas d'entrée par le haut
   }
-  if (dy > 0.5) { dy = 0.5; const l = Math.hypot(dx, dy); dx /= l; dy /= l; }
   c.dx = dx; c.dy = dy; c.ang = Math.atan2(dx, -dy);
   c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
   c.x = c.ex = E[0]; c.y = c.ey = E[1];
   c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
   c.seen = false; c.passT = 0;
-  c.tilt = c.tiltT = c.ang;   // elle entre déjà la tête dans le sens du mouvement
+  c.tilt = c.tiltT = c.ang; c.tw = 0;   // elle entre déjà la tête dans le sens du mouvement
   for (const t of c.tents) t.init = false;
 }
 function updateJelly(c, dt, el) {
@@ -1223,13 +1231,11 @@ function updateJelly(c, dt, el) {
   if (avm > 0.25 && JELLY_MODE !== 'loop') c.tiltT = clamp(Math.atan2(stx - c.x, c.y - sty), -0.6, 0.6);   // elle s'incline tout de suite du côté où elle se détourne
   c.tilt += (c.tiltT * (JELLY_MODE === 'loop' ? 1 : 1 - guide) + (Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04) - c.tilt) * Math.min(1, dt * (JELLY_MODE === 'loop' ? 0 : avm > 0.25 ? 1.0 : 0.6));   // le corps se balance à chaque battement et roule doucement : elle a l'air vivante
   if (c.alpha0 === undefined) c.alpha0 = c.alpha;
-  if (JELLY_MODE === 'loop' && !c.giant) {   // la tête pointe toujours dans le sens du mouvement réel (vitesse lissée), de côté comme en diagonale ou vers le haut
-    const kv = 1 - Math.exp(-dt / 0.9);
-    c.svx = c.svx === undefined ? c.vx : c.svx + (c.vx - c.svx) * kv; c.svy = c.svy === undefined ? c.vy : c.svy + (c.vy - c.svy) * kv;
-    if (Math.hypot(c.svx, c.svy) > 4) c.hd = Math.atan2(c.svx, -c.svy);
-    let dh = (c.hd === undefined ? c.ang : c.hd) + Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04 - c.tilt;
+  if (JELLY_MODE === 'loop' && !c.giant) {   // la tête pointe dans le sens du trajet, avec une rotation douce (ressort amorti, vitesse de rotation limitée)
+    let dh = thrAng + Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04 - c.tilt;
     dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-    c.tilt += dh * Math.min(1, dt * 2.2);
+    c.tw = clamp((c.tw || 0) + (dh * 3.0 - 2.4 * (c.tw || 0)) * dt, -0.7, 0.7);
+    c.tilt += c.tw * dt;
   }
   c.X = c.x; c.Y = c.y;
   c.col = pathColor(c.cols, uc);

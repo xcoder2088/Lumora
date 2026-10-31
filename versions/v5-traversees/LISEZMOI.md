@@ -13,3 +13,8 @@ Cette version part de la **version 4** (conservée telle quelle dans `versions/v
 - Ils se posent toujours sur les marguerites (deux au plus à la fois), sans jamais se chevaucher.
 
 Cette page charge les images de `../../assets/` et les sons de `../../audio/` : il faut la servir depuis la racine du dépôt (`python3 -m http.server 8000`).
+
+**Grands écrans (tableau blanc interactif)**
+- Les boutons et les textes s'agrandissent avec l'écran (jusqu'à 2,6 fois) pour rester lisibles de loin et faciles à toucher.
+- Sur un écran très grand (4K), le dessin est limité à environ 4 millions de points pour rester fluide, puis étiré à l'écran.
+- Vérifié à 1280×1024 (format 5:4), 1600×1200, 1920×1080 et 3840×2160, avec des appuis tactiles : choix des réglages, démarrage, barre de commandes.
