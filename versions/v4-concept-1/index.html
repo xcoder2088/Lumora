@@ -432,29 +432,52 @@ function drawHillsImg() {
   if (!im) return;
   ctx.drawImage(im, x, y, dw, dh);
 }
-function drawDaisies() {   // marguerites dans l'herbe, entre les papillons et les herbes du premier plan
-  const im = DUSK['decor-prairie-marguerites'];
-  if (im) swayLayer(im, 0, 1, 1.3, 1, false, 1);
-}
 function drawGrassImg() {   // herbes dans le vent
   const im = DUSK['decor-prairie-herbes'] || BGI['decor-prairie-herbes'];
   if (im) swayLayer(im, 0, 1, 1, 1, false, 1);
 }
-function drawFrontTrees() {   // grands arbres des bords, devant tout le reste ; plus petits sur un écran étroit
-  const narrow = W / H < 0.8;   // écran étroit : un seul arbre, plus petit, dans le coin bas gauche
-  const a = DUSK['decor-prairie-arbre-premier-plan'], b = DUSK['decor-prairie-arbre-premier-plan-droite'];
-  if (a) swayLayer(a, 0, 0.5, 0.45, 0.7, true, narrow ? 0.45 : 1, 0);
-  if (b && !narrow) swayLayer(b, 0.5, 1, 0.45, 0.7, true, 1, 0);
+function drawPlant(name, X, footY, hs, ph, sp, amp, alpha, tint) {
+  // une plante entière (pied en X, footY), découpée en rangées (une tous les 14 pixels environ) qui oscillent chacune un peu après la précédente :
+  // elle plie vraiment, de façon indépendante des autres, et le pied reste immobile
+  const s = SPR[name];
+  if (!s) return false;
+  const k = hs / (s.py - s.by), n = clamp(Math.round(hs / 14), 8, 28), src = tint !== undefined ? tinted(name, tint) : s.cv, rh = src.height / n, bh = s.bh / n;
+  ctx.globalAlpha = alpha;
+  for (let j = 0; j < n; j++) {
+    const t = (n - 1 - j + 0.5) / n;   // hauteur de la rangée (0 = pied, 1 = bout)
+    const off = amp * hs * 0.17 * Math.pow(t, 1.6) * (Math.sin(T * sp + ph - t * 2.4) + 0.35 * Math.sin(T * sp * 1.9 + ph * 2 - t * 3.7));
+    ctx.drawImage(src, 0, j * rh, src.width, rh + 0.3, X + (s.bx - s.px) * k + off, footY - (s.py - (s.by + j * bh)) * k, s.bw * k, bh * k + 0.5);
+  }
+  ctx.globalAlpha = 1;
+  return true;
 }
-const ALGAE = ['decor-eau-algues-lointaines', 'decor-eau-algues-moyennes', 'decor-eau-algues-premier-plan'];
-function drawAlgae(i, w) {   // algues illustrées sur trois plans ; si l'image manque, les algues dessinées par le code les remplacent
-  const im = BGI[ALGAE[i]];
-  if (!im) { drawKelp(i, w); return; }
+const PLANTS = (() => {   // algues réparties sur trois plans : peu nombreuses, petites au loin, un peu plus grandes sur les bords
+  const r = mulberry(2024), L = [], names = ['plante-eau-varech-01', 'plante-eau-varech-02', 'plante-eau-herbe-marine-01', 'plante-eau-herbe-marine-02', 'plante-eau-branchue-01'];
+  const add = (n, layer, hLo, hHi, xf, al) => { for (let i = 0; i < n; i++) L.push({ name: names[Math.floor(r() * 5)], layer, x: xf(i), h: lerp(hLo, hHi, r()), ph: r() * TAU, sp: lerp(0.55, 0.95, r()), al }); };
+  add(5, 0, 0.15, 0.23, i => (i + 0.5) / 5 + (r() - 0.5) * 0.08, 0.3);
+  add(3, 1, 0.2, 0.29, i => (i + 0.5) / 3 + (r() - 0.5) * 0.1, 0.5);
+  add(3, 2, 0.27, 0.36, i => [0.05, 0.93, 0.85][i] + (r() - 0.5) * 0.02, 0.85);
+  return L;
+})();
+function drawAlgae(layer, w) {   // si les images manquent, les algues dessinées par le code les remplacent
   const k = 1 - w * 0.9;
   if (k <= 0.02) return;
-  ctx.globalAlpha = k;
-  swayLayer(im, 0, 1, [0.5, 0.8, 1.1][i], [0.6, 0.75, 0.9][i], i === 2, W / H < 0.8 ? 0.55 : 1);
-  ctx.globalAlpha = 1;
+  let any = false;
+  const sc = W / H < 0.8 ? 0.75 : 1;
+  for (const p of PLANTS) { if (p.layer === layer && drawPlant(p.name, p.x * W, H + 4, p.h * H * sc, p.ph, p.sp, 1, p.al * k)) any = true; }
+  if (!any && !SPR[PLANTS[0].name]) drawKelp(layer, w);
+}
+const DAISIES = (() => {   // petites marguerites dans l'herbe : plus petites vers l'horizon, plus grandes devant
+  const r = mulberry(77), L = [];
+  for (let i = 0; i < 14; i++) {
+    const y = lerp(0.76, 0.97, r()), t = (y - 0.76) / 0.21;
+    L.push({ name: 'fleur-marguerite-0' + (1 + Math.floor(r() * 5)), x: lerp(0.03, 0.97, r()), y, h: lerp(0.06, 0.13, t) * (0.85 + 0.3 * r()), ph: r() * TAU, sp: lerp(0.6, 1.1, r()) });
+  }
+  return L.sort((a, b) => a.y - b.y);
+})();
+function drawDaisies() {   // entre les papillons et les herbes du premier plan (les herbes cachent le pied des tiges)
+  if (!TINTC[40]) TINTC[40] = [205, 178, 210];   // teinte du crépuscule
+  for (const d of DAISIES) drawPlant(d.name, d.x * W, d.y * H, d.h * H, d.ph, d.sp, 0.5, 1, 40);
 }
 function drawMotes(w) {   // graines et poussières qui dérivent avec le vent
   const k = 1 - w * 1.3;
@@ -539,9 +562,9 @@ function pathColor(cols, u) { // couleur le long du trajet : bleue au départ, m
 const ASSET_BASE = '../../assets/';
 const AUDIO_BASE = '../../audio/';
 const SCENE_FILES = {
-  jelly: ['decor-eau-algues-lointaines', 'decor-eau-algues-moyennes', 'decor-eau-algues-premier-plan'].concat(['lune', 'haute', 'fantomatique'].flatMap(t =>
+  jelly: ['plante-eau-varech-01', 'plante-eau-varech-02', 'plante-eau-herbe-marine-01', 'plante-eau-herbe-marine-02', 'plante-eau-branchue-01'].concat(['lune', 'haute', 'fantomatique'].flatMap(t =>
     ['ombrelle-01', 'bras-oraux', 'lueur-interne'].map(p => 'meduse-' + t + '-' + p))),
-  butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes', 'decor-prairie-arbres-lointains', 'decor-prairie-arbre-premier-plan', 'decor-prairie-arbre-premier-plan-droite', 'decor-prairie-marguerites'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
+  butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes', 'decor-prairie-arbres-lointains', 'fleur-marguerite-01', 'fleur-marguerite-02', 'fleur-marguerite-03', 'fleur-marguerite-04', 'fleur-marguerite-05'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
     ['aile-avant', 'aile-arriere', 'corps'].map(p => 'papillon-' + s + '-' + p)))
 };
 const DUSK = {};   // calques de la prairie assombris à la tombée de la nuit (calculés une fois au chargement)
@@ -590,6 +613,7 @@ function makeDusk(name, im) {
 }
 const RIM_N = 41;
 const GEOM = {"meduse-fantomatique-bras-oraux":{"bb":[335,61,689,939]},"meduse-fantomatique-lueur-interne":{"bb":[164,62,861,748]},"meduse-fantomatique-ombrelle-01":{"bb":[63,495,961,760],"rim":[-74,-65,-55,-51,-46,-48,-37,-31,-25,-25,-32,-16,-13,-14,-25,-18,-10,-4,-3,-6,-14,-5,-3,-4,-12,-20,-23,-13,-13,-17,-30,-25,-25,-31,-38,-47,-47,-52,-55,-65,-75],"rx0":65,"rw":894},"meduse-fantomatique-ombrelle-02":{"bb":[81,474,943,760],"rim":[-76,-64,-49,-46,-41,-43,-39,-31,-25,-25,-30,-18,-13,-14,-20,-19,-8,-3,-3,-6,-16,-6,-3,-3,-8,-19,-19,-13,-13,-17,-28,-24,-24,-30,-39,-45,-41,-47,-50,-65,-77],"rx0":83,"rw":858},"meduse-fantomatique-ombrelle-03":{"bb":[113,453,911,760],"rim":[-75,-60,-51,-45,-47,-37,-27,-24,-26,-24,-15,-13,-14,-20,-21,-15,-6,-3,-3,-6,-15,-8,-4,-3,-4,-9,-18,-25,-16,-13,-14,-19,-32,-26,-26,-34,-40,-47,-49,-62,-74],"rx0":115,"rw":794},"meduse-fantomatique-ombrelle-04":{"bb":[154,430,871,759],"rim":[-74,-62,-55,-43,-38,-40,-35,-27,-25,-27,-26,-16,-13,-14,-20,-14,-6,-4,-4,-9,-21,-9,-4,-4,-7,-14,-20,-14,-14,-17,-27,-28,-26,-28,-36,-41,-39,-44,-56,-63,-75],"rx0":156,"rw":713},"meduse-haute-bras-oraux":{"bb":[251,60,774,940]},"meduse-haute-lueur-interne":{"bb":[308,65,714,904]},"meduse-haute-ombrelle-01":{"bb":[63,260,961,760],"rim":[-89,-76,-52,-47,-47,-40,-41,-34,-24,-24,-31,-18,-6,-3,-5,-16,-22,-14,-10,-13,-17,-11,-11,-18,-25,-13,-5,-5,-10,-26,-27,-23,-26,-39,-46,-44,-51,-54,-59,-81,-97],"rx0":65,"rw":894},"meduse-haute-ombrelle-02":{"bb":[81,221,943,759],"rim":[-122,-107,-78,-69,-64,-54,-53,-48,-34,-31,-35,-28,-10,-4,-4,-14,-21,-11,-6,-8,-16,-7,-7,-13,-23,-12,-4,-4,-11,-30,-33,-30,-34,-48,-55,-54,-64,-70,-79,-112,-131],"rx0":83,"rw":858},"meduse-haute-ombrelle-03":{"bb":[113,181,912,759],"rim":[-101,-88,-58,-54,-52,-45,-46,-42,-30,-28,-32,-22,-8,-4,-5,-16,-25,-16,-12,-14,-19,-13,-12,-18,-28,-13,-6,-5,-11,-29,-30,-27,-31,-45,-47,-47,-56,-57,-62,-91,-107],"rx0":115,"rw":795},"meduse-haute-ombrelle-04":{"bb":[153,137,871,759],"rim":[-102,-83,-66,-45,-41,-45,-39,-41,-33,-23,-22,-30,-21,-7,-4,-6,-19,-24,-16,-15,-24,-17,-16,-21,-29,-12,-5,-5,-12,-30,-25,-22,-25,-40,-43,-43,-44,-47,-62,-84,-101],"rx0":155,"rw":714},"meduse-lune-bras-oraux":{"bb":[228,60,796,939]},"meduse-lune-lueur-interne":{"bb":[180,62,845,624]},"meduse-lune-ombrelle-01":{"bb":[63,350,961,759],"rim":[-107,-77,-69,-63,-45,-39,-42,-29,-19,-17,-20,-21,-25,-21,-9,-5,-5,-3,-3,-7,-21,-13,-5,-3,-4,-5,-8,-20,-27,-20,-17,-15,-18,-31,-40,-40,-45,-63,-69,-77,-107],"rx0":65,"rw":894},"meduse-lune-ombrelle-02":{"bb":[81,317,943,760],"rim":[-123,-109,-76,-73,-54,-45,-45,-40,-27,-23,-24,-26,-31,-24,-11,-6,-4,-4,-3,-5,-16,-18,-7,-4,-4,-6,-8,-14,-32,-30,-25,-24,-26,-40,-47,-47,-55,-74,-77,-111,-127],"rx0":83,"rw":858},"meduse-lune-ombrelle-03":{"bb":[113,285,912,759],"rim":[-106,-78,-69,-52,-43,-43,-34,-22,-18,-19,-21,-24,-27,-14,-7,-5,-5,-3,-4,-8,-18,-13,-5,-3,-3,-5,-5,-11,-23,-25,-20,-18,-17,-20,-31,-43,-42,-48,-71,-79,-107],"rx0":115,"rw":795},"meduse-lune-ombrelle-04":{"bb":[153,249,871,759],"rim":[-110,-77,-71,-71,-52,-43,-43,-34,-22,-18,-19,-22,-31,-23,-11,-6,-5,-3,-3,-7,-16,-19,-7,-3,-3,-5,-7,-13,-26,-28,-21,-18,-18,-25,-45,-43,-46,-64,-71,-76,-109],"rx0":155,"rw":714},"papillon-azure-commun-aile-arriere":{"bb":[53,110,970,915]},"papillon-azure-commun-aile-avant":{"bb":[57,63,966,961]},"papillon-azure-commun-corps":{"bb":[356,61,668,527]},"papillon-lune-aile-arriere":{"bb":[182,63,842,961]},"papillon-lune-aile-avant":{"bb":[53,95,971,929]},"papillon-lune-corps":{"bb":[357,62,667,620]},"papillon-machaon-aile-arriere":{"bb":[122,63,901,961]},"papillon-machaon-aile-avant":{"bb":[53,82,971,942]},"papillon-machaon-corps":{"bb":[357,62,667,689]},"papillon-monarque-aile-arriere":{"bb":[53,130,971,893]},"papillon-monarque-aile-avant":{"bb":[53,83,971,940]},"papillon-monarque-corps":{"bb":[356,61,668,631]},"papillon-morpho-bleu-aile-arriere":{"bb":[68,63,954,961]},"papillon-morpho-bleu-aile-avant":{"bb":[53,64,971,959]},"papillon-morpho-bleu-corps":{"bb":[357,62,667,850]}};
+Object.assign(GEOM, {"plante-eau-varech-01":{"bb":[340,51,713,2048]},"plante-eau-varech-02":{"bb":[290,51,738,2048]},"plante-eau-herbe-marine-01":{"bb":[237,51,789,2048]},"plante-eau-herbe-marine-02":{"bb":[190,51,833,2048]},"plante-eau-branchue-01":{"bb":[179,51,876,2048]},"fleur-marguerite-01":{"bb":[179,38,849,1536]},"fleur-marguerite-02":{"bb":[258,38,904,1536]},"fleur-marguerite-03":{"bb":[143,38,674,1536]},"fleur-marguerite-04":{"bb":[333,38,637,1536]},"fleur-marguerite-05":{"bb":[191,38,845,1536]}});
 const BGI = {};            // décors en pleine image
 const SPR = {};            // créatures : image recadrée et réduite, avec ses repères
 let MAN = null;
@@ -1393,7 +1417,6 @@ function frame(now) {
     for (const c of sorted) { try { drawButterfly(c, w); } catch (e) { ctx.restore(); } }
     drawDaisies();
     drawGrassImg();
-    drawFrontTrees();
   }
   drawWake(w);
   drawVignette(w);
