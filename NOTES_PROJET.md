@@ -1,5 +1,15 @@
 # Lumora — notes de reprise du projet
 
+## Icônes — 31 octobre 2026
+
+Le propriétaire a choisi le **papillon bleu seul**, sans le mot miniature, pour l'onglet du navigateur et les raccourcis. Les fichiers `icons/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` et `apple-touch-icon.png` sont remplacés par ce dessin. Ajouts : `icons/icon.svg`, `favicon-16.png`, `favicon-32.png` et `favicon.ico` à la racine.
+
+[Aperçu des icônes aux différentes tailles](assets/apercus/icones-papillon.png). Vérifié : build réel du site, liens et types des fichiers, manifeste lu par Chromium, tailles PNG 180/192/512, quatre tailles dans le ICO, marge de sécurité de l'icône adaptative, chargement des icônes hors ligne et conservation des caches étrangers à Lumora. Aucun essai sur un écran d'accueil iOS physique n'est revendiqué.
+
+Le manifeste garde l'identifiant et le démarrage de l'application existante; les URL d'icônes portent `?v=2` pour éviter l'ancien dessin en cache. Le service worker est passé à `5.5-papillon-2`; il conserve les nouvelles icônes hors ligne et ne nettoie que les anciens caches de Lumora. Les métadonnées sont à jour dans la page racine et la v5. Le générateur `tools/make_icons.py` reproduit tous les formats avec Pillow, et `tools/build_site.py` copie aussi le favicon dans `dist`.
+
+Après récupération de cette mise à jour, republier `dist` par la procédure habituelle du site. Un raccourci déjà présent sur un écran d'accueil peut garder son ancien dessin jusqu'à sa recréation. Ne pas remplacer toute la page par une copie plus ancienne : seuls les liens d'icônes ont été modifiés.
+
 Document pour reprendre le travail dans une nouvelle conversation sans rien perdre.
 
 ## But
@@ -101,3 +111,4 @@ Le panneau de départ ne défile plus : il est un peu plus compact, le bouton «
 
 ## Serveur (31 octobre 2026)
 Le service `lumora-web` lance maintenant `deploy/lumora-server.py` (copié dans `/usr/local/share/lumora/` par `installer-sur-serveur.sh`) au lieu de `python3 -m http.server`. Il envoie `Cache-Control: public, max-age=0, must-revalidate` pour la page, `sw.js` et le manifeste, et `max-age=86400` pour `assets/`, `audio/` et `icons/`. Cloudflare avait gardé l'ancien `sw.js` : une purge unique (Caching > Purge Everything) est nécessaire après ce changement.
+

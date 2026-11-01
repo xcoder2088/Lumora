@@ -18,7 +18,7 @@ dist.mkdir()
 shutil.copy2(racine / "index.html", dist / "index.html")
 shutil.copy2(racine / "_headers", dist / "_headers")
 # application installable : manifeste, service worker et icônes
-for f in ("manifest.webmanifest", "sw.js"):
+for f in ("manifest.webmanifest", "sw.js", "favicon.ico"):
     shutil.copy2(racine / f, dist / f)
 shutil.copytree(racine / "icons", dist / "icons")
 shutil.copytree(racine / "audio", dist / "audio")
@@ -56,3 +56,4 @@ if manquants:
 octets = sum(f.stat().st_size for f in dist.rglob("*") if f.is_file())
 nb = sum(1 for f in dist.rglob("*") if f.is_file())
 print(f"Site prêt dans dist/ : {nb} fichiers, {octets/1e6:.1f} Mo")
+

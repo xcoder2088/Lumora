@@ -1,15 +1,15 @@
 /* Lumora : service worker. Garde la page et les icônes pour ouvrir l'application sans réseau ;
    les sons et illustrations sont gardés au fur et à mesure qu'ils sont utilisés.
    Changer le numéro de version ci-dessous à chaque version ou révision pour que les appareils se mettent à jour. */
-const VERSION = '5.5';
+const VERSION = '5.5-papillon-2';
 const CACHE = 'lumora-' + VERSION;
-const COQUILLE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const COQUILLE = ['./', './index.html', './manifest.webmanifest?v=2', './favicon.ico?v=2', './icons/icon.svg?v=2', './icons/favicon-32.png?v=2', './icons/icon-192.png?v=2', './icons/icon-512.png?v=2', './icons/icon-maskable-512.png?v=2', './icons/apple-touch-icon.png?v=2'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(COQUILLE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(COQUILLE.map(url => new Request(url, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('lumora-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const req = e.request;
@@ -26,3 +26,4 @@ self.addEventListener('fetch', e => {
     return r;
   })));
 });
+

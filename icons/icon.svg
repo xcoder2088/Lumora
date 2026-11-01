@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+<title id="title">Papillon bleu — Lumora</title>
+<defs><radialGradient id="halo"><stop stop-color="#a9cdee" stop-opacity=".10"/><stop offset="1" stop-color="#a9cdee" stop-opacity="0"/></radialGradient>
+<g id="wings"><path d="M0 -.08 C.3 -.8 1 -.95 1.1 -.5 C1.15 -.12 .6 .04 0 .04 Z" fill="#8fbbe6"/>
+<path d="M0 .04 C.6 .04 .95 .2 .82 .6 C.7 .9 .25 .72 0 .26 Z" fill="#79a2cf"/>
+<path d="M.05 -.03 L.95 -.55 M.05 0 L1 -.3 M.05 .08 L.7 .5" fill="none" stroke="#4c7098" stroke-width=".012"/></g></defs>
+<path d="M0 0h512v512H0z" fill="#04101a"/>
+<g transform="translate(256 270) scale(180)"><circle r="1.4" fill="url(#halo)"/><use href="#wings"/><use href="#wings" transform="scale(-1 1)"/>
+<ellipse cy=".05" rx=".06" ry=".42" fill="#27324d"/>
+<path d="M-.01 -.36 C-.1 -.62 -.22 -.7 -.3 -.66 M.01 -.36 C.1 -.62 .22 -.7 .3 -.66" fill="none" stroke="#748eae" stroke-width=".022" stroke-linecap="round"/></g></svg>
