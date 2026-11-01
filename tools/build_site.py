@@ -17,6 +17,10 @@ dist.mkdir()
 # page, en-têtes HTTP et sons
 shutil.copy2(racine / "index.html", dist / "index.html")
 shutil.copy2(racine / "_headers", dist / "_headers")
+# application installable : manifeste, service worker et icônes
+for f in ("manifest.webmanifest", "sw.js"):
+    shutil.copy2(racine / f, dist / f)
+shutil.copytree(racine / "icons", dist / "icons")
 shutil.copytree(racine / "audio", dist / "audio")
 
 # images : seulement le manifeste et les fichiers .webp qu'il cite (pas les .png, pas les aperçus)

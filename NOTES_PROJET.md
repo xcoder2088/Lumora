@@ -82,3 +82,13 @@ Marche à suivre :
 
 ## Page de démonstration privée
 Version 5 : la page de démonstration privée est dans la liste des pages publiées du propriétaire (titre « Lumora »).
+
+## Version 5.3 (31 octobre 2026)
+**Règle : à chaque version ou révision, changer le numéro à deux endroits : le texte `ver x.y` (élément `#ver` de `index.html`, sous le bouton Commencer) et `VERSION` dans `sw.js` (sinon les appareils gardent l'ancienne copie).**
+- Titre du panneau : le tracé écrit à la main de l'accueil, avec le papillon posé sur le L (plus de texte « Lumora » en police simple). Sous le titre, la phrase du sens du nom : l'éveil de la lumière, un nouveau départ, une lueur douce qui naît de l'intérieur (aussi dans la description et le manifeste).
+- Version déplacée sous le bouton Commencer (« ver 5.3 »), avec le bouton « Soutenir le développement » (petite tasse).
+- Fin du minuteur : le message apparaît (et le carillon joue) dès que la dernière créature a quitté l'écran, dans les 8 dernières secondes, au lieu d'attendre zéro puis 1,5 s. L'horloge passe alors à 0:00. Mesuré en essai de 30 s : la dernière méduse sort jusqu'à ~5 s avant zéro selon son trajet, le dernier papillon environ 2 s avant.
+- Langue : celle de l'appareil, comme QuickProof (français, anglais, espagnol, allemand, chinois ; sinon anglais ; `?lang=fr` force une langue). Textes dans `I18N` (premier script de `index.html`), fonction `txt('clé')`. Ne pas la nommer `t` : conflit avec des variables locales.
+- Soutien : PayPal, dans la devise de l'appareil (région de la langue, sinon fuseau : US→USD, CA→CAD, zone euro→EUR, etc. ; montants 5 / 10 / 20 ou équivalents). Pas de serveur : la commande PayPal est créée et validée par le navigateur avec l'identifiant public du compte (le même que QuickProof, aucun secret dans la page). **Google Pay : affiché « Bientôt »**. Il ne fonctionne pas via PayPal (même constat dans QuickProof) : une autre technique est à choisir.
+- Application installable : `manifest.webmanifest` (mode standalone), `sw.js` (copie hors ligne), icônes dans `icons/` (refaites avec `python3 tools/make_icons.py`), bouton « Installer l'app » quand le navigateur le propose. Une page web ne peut pas s'ouvrir sans barre d'adresse sans être installée : Android/Chrome « Installer », iPhone Partager > Sur l'écran d'accueil. Pour une ouverture sans barre garantie sur Android, il faut une application TWA comme QuickProof (non faite).
+- Non vérifié : service worker (le navigateur intégré de l'outil de test ne l'accepte pas), paiement PayPal réel, installation sur un vrai téléphone, fin du minuteur pour 5 min et plus (testé en essai de 30 s seulement).

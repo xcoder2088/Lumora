@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04101a">
+<meta name="description" content="Lumora : l'éveil de la lumière, un nouveau départ. Un minuteur visuel et calme, une lueur douce qui naît de l'intérieur.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lumora">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <!--
   Lumora : minuteur visuel et relaxant.
   Copyright (C) 2026 Xcoder
@@ -169,7 +178,39 @@ legend {
 .switch input:checked + .track { background: var(--glow); border-color: var(--glow); }
 .switch input:checked + .track::after { transform: translateX(18px); background: var(--glow-ink); }
 .switch input:focus-visible + .track { outline: 2px solid var(--glow); outline-offset: 3px; }
-.ver { margin: 4px 0 10px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--glow); }
+/* Titre : le même tracé écrit que l'accueil, avec le papillon posé sur le L. */
+#setup h1 { line-height: 0; }
+.title-mark { display: block; width: min(250px, 72%); height: auto; overflow: visible; margin: -4px 0 6px -6px; }
+.tm-trace { fill: none; stroke: #e6dfb8; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+.tm-trace--glow { stroke-width: 8; opacity: 0.22; filter: url(#tm-glow); }
+#tmButterfly .tm-wing { fill: url(#tm-wing); stroke: #3a5a8a; stroke-opacity: 0.55; stroke-width: 0.025; }
+#tmButterfly .tm-low { fill: url(#tm-wing2); }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: -6px; }
+.ver { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-dim); opacity: 0.85; }
+.support { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--ink-dim); transition: border-color 0.25s, color 0.25s; }
+.support:hover { border-color: rgba(190, 235, 245, 0.5); color: var(--ink); }
+.support svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2, 8, 14, 0.7); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal-card { width: 100%; max-width: 380px; box-sizing: border-box; padding: 22px 22px 18px; background: rgba(8, 24, 36, 0.96); border: 1px solid var(--line); border-radius: 20px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.modal-head h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.15; }
+.modal-close { background: none; border: 0; color: var(--ink-dim); font-size: 28px; line-height: 1; padding: 0 4px; }
+.modal-text { margin: 10px 0 16px; color: var(--ink-dim); font-size: 15px; }
+.amounts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.amount { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 999px; background: var(--glow); color: var(--glow-ink); font-weight: 500; font-size: 17px; text-decoration: none; transition: filter 0.2s; }
+.amount:hover { filter: brightness(1.08); }
+button.amount { border: 0; font-family: inherit; cursor: pointer; }
+.tagline { margin: 0 0 8px; color: var(--glow); font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
+#installBtn { align-self: flex-start; }
+.method { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 12px 16px; background: transparent; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); text-align: left; font-family: inherit; }
+button.method:hover { border-color: rgba(190, 235, 245, 0.5); }
+.method-name { font-weight: 500; font-size: 16px; }
+.method-sub { font-size: 12.5px; color: var(--ink-dim); }
+.method-off { opacity: 0.5; cursor: default; }
+.modal-back { margin-top: 14px; padding: 8px 4px; background: none; border: 0; color: var(--ink-dim); font-size: 14px; text-decoration: underline; }
+#supButtonHost { min-height: 45px; }
+.modal-note.err { color: #ffb4a8; opacity: 1; }
+.modal-note { margin: 12px 0 0; font-size: 12px; color: var(--ink-dim); opacity: 0.8; text-align: center; }
 #start:disabled { opacity: 0.65; cursor: progress; filter: none; }
 .credits { margin: 0; font-size: 12px; line-height: 1.4; color: var(--ink-dim); opacity: 0.8; }
 .soundrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: -8px; }
@@ -253,7 +294,7 @@ body.idle #hud { opacity: 0; pointer-events: none; }
   transition: opacity 2.5s ease 1s, visibility 0s linear 3.5s;
   color: #f6fbfc;
 }
-body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opacity 3s ease 1.5s, visibility 0s linear 1.5s; }
+body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opacity 2s ease 0s, visibility 0s linear 0s; }
 #end h2 { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: clamp(34px, 7vw, 64px); line-height: 1.1; text-wrap: balance; text-shadow: 0 2px 28px rgba(5, 20, 40, 0.6); }
 #end p { margin: 0; font-size: 16px; letter-spacing: 0.04em; opacity: 0.8; }
 
@@ -277,7 +318,7 @@ img { max-width: 100%; }
 </style>
 </head>
 <body>
-<section id="welcome" role="dialog" aria-modal="true" aria-label="Bienvenue dans Lumora" hidden>
+<section id="welcome" role="dialog" aria-modal="true" data-i18n-aria="welcomeAria" aria-label="Bienvenue dans Lumora" hidden>
   <svg class="welcome-mark" viewBox="40 20 510 190" aria-hidden="true" focusable="false">
     <defs>
       <filter id="welcome-soft-glow" x="-30%" y="-50%" width="160%" height="200%">
@@ -319,61 +360,127 @@ img { max-width: 100%; }
       <path d="M-0.01 -0.36 C-0.1 -0.62 -0.22 -0.7 -0.3 -0.66 M0.01 -0.36 C0.1 -0.62 0.22 -0.7 0.3 -0.66" fill="none" stroke="#27324d" stroke-width="0.022" stroke-linecap="round"/>
     </g>
   </svg>
-  <button id="welcomeSkip" type="button">Passer l’animation</button>
+  <button id="welcomeSkip" type="button" data-i18n="skip">Passer l’animation</button>
 </section>
 <canvas id="scene" aria-hidden="true"></canvas>
 
-<main id="setup" aria-label="Réglages du minuteur">
+<main id="setup" data-i18n-aria="setupAria" aria-label="Réglages du minuteur">
   <div>
-    <h1>Lumora</h1>
-    <p class="ver">Version 5 · révision 2</p>
-    <p class="lede">Un minuteur pour les moments de calme. Des créatures nagent ou volent doucement sur l'écran : il y en a une de moins à chaque minute. La dernière s'en va exactement quand le temps tombe à zéro.</p>
+    <h1 aria-label="Lumora">
+      <svg class="title-mark" id="titleMark" viewBox="40 20 510 190" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="tm-glow" x="-30%" y="-50%" width="160%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+          <linearGradient id="tm-wing" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#6f98c8"/><stop offset="0.6" stop-color="#8fbbe6"/><stop offset="1" stop-color="#a9cdee"/></linearGradient>
+          <linearGradient id="tm-wing2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5c82b6"/><stop offset="1" stop-color="#86b0dc"/></linearGradient>
+          <radialGradient id="tm-halo"><stop stop-color="#a9cdee" stop-opacity="0.22"/><stop offset="1" stop-color="#a9cdee" stop-opacity="0"/></radialGradient>
+        </defs>
+        <use class="tm-trace tm-trace--glow" href="#welcomeWriting"/>
+        <use class="tm-trace" href="#welcomeWriting"/>
+        <g id="tmButterfly">
+          <circle r="1.5" fill="url(#tm-halo)"/>
+          <g class="tm-wingL"><g transform="scale(-1 1)"><path class="tm-wing" d="M0 -0.08 C0.3 -0.8 1.0 -0.95 1.1 -0.5 C1.15 -0.12 0.6 0.04 0 0.04 Z"/><path class="tm-wing tm-low" d="M0 0.04 C0.6 0.04 0.95 0.2 0.82 0.6 C0.7 0.9 0.25 0.72 0 0.26 Z"/></g><animateTransform attributeName="transform" type="scale" values="1 1;0.14 1;1 1" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" dur="2.6s" repeatCount="indefinite"/></g>
+          <g class="tm-wingR"><path class="tm-wing" d="M0 -0.08 C0.3 -0.8 1.0 -0.95 1.1 -0.5 C1.15 -0.12 0.6 0.04 0 0.04 Z"/><path class="tm-wing tm-low" d="M0 0.04 C0.6 0.04 0.95 0.2 0.82 0.6 C0.7 0.9 0.25 0.72 0 0.26 Z"/><animateTransform attributeName="transform" type="scale" values="1 1;0.14 1;1 1" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1" dur="2.6s" repeatCount="indefinite"/></g>
+          <ellipse cy="0.05" rx="0.055" ry="0.42" fill="#27324d"/>
+          <path d="M-0.01 -0.36 C-0.1 -0.62 -0.22 -0.7 -0.3 -0.66 M0.01 -0.36 C0.1 -0.62 0.22 -0.7 0.3 -0.66" fill="none" stroke="#27324d" stroke-width="0.022" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </h1>
+    <p class="tagline" data-i18n="tagline">L'éveil de la lumière : une lueur douce, née de l'intérieur.</p>
+    <p class="lede" data-i18n="lede">Un minuteur pour les moments de calme. Des créatures nagent ou volent doucement sur l'écran : il y en a une de moins à chaque minute. La dernière s'en va exactement quand le temps tombe à zéro.</p>
   </div>
   <fieldset>
-    <legend>Décor</legend>
+    <legend data-i18n="legScene">Décor</legend>
     <div class="chips" id="chipScene"></div>
   </fieldset>
   <fieldset>
-    <legend>Durée</legend>
+    <legend data-i18n="legDur">Durée</legend>
     <div class="chips" id="chipDur"></div>
   </fieldset>
   <label class="switch" for="soundBox">
     <input type="checkbox" id="soundBox">
     <span class="track"></span>
-    <span>Ambiance sonore du décor et carillon final</span>
+    <span data-i18n="soundLabel">Ambiance sonore du décor et carillon final</span>
   </label>
   <div class="soundrow">
-    <button class="chip" id="soundTest" type="button">Tester le son</button>
+    <button class="chip" id="soundTest" type="button" data-i18n="soundTest">Tester le son</button>
     <span id="soundState" aria-live="polite"></span>
   </div>
-  <button id="start" type="button">Commencer</button>
+  <button id="start" type="button" data-i18n="start">Commencer</button>
+  <button class="chip" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
+  <div class="foot">
+    <span class="ver" id="ver">ver 5.3</span>
+    <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>
+      <span data-i18n="supportBtn">Soutenir le développement</span>
+    </button>
+  </div>
 </main>
 
+<div id="supportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="supportTitle" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="supportTitle" data-i18n="supportTitle">Soutenir le développement</h2>
+      <button class="modal-close" id="supportClose" type="button" data-i18n-aria="close" aria-label="Fermer">&times;</button>
+    </div>
+    <div id="supMethod">
+      <p class="modal-text" data-i18n="supportText">Lumora est libre d'usage. Un petit café aide à continuer de le faire grandir. Merci!</p>
+      <button class="method" id="methodPaypal" type="button"><span class="method-name">PayPal</span><span class="method-sub" data-i18n="chooseAmount">Choisir un montant</span></button>
+      <div class="method method-off" aria-disabled="true"><span class="method-name">Google Pay</span><span class="method-sub" data-i18n="soon">Bientôt</span></div>
+    </div>
+    <div id="supAmount" hidden>
+      <p class="modal-text" data-i18n="chooseAmount">Choisir un montant</p>
+      <div class="amounts" id="supAmounts"></div>
+    </div>
+    <div id="supPay" hidden>
+      <p class="modal-text" id="supPayAmount"></p>
+      <div id="supButtonHost"></div>
+      <p class="modal-note" id="supStatus" aria-live="polite"></p>
+    </div>
+    <button class="modal-back" id="supBack" type="button" data-i18n="back" hidden>Retour</button>
+  </div>
+</div>
+
 <div id="hud" role="toolbar" aria-label="Contrôles du minuteur">
-  <button class="ib" id="btnPause" type="button" aria-label="Mettre en pause" title="Pause (barre d'espace)">
+  <button class="ib" id="btnPause" type="button" data-i18n-aria="pauseAria" data-i18n-title="pauseTitle" aria-label="Mettre en pause" title="Pause (barre d'espace)">
     <svg viewBox="0 0 24 24" aria-hidden="true"><g class="pauseIcon"><rect class="solid" x="6" y="5" width="4" height="14" rx="1"/><rect class="solid" x="14" y="5" width="4" height="14" rx="1"/></g><path class="solid playIcon" d="M8 5.5v13l11-6.5z" style="display:none"/></svg>
   </button>
-  <button class="ib" id="btnRestart" type="button" aria-label="Recommencer le minuteur" title="Recommencer">
+  <button class="ib" id="btnRestart" type="button" data-i18n-aria="restartAria" data-i18n-title="restartTitle" aria-label="Recommencer le minuteur" title="Recommencer">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 4.5v4.5H9"/></svg>
   </button>
-  <div id="remain" role="timer" aria-label="Temps restant">00:00</div>
-  <button class="ib" id="btnSound" type="button" aria-pressed="false" aria-label="Son" title="Son">
+  <div id="remain" role="timer" data-i18n-aria="remain" aria-label="Temps restant">00:00</div>
+  <button class="ib" id="btnSound" type="button" aria-pressed="false" data-i18n-aria="soundBtn" data-i18n-title="soundBtn" aria-label="Son" title="Son">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3.5l4.5 3.5v-11L7.5 10z"/><g class="on"><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></g><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
   </button>
-  <button class="ib" id="btnFull" type="button" aria-label="Plein écran" title="Plein écran">
+  <button class="ib" id="btnFull" type="button" data-i18n-aria="fullBtn" data-i18n-title="fullBtn" aria-label="Plein écran" title="Plein écran">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
   </button>
-  <button class="ib" id="btnSettings" type="button" aria-label="Retour aux réglages" title="Réglages">
+  <button class="ib" id="btnSettings" type="button" data-i18n-aria="backAria" data-i18n-title="backTitle" aria-label="Retour aux réglages" title="Réglages">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
   </button>
 </div>
 
 <div id="end" aria-live="polite">
-  <h2>Doucement, c'est l'heure.</h2>
-  <p>Le temps est écoulé.</p>
+  <h2 data-i18n="endTitle">Doucement, c'est l'heure.</h2>
+  <p data-i18n="endText">Le temps est écoulé.</p>
 </div>
 <div id="bar"></div>
 
+<script>
+/* Langue : celle de l'appareil (comme QuickProof). Français, anglais, espagnol, allemand, chinois ; sinon anglais. « ?lang=fr » force une langue. */
+const I18N = {"fr": {"welcomeAria": "Bienvenue dans Lumora", "skip": "Passer l’animation", "setupAria": "Réglages du minuteur", "tagline": "L'éveil de la lumière : une lueur douce, née de l'intérieur.", "lede": "Un minuteur pour les moments de calme. Des créatures nagent ou volent doucement sur l'écran : il y en a une de moins à chaque minute. La dernière s'en va exactement quand le temps tombe à zéro.", "legScene": "Décor", "legDur": "Durée", "jelly": "Méduses", "butterfly": "Papillons", "trial": "Essai 30 s", "minUnit": "min", "soundLabel": "Ambiance sonore du décor et carillon final", "soundTest": "Tester le son", "start": "Commencer", "install": "Installer l'app", "loading": "Chargement des illustrations…", "slow": "Illustrations lentes à charger : elles apparaîtront dès qu’elles sont prêtes.", "failed": "Illustrations non chargées : décor simplifié.", "soundErr": "Impossible de charger le son « {id} ».", "noAudio": "Ce navigateur ne permet pas de jouer du son.", "soundOk": "Son actif. Si vous n'entendez rien, vérifiez le volume, le mode silencieux et que l'onglet n'est pas en sourdine.", "soundBlocked": "Le navigateur bloque le son. Touchez « Tester le son ».", "pauseAria": "Mettre en pause", "pauseTitle": "Pause (barre d'espace)", "resume": "Reprendre", "restartAria": "Recommencer le minuteur", "restartTitle": "Recommencer", "remain": "Temps restant", "soundBtn": "Son", "soundOff": "Couper le son", "soundOn": "Activer le son", "fullBtn": "Plein écran", "backAria": "Retour aux réglages", "backTitle": "Réglages", "endTitle": "Doucement, c'est l'heure.", "endText": "Le temps est écoulé.", "supportBtn": "Soutenir le développement", "supportTitle": "Soutenir le développement", "supportText": "Lumora est libre d'usage. Un petit café aide à continuer de le faire grandir. Merci!", "chooseAmount": "Choisir un montant", "soon": "Bientôt", "back": "Retour", "close": "Fermer", "payWith": "Payer avec PayPal", "thanks": "Merci pour votre soutien!", "error": "Le paiement n'a pas abouti. Réessayez.", "notConfigured": "Le paiement n'est pas disponible pour le moment."}, "en": {"welcomeAria": "Welcome to Lumora", "skip": "Skip the animation", "setupAria": "Timer settings", "tagline": "The awakening of light: a soft glow that rises from within.", "lede": "A timer for quiet moments. Creatures drift or flutter gently across the screen: one fewer every minute. The last one leaves exactly when the time reaches zero.", "legScene": "Scene", "legDur": "Duration", "jelly": "Jellyfish", "butterfly": "Butterflies", "trial": "30 s trial", "minUnit": "min", "soundLabel": "Scene ambience and final chime", "soundTest": "Test sound", "start": "Start", "install": "Install the app", "loading": "Loading illustrations…", "slow": "Illustrations are slow to load: they will appear as soon as they are ready.", "failed": "Illustrations not loaded: simplified scene.", "soundErr": "Unable to load sound “{id}”.", "noAudio": "This browser cannot play sound.", "soundOk": "Sound on. If you hear nothing, check the volume, silent mode and that the tab is not muted.", "soundBlocked": "The browser is blocking sound. Tap “Test sound”.", "pauseAria": "Pause", "pauseTitle": "Pause (space bar)", "resume": "Resume", "restartAria": "Restart the timer", "restartTitle": "Restart", "remain": "Time remaining", "soundBtn": "Sound", "soundOff": "Mute", "soundOn": "Turn sound on", "fullBtn": "Full screen", "backAria": "Back to settings", "backTitle": "Settings", "endTitle": "Gently, it's time.", "endText": "Time is up.", "supportBtn": "Support the development", "supportTitle": "Support the development", "supportText": "Lumora is free to use. A small coffee helps it keep growing. Thank you!", "chooseAmount": "Choose an amount", "soon": "Coming soon", "back": "Back", "close": "Close", "payWith": "Pay with PayPal", "thanks": "Thank you for your support!", "error": "The payment did not go through. Please try again.", "notConfigured": "Payment is not available right now."}, "es": {"welcomeAria": "Bienvenido a Lumora", "skip": "Omitir la animación", "setupAria": "Ajustes del temporizador", "tagline": "El despertar de la luz: un suave resplandor que nace desde dentro.", "lede": "Un temporizador para los momentos de calma. Criaturas que nadan o vuelan suavemente por la pantalla: una menos cada minuto. La última se va justo cuando el tiempo llega a cero.", "legScene": "Escena", "legDur": "Duración", "jelly": "Medusas", "butterfly": "Mariposas", "trial": "Prueba 30 s", "minUnit": "min", "soundLabel": "Sonido ambiental y campanada final", "soundTest": "Probar el sonido", "start": "Comenzar", "install": "Instalar la app", "loading": "Cargando ilustraciones…", "slow": "Las ilustraciones tardan en cargar: aparecerán en cuanto estén listas.", "failed": "Ilustraciones no cargadas: escena simplificada.", "soundErr": "No se pudo cargar el sonido «{id}».", "noAudio": "Este navegador no puede reproducir sonido.", "soundOk": "Sonido activo. Si no oye nada, compruebe el volumen, el modo silencio y que la pestaña no esté silenciada.", "soundBlocked": "El navegador bloquea el sonido. Toque «Probar el sonido».", "pauseAria": "Pausar", "pauseTitle": "Pausa (barra espaciadora)", "resume": "Reanudar", "restartAria": "Reiniciar el temporizador", "restartTitle": "Reiniciar", "remain": "Tiempo restante", "soundBtn": "Sonido", "soundOff": "Silenciar", "soundOn": "Activar el sonido", "fullBtn": "Pantalla completa", "backAria": "Volver a los ajustes", "backTitle": "Ajustes", "endTitle": "Con calma, es la hora.", "endText": "El tiempo ha terminado.", "supportBtn": "Apoyar el desarrollo", "supportTitle": "Apoyar el desarrollo", "supportText": "Lumora es de uso libre. Un pequeño café ayuda a seguir haciéndolo crecer. ¡Gracias!", "chooseAmount": "Elige un monto", "soon": "Próximamente", "back": "Volver", "close": "Cerrar", "payWith": "Pagar con PayPal", "thanks": "¡Gracias por su apoyo!", "error": "El pago no se completó. Inténtelo de nuevo.", "notConfigured": "El pago no está disponible por ahora."}, "de": {"welcomeAria": "Willkommen bei Lumora", "skip": "Animation überspringen", "setupAria": "Timer-Einstellungen", "tagline": "Das Erwachen des Lichts: ein sanfter Schein, der von innen kommt.", "lede": "Ein Timer für ruhige Momente. Kreaturen schwimmen oder fliegen sanft über den Bildschirm: jede Minute eine weniger. Die letzte verschwindet genau, wenn die Zeit null erreicht.", "legScene": "Szene", "legDur": "Dauer", "jelly": "Quallen", "butterfly": "Schmetterlinge", "trial": "Test 30 s", "minUnit": "Min.", "soundLabel": "Klangkulisse und Abschlussklang", "soundTest": "Ton testen", "start": "Starten", "install": "App installieren", "loading": "Illustrationen werden geladen …", "slow": "Die Illustrationen laden langsam: sie erscheinen, sobald sie bereit sind.", "failed": "Illustrationen nicht geladen: vereinfachte Szene.", "soundErr": "Ton „{id}“ konnte nicht geladen werden.", "noAudio": "Dieser Browser kann keinen Ton abspielen.", "soundOk": "Ton an. Wenn Sie nichts hören, prüfen Sie Lautstärke, Stummschaltung und ob der Tab nicht stummgeschaltet ist.", "soundBlocked": "Der Browser blockiert den Ton. Tippen Sie auf „Ton testen“.", "pauseAria": "Pausieren", "pauseTitle": "Pause (Leertaste)", "resume": "Fortsetzen", "restartAria": "Timer neu starten", "restartTitle": "Neu starten", "remain": "Verbleibende Zeit", "soundBtn": "Ton", "soundOff": "Ton aus", "soundOn": "Ton an", "fullBtn": "Vollbild", "backAria": "Zurück zu den Einstellungen", "backTitle": "Einstellungen", "endTitle": "Sanft, es ist so weit.", "endText": "Die Zeit ist abgelaufen.", "supportBtn": "Entwicklung unterstützen", "supportTitle": "Entwicklung unterstützen", "supportText": "Lumora ist frei nutzbar. Ein kleiner Kaffee hilft, es weiterzuentwickeln. Danke!", "chooseAmount": "Betrag wählen", "soon": "Demnächst", "back": "Zurück", "close": "Schließen", "payWith": "Mit PayPal zahlen", "thanks": "Danke für Ihre Unterstützung!", "error": "Die Zahlung ist fehlgeschlagen. Bitte erneut versuchen.", "notConfigured": "Die Zahlung ist derzeit nicht verfügbar."}, "zh": {"welcomeAria": "欢迎来到 Lumora", "skip": "跳过动画", "setupAria": "计时器设置", "tagline": "光的苏醒：一束从内心升起的柔和光芒。", "lede": "一个用于宁静时刻的计时器。生物在屏幕上轻柔地游动或飞舞：每过一分钟就少一只。最后一只会在时间归零时准确离开。", "legScene": "场景", "legDur": "时长", "jelly": "水母", "butterfly": "蝴蝶", "trial": "试用 30 秒", "minUnit": "分钟", "soundLabel": "场景环境音与结束钟声", "soundTest": "测试声音", "start": "开始", "install": "安装应用", "loading": "正在加载插图…", "slow": "插图加载较慢：准备好后会立即显示。", "failed": "插图未能加载：已使用简化场景。", "soundErr": "无法加载声音“{id}”。", "noAudio": "此浏览器无法播放声音。", "soundOk": "声音已开启。如果听不到，请检查音量、静音模式以及标签页是否被静音。", "soundBlocked": "浏览器阻止了声音。请点按“测试声音”。", "pauseAria": "暂停", "pauseTitle": "暂停（空格键）", "resume": "继续", "restartAria": "重新开始计时", "restartTitle": "重新开始", "remain": "剩余时间", "soundBtn": "声音", "soundOff": "关闭声音", "soundOn": "开启声音", "fullBtn": "全屏", "backAria": "返回设置", "backTitle": "设置", "endTitle": "轻轻地，时间到了。", "endText": "时间已结束。", "supportBtn": "支持开发", "supportTitle": "支持开发", "supportText": "Lumora 可免费使用。一杯小小的咖啡能帮助它继续成长。谢谢！", "chooseAmount": "选择金额", "soon": "即将推出", "back": "返回", "close": "关闭", "payWith": "使用 PayPal 支付", "thanks": "感谢您的支持！", "error": "支付未成功，请重试。", "notConfigured": "目前无法使用支付功能。"}};
+const LANG = (function () {
+  const forced = new URLSearchParams(location.search).get('lang');
+  if (forced && I18N[forced.toLowerCase()]) return forced.toLowerCase();
+  const langs = navigator.languages || [navigator.language || 'en'];
+  for (const l of langs) { const c = String(l).toLowerCase().split(/[-_]/)[0]; if (I18N[c]) return c; }
+  return 'en';
+})();
+const txt = k => (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || k;
+document.documentElement.lang = LANG;
+document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = txt(el.dataset.i18n); });
+document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', txt(el.dataset.i18nAria)); });
+document.querySelectorAll('[data-i18n-title]').forEach(el => { el.setAttribute('title', txt(el.dataset.i18nTitle)); });
+</script>
 <script>
 /* L'accueil est indépendant du minuteur : il ne lance ni compte à rebours ni son. */
 (() => {
@@ -548,7 +655,7 @@ const fmtClock = s => {
 
 /* ================= État ================= */
 const DURS = [30, 300, 600, 900, 1200, 1800, 2700];
-const SCENES = [['jelly', 'Méduses'], ['butterfly', 'Papillons']];
+const SCENES = [['jelly', txt('jelly')], ['butterfly', txt('butterfly')]];
 const S = { scene: 'jelly', dur: 1200, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
 try {
   const saved = JSON.parse(localStorage.getItem('lumora.v2') || 'null');
@@ -965,17 +1072,17 @@ function loadScene(scene) {
 }
 function ensureScene() {
   const sc = S.scene, btn = $('start');
-  if (sceneReady[sc]) { btn.disabled = false; btn.textContent = 'Commencer'; return; }
-  btn.disabled = true; btn.textContent = 'Chargement des illustrations…';
+  if (sceneReady[sc]) { btn.disabled = false; btn.textContent = txt('start'); return; }
+  btn.disabled = true; btn.textContent = txt('loading');
   const guard = setTimeout(() => {   // si le chargement traîne, le bouton ne reste jamais bloqué
-    if (S.scene === sc && btn.disabled) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations lentes à charger : elles apparaîtront dès qu\u2019elles sont prêtes.'); }
+    if (S.scene === sc && btn.disabled) { btn.disabled = false; btn.textContent = txt('start'); soundStatus(txt('slow')); }
   }, 12000);
   loadScene(sc).then(() => {
     clearTimeout(guard);
-    if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; }
+    if (S.scene === sc) { btn.disabled = false; btn.textContent = txt('start'); }
   }).catch(() => {
     clearTimeout(guard);
-    if (S.scene === sc) { btn.disabled = false; btn.textContent = 'Commencer'; soundStatus('Illustrations non chargées : décor simplifié.'); }
+    if (S.scene === sc) { btn.disabled = false; btn.textContent = txt('start'); soundStatus(txt('failed')); }
   });
 }
 // Teinte : les méduses sont en gris translucide ; on les multiplie par la couleur, en gardant la transparence.
@@ -1856,7 +1963,7 @@ function streamUpdate(el) {
 }
 
 /* ================= Boucle ================= */
-let last = performance.now();
+let last = performance.now(), clearSince = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   if (document.body.classList.contains('welcome-active')) { last = now; return; }   // le minuteur attend la fin de l'accueil
@@ -1878,6 +1985,12 @@ function frame(now) {
     if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
     else updateButterfly(c, Math.max(dt, 1e-4), el);
   }
+  // Fin : dès que la dernière créature a quitté l'écran (un peu avant zéro), le message apparaît et le carillon joue.
+  if (S.phase === 'running' && el >= D - 8 && hi >= sched.length && live.length &&
+      live.every(c => { const m = c.kind === 'j' ? (c.R || 60) * 3.2 : (c.S || 50) * 1.4; return c.X < -m || c.X > W + m || c.Y < -m || c.Y > H + m; })) {
+    clearSince = clearSince || now;
+    if (now - clearSince > 400) finish();
+  } else clearSince = 0;
   const sorted = live.slice().sort((a, b) => (a.z - 2 * (a.back || 0)) - (b.z - 2 * (b.back || 0)));
 
   ctx.globalAlpha = 1;
@@ -1920,7 +2033,7 @@ function setPhase(p) {
   const paused = p === 'paused';
   pauseBtn.querySelector('.pauseIcon').style.display = paused ? 'none' : '';
   pauseBtn.querySelector('.playIcon').style.display = paused ? '' : 'none';
-  pauseBtn.setAttribute('aria-label', paused ? 'Reprendre' : 'Mettre en pause');
+  pauseBtn.setAttribute('aria-label', paused ? txt('resume') : txt('pauseAria'));
   pauseBtn.disabled = p === 'done';
   if (p === 'setup' || p === 'paused') document.body.classList.remove('idle');
   audioSync();
@@ -1959,7 +2072,7 @@ function buildChips(host, items, isOn, onPick) {
 }
 function refreshSetup() {
   buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; build(); audioSync(); ensureScene(); } persist(); });
-  buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? 'Essai 30 s' : (d / 60) + ' min']), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
+  buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? txt('trial') : (d / 60) + ' ' + txt('minUnit')]), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
 }
 
 /* ================= Son ================= */
@@ -2002,11 +2115,11 @@ function loadLayer(def) {
       L.state = 'ready';
       audioSync();
     })
-    .catch(() => { L.state = 'error'; soundStatus('Impossible de charger le son « ' + def.id + ' ».'); });
+    .catch(() => { L.state = 'error'; soundStatus(txt('soundErr').replace('{id}', def.id)); });
 }
 function audioSync() {
   $('btnSound').setAttribute('aria-pressed', String(S.sound));
-  $('btnSound').setAttribute('aria-label', S.sound ? 'Couper le son' : 'Activer le son');
+  $('btnSound').setAttribute('aria-label', S.sound ? txt('soundOff') : txt('soundOn'));
   $('soundBox').checked = S.sound;
   if (!ac) return;
   const live = S.sound && (S.phase === 'running' || S.phase === 'paused' || S.preview);
@@ -2069,11 +2182,11 @@ function unlockAudio() {
 function soundStatus(msg) { $('soundState').textContent = msg; }
 function prepareAudio() {
   audioInit();
-  if (!ac) { soundStatus('Ce navigateur ne permet pas de jouer du son.'); return Promise.resolve(false); }
+  if (!ac) { soundStatus(txt('noAudio')); return Promise.resolve(false); }
   unlockAudio();
   return Promise.resolve(ac.resume()).catch(() => {}).then(() => {
     const ok = ac.state === 'running';
-    soundStatus(ok ? 'Son actif. Si vous n\'entendez rien, vérifiez le volume, le mode silencieux et que l\'onglet n\'est pas en sourdine.' : 'Le navigateur bloque le son. Touchez « Tester le son ».');
+    soundStatus(ok ? txt('soundOk') : txt('soundBlocked'));
     return ok;
   });
 }
@@ -2146,6 +2259,111 @@ setPhase('setup');
 ensureScene();
 fade = 0;
 requestAnimationFrame(frame);
+})();
+</script>
+<script>
+/* Titre du panneau : papillon posé sur le haut du L (même point que sur l'accueil). */
+(function () {
+  const path = document.getElementById('welcomeWriting'), mark = document.getElementById('titleMark'), b = document.getElementById('tmButterfly');
+  if (path && mark && b && path.getTotalLength) {
+    const length = path.getTotalLength();
+    let top = path.getPointAtLength(0);
+    for (let i = 0; i <= 500; i++) { const q = path.getPointAtLength(length * 0.5 * i / 500); if (q.y < top.y) top = q; }
+    const sz = 46;
+    b.setAttribute('transform', 'translate(' + top.x.toFixed(1) + ' ' + (top.y - sz * 0.18).toFixed(1) + ') rotate(-5.7) scale(' + sz + ')');
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches && mark.pauseAnimations) mark.pauseAnimations();
+  }
+})();
+
+/* Soutenir le développement : même parcours que QuickProof (méthode, montant, bouton PayPal), dans la devise de l'appareil.
+   Pas de serveur ici : la commande PayPal est créée et validée par le navigateur avec l'identifiant public du compte (aucun secret dans la page).
+   Google Pay demande un serveur : il est annoncé « bientôt », comme dans QuickQuoteTool. */
+(function () {
+  const PAYPAL_CLIENT_ID = 'BAAiZftqvwGeSaeuuz4LKoY1XfmS76lQG0Vn3o3t6tKrgnyIttHLOpBQAbhzDxWcoQJpid5Y7tfj0EUvO4';
+  const PRESETS = { USD: [5, 10, 20], CAD: [5, 10, 20], EUR: [5, 10, 20], GBP: [5, 10, 20], AUD: [5, 10, 20], NZD: [5, 10, 20], CHF: [5, 10, 20],
+    JPY: [500, 1000, 2000], HUF: [1500, 3000, 6000], TWD: [150, 300, 600], MXN: [100, 200, 400], BRL: [25, 50, 100], SEK: [50, 100, 200],
+    NOK: [50, 100, 200], DKK: [50, 100, 200], PLN: [20, 40, 80], CZK: [100, 200, 400], ILS: [20, 40, 80], HKD: [40, 80, 160],
+    SGD: [7, 14, 28], THB: [150, 300, 600], PHP: [250, 500, 1000], MYR: [20, 40, 80] };
+  const ZERO_DEC = { JPY: 1, HUF: 1, TWD: 1 };
+  const EURO = 'AT BE CY DE EE ES FI FR GR HR IE IT LT LU LV MT NL PT SI SK'.split(' ');
+  const REGION_CUR = { US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD', NZ: 'NZD', CH: 'CHF', JP: 'JPY', MX: 'MXN', BR: 'BRL', SE: 'SEK', NO: 'NOK',
+    DK: 'DKK', PL: 'PLN', CZ: 'CZK', HU: 'HUF', IL: 'ILS', HK: 'HKD', SG: 'SGD', TW: 'TWD', TH: 'THB', PH: 'PHP', MY: 'MYR' };
+  // Pays de l'appareil : région de la langue (fr-CA, en-US…), sinon fuseau horaire, sinon région probable de la langue.
+  function detectRegion() {
+    const langs = navigator.languages || [navigator.language || 'en'];
+    for (const l of langs) { try { const r = new Intl.Locale(l).region; if (r) return r; } catch (e) {} }
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (/^America\/(Toronto|Montreal|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina|Moncton|Glace_Bay|Whitehorse|Iqaluit)/.test(tz)) return 'CA';
+      if (/^Australia\//.test(tz)) return 'AU';
+      if (tz === 'Pacific/Auckland') return 'NZ';
+      if (tz === 'Europe/London') return 'GB';
+    } catch (e) {}
+    try { return new Intl.Locale(langs[0]).maximize().region || 'US'; } catch (e) { return 'US'; }
+  }
+  const REGION = detectRegion();
+  const CUR = REGION_CUR[REGION] || (EURO.indexOf(REGION) >= 0 ? 'EUR' : 'USD');
+  const LOCALE = (navigator.languages && navigator.languages[0]) || 'en';
+  const fmt = n => { try { return new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CUR, maximumFractionDigits: ZERO_DEC[CUR] ? 0 : (n % 1 ? 2 : 0) }).format(n); } catch (e) { return n + ' ' + CUR; } };
+
+  const $ = id => document.getElementById(id);
+  const modal = $('supportModal'), openBtn = $('supportOpen'), closeBtn = $('supportClose'), backBtn = $('supBack');
+  const views = { method: $('supMethod'), amount: $('supAmount'), pay: $('supPay') };
+  let view = 'method';
+  function show(v) { view = v; for (const k in views) views[k].hidden = k !== v; backBtn.hidden = v === 'method'; }
+  function status(msg, isErr) { const e = $('supStatus'); e.textContent = msg; e.classList.toggle('err', !!isErr); }
+  function closeModal() { modal.hidden = true; $('supButtonHost').innerHTML = ''; openBtn.focus(); }
+  openBtn.addEventListener('click', () => { show('method'); status(''); modal.hidden = false; closeBtn.focus(); });
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  backBtn.addEventListener('click', () => { $('supButtonHost').innerHTML = ''; status(''); show(view === 'pay' ? 'amount' : 'method'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) { e.stopPropagation(); closeModal(); } }, true);
+
+  let sdk = null;
+  function loadSdk() {
+    if (sdk) return sdk;
+    sdk = new Promise((resolve, reject) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(PAYPAL_CLIENT_ID) + '&currency=' + CUR + '&components=buttons';
+      sc.onload = () => resolve(); sc.onerror = () => { sdk = null; reject(new Error('sdk')); };
+      document.head.appendChild(sc);
+    });
+    return sdk;
+  }
+  const box = $('supAmounts');
+  (PRESETS[CUR] || PRESETS.USD).forEach(n => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'amount'; b.textContent = fmt(n);
+    b.addEventListener('click', () => pay(n));
+    box.appendChild(b);
+  });
+  $('methodPaypal').addEventListener('click', () => show('amount'));
+  async function pay(n) {
+    const value = ZERO_DEC[CUR] ? String(n) : n.toFixed(2);
+    $('supPayAmount').textContent = fmt(n) + ' · ' + txt('payWith');
+    $('supButtonHost').innerHTML = ''; status(''); show('pay');
+    try {
+      await loadSdk();
+      paypal.Buttons({
+        style: { color: 'blue', shape: 'rect', label: 'pay', height: 45 },
+        createOrder: (d, actions) => actions.order.create({ purchase_units: [{ description: 'Lumora', amount: { currency_code: CUR, value } }] }),
+        onApprove: (d, actions) => actions.order.capture().then(() => status(txt('thanks'), false)),
+        onCancel: () => status(''),
+        onError: () => status(txt('error'), true)
+      }).render('#supButtonHost');
+    } catch (err) { status(txt('notConfigured'), true); }
+  }
+})();
+
+/* Application installable : le bouton « Installer » apparaît seulement si le navigateur le permet et si la page n'est pas déjà en mode application. */
+(function () {
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  const btn = document.getElementById('installBtn');
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if (!standalone) btn.hidden = false; });
+  btn.addEventListener('click', async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; btn.hidden = true; });
+  window.addEventListener('appinstalled', () => { btn.hidden = true; });
 })();
 </script>
 </body>
