@@ -169,3 +169,10 @@ Défaut corrigé au passage (présent en 5.11 et 5.12) : après le déclenchemen
 Papillons : zone de vol élargie (4 à 96 % de la largeur) et ils s'attardent près de leurs repères, pour occuper tout l'écran (répartition horizontale 9/22/32/26/11 % au lieu de 6/28/40/23/3 %).
 Mesure (simulation) : aucune sortie avant l'approche (0 s sur méduses 5, 10, 30 et papillons 10, 30) ; comptes exacts à chaque minute ; collisions et orientation de la tête inchangées.
 Remarque pour les tests : dans le navigateur de l'outil de test, les cloches n'apparaissent pas si on démarre avant la fin du chargement des images ; attendre quelques secondes.
+
+## Version 5.14 (1er novembre 2026, branche `version-5.14`)
+Retour sur PayPal (iPhone) : « petit bug : une fois PayPal ouvert, on ne peut pas revenir en arrière » ; et « montant personnalisé à ajouter ».
+- Le script PayPal est chargé avec `disable-funding=paylater,venmo` : plus de « Payer plus tard » (sa fenêtre de connexion n'avait aucun bouton pour revenir). Restent « PayPal » et « Carte de débit ou de crédit ».
+- Si on annule dans la fenêtre PayPal (`onCancel`), on revient au choix du montant avec le message « Paiement annulé. Vous pouvez choisir un autre montant. » ; le bouton « Retour » de la fenêtre reste disponible.
+- Montant personnalisé : champ « Autre montant » + devise + bouton « Continuer » sous les trois montants. Accepte la virgule ou le point (au plus 2 décimales ; entier pour JPY, HUF, TWD) ; minimum = 1 / 5 du premier montant proposé (1 USD, 100 JPY…), maximum = 50 fois le troisième (1 000 USD). Message d'erreur dans la langue de l'appareil. Cinq langues (`customAmount`, `continueBtn`, `amountInvalid`, `cancelled`).
+Non vérifié : paiement réel (aucun test avec de l'argent), comportement exact de la fenêtre PayPal sur iPhone après ce changement.
