@@ -443,7 +443,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.14</span>
+    <span class="ver" id="ver">ver 5.15</span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -2585,7 +2585,7 @@ requestAnimationFrame(frame);
     if (sdk) return sdk;
     sdk = new Promise((resolve, reject) => {
       const sc = document.createElement('script');
-      sc.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(PAYPAL_CLIENT_ID) + '&currency=' + CUR + '&components=buttons&disable-funding=paylater,venmo';   // pas de « Payer plus tard » : pour un don, le parcours reste simple
+      sc.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(PAYPAL_CLIENT_ID) + '&currency=' + CUR + '&components=buttons&disable-funding=card,paylater,venmo';   // un seul bouton « PayPal » : il s'ouvre dans sa propre fenêtre, qu'on peut fermer (le formulaire de carte intégré de PayPal prend tout l'écran du téléphone et n'a pas de retour)
       sc.onload = () => resolve(); sc.onerror = () => { sdk = null; reject(new Error('sdk')); };
       document.head.appendChild(sc);
     });
