@@ -112,3 +112,5 @@ Le panneau de départ ne défile plus : il est un peu plus compact, le bouton «
 ## Serveur (31 octobre 2026)
 Le service `lumora-web` lance maintenant `deploy/lumora-server.py` (copié dans `/usr/local/share/lumora/` par `installer-sur-serveur.sh`) au lieu de `python3 -m http.server`. Il envoie `Cache-Control: public, max-age=0, must-revalidate` pour la page, `sw.js` et le manifeste, et `max-age=86400` pour `assets/`, `audio/` et `icons/`. Cloudflare avait gardé l'ancien `sw.js` : une purge unique (Caching > Purge Everything) est nécessaire après ce changement.
 
+## Version 5.6 (31 octobre 2026)
+Nouvelles icônes : le papillon bleu seul (favicon, raccourcis, écran d'accueil), voir « Icônes » en haut de ce document. Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
