@@ -22,6 +22,7 @@ for f in ("manifest.webmanifest", "sw.js", "favicon.ico"):
     shutil.copy2(racine / f, dist / f)
 shutil.copytree(racine / "icons", dist / "icons")
 shutil.copytree(racine / "audio", dist / "audio")
+shutil.copytree(racine / "fonts", dist / "fonts")
 
 # images : seulement le manifeste et les fichiers .webp qu'il cite (pas les .png, pas les aperçus)
 manifeste = racine / "assets" / "manifest.json"
@@ -52,6 +53,11 @@ for chemin in sorted(set(webp_cites(donnees))):
 if manquants:
     print("ERREUR : fichiers cités dans le manifeste mais absents :", *manquants, sep="\n  ")
     sys.exit(1)
+
+# liste des fichiers que l'application garde pour fonctionner sans réseau (lue par sw.js)
+exclus = {"_headers", "sw.js", "precache.json", "index.html", "manifest.webmanifest", "favicon.ico"}
+liste = sorted("./" + f.relative_to(dist).as_posix() for f in dist.rglob("*") if f.is_file() and f.relative_to(dist).as_posix() not in exclus and not f.relative_to(dist).as_posix().startswith("icons/"))
+(dist / "precache.json").write_text(json.dumps(liste), encoding="utf-8")
 
 octets = sum(f.stat().st_size for f in dist.rglob("*") if f.is_file())
 nb = sum(1 for f in dist.rglob("*") if f.is_file())

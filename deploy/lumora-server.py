@@ -10,8 +10,8 @@ import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-SANS_CACHE = ('/', '/index.html', '/sw.js', '/manifest.webmanifest')
-UNE_JOURNEE = ('/assets/', '/audio/', '/icons/')
+SANS_CACHE = ('/', '/index.html', '/sw.js', '/manifest.webmanifest', '/precache.json')
+UNE_JOURNEE = ('/assets/', '/audio/', '/icons/', '/fonts/')
 
 
 class Gestionnaire(SimpleHTTPRequestHandler):
