@@ -442,7 +442,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.16</span>
+    <span class="ver" id="ver">ver 5.17</span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -890,7 +890,7 @@ function drawAlgae(layer, w) {   // si les images manquent, les algues dessinée
   for (const p of PLANTS) { if (p.layer === layer && drawPlant(p.name, p.x * W, H + 4, p.h * H * sc, p.ph, p.sp, 1, p.al * k)) any = true; }
   if (!any && !SPR[PLANTS[0].name]) drawKelp(layer, w);
 }
-const DAISIES = Array.from({ length: 12 }, (_, i) => ({ name: 'fleur-marguerite-0' + (1 + (i * 3) % 5), x: 0.5, y: 0.9, h: 0.1, ph: (i * 2.399) % TAU, sp: 0.6 + (i * 0.137) % 0.5, busy: -1e9 }));
+const DAISIES = Array.from({ length: 12 }, (_, i) => ({ name: 'fleur-marguerite-0' + [1, 2, 3, 5][(i * 3) % 4], x: 0.5, y: 0.9, h: 0.1, ph: (i * 2.399) % TAU, sp: 0.6 + (i * 0.137) % 0.5, busy: -1e9 }));
 let daisyKey = '';
 function layoutDaisies() {   // répartition régulière : jamais deux fleurs collées (l'écart tient compte de leur taille)
   const key = W + 'x' + H;
@@ -1037,7 +1037,7 @@ const AUDIO_BASE = '../../audio/';
 const SCENE_FILES = {
   jelly: ['plante-eau-varech-01', 'plante-eau-varech-02', 'plante-eau-herbe-marine-01', 'plante-eau-herbe-marine-02', 'plante-eau-branchue-01'].concat(['lune', 'haute', 'fantomatique'].flatMap(t =>
     ['ombrelle-01', 'bras-oraux', 'lueur-interne'].map(p => 'meduse-' + t + '-' + p))),
-  butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes', 'decor-prairie-arbres-lointains', 'fleur-marguerite-01', 'fleur-marguerite-02', 'fleur-marguerite-03', 'fleur-marguerite-04', 'fleur-marguerite-05'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
+  butterfly: ['decor-prairie-ciel', 'decor-prairie-collines', 'decor-prairie-herbes', 'decor-prairie-arbres-lointains', 'fleur-marguerite-01', 'fleur-marguerite-02', 'fleur-marguerite-03', 'fleur-marguerite-05'].concat(['monarque', 'morpho-bleu', 'azure-commun', 'machaon', 'lune'].flatMap(s =>
     ['aile-avant', 'aile-arriere', 'corps'].map(p => 'papillon-' + s + '-' + p)))
 };
 const DUSK = {};   // calques de la prairie assombris à la tombée de la nuit (calculés une fois au chargement)
@@ -1902,6 +1902,21 @@ function updateButterfly(c, dt, el) {
   Xp += c.ox; Yp += c.oy;
   if (c.stay && !c.out) { Xp = clamp(Xp, Sz * 0.6, W - Sz * 0.6); Yp = clamp(Yp, Sz * 0.6, H - Sz * 0.6); }   // un papillon reste dans l'écran jusqu'à son départ
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
+  // écartement : deux papillons ne restent jamais collés (quel que soit leur plan) ; un décalage lent, propre à chacun, les éloigne doucement l'un de l'autre
+  if (c.ox === undefined) { c.ox = 0; c.oy = 0; }
+  if (wL < 0.3 && !(c.exitK > 0)) {
+    let tx = 0, ty = 0;
+    for (const o of live) {
+      if (o === c || o.kind !== 'b' || o.px === undefined || !(o.fade > 0.2) || o.wL > 0.3 || o.exitK > 0) continue;
+      const dx = Xp + c.ox - o.px, dy = Yp + c.oy - o.py, d = Math.hypot(dx, dy) || 1, d0 = 3.4 * (c.S + o.S);
+      if (d < d0) { const f = (d0 - d) * 0.7 / d; tx += dx * f; ty += dy * f; }
+    }
+    const m = 0.3 * minWH(), n = Math.hypot(tx, ty);
+    if (n > m) { tx *= m / n; ty *= m / n; }
+    const kk = Math.min(1, dt * 1.6);
+    c.ox = lerp(c.ox, c.ox + tx, kk) * (1 - Math.min(1, dt * 0.15)); c.oy = lerp(c.oy, c.oy + ty, kk) * (1 - Math.min(1, dt * 0.15));
+  } else { c.ox *= 1 - Math.min(1, dt * 1.5); c.oy *= 1 - Math.min(1, dt * 1.5); }
+  Xp += c.ox; Yp += c.oy;
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
   c.svx = lerp(c.svx === undefined ? vx : c.svx, vx, Math.min(1, dt * 1.2)); c.svy = lerp(c.svy === undefined ? vy : c.svy, vy, Math.min(1, dt * 1.2));   // vitesse lissée (sans les petits zigzags du vol)
