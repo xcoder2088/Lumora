@@ -1,7 +1,7 @@
 /* Lumora : service worker. Garde la page et les icônes pour ouvrir l'application sans réseau ;
    les sons et illustrations sont gardés au fur et à mesure qu'ils sont utilisés.
    Changer le numéro de version ci-dessous à chaque version ou révision pour que les appareils se mettent à jour. */
-const VERSION = '5.3';
+const VERSION = '5.4';
 const CACHE = 'lumora-' + VERSION;
 const COQUILLE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 

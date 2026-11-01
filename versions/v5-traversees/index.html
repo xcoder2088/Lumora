@@ -185,9 +185,13 @@ legend {
 .tm-trace--glow { stroke-width: 8; opacity: 0.22; filter: url(#tm-glow); }
 #tmButterfly .tm-wing { fill: url(#tm-wing); stroke: #3a5a8a; stroke-opacity: 0.55; stroke-width: 0.025; }
 #tmButterfly .tm-low { fill: url(#tm-wing2); }
-.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: -6px; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-top: -6px; }
+#setup { scrollbar-width: thin; scrollbar-color: rgba(190, 235, 245, 0.3) transparent; }
+#setup::-webkit-scrollbar { width: 6px; }
+#setup::-webkit-scrollbar-thumb { background: rgba(190, 235, 245, 0.3); border-radius: 3px; }
+#setup::-webkit-scrollbar-track { background: transparent; }
 .ver { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-dim); opacity: 0.85; }
-.support { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--ink-dim); transition: border-color 0.25s, color 0.25s; }
+.support { margin-left: auto; max-width: 100%; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px; background: transparent; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; color: var(--ink-dim); transition: border-color 0.25s, color 0.25s; }
 .support:hover { border-color: rgba(190, 235, 245, 0.5); color: var(--ink); }
 .support svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2, 8, 14, 0.7); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
@@ -201,7 +205,7 @@ legend {
 .amount:hover { filter: brightness(1.08); }
 button.amount { border: 0; font-family: inherit; cursor: pointer; }
 .tagline { margin: 0 0 8px; color: var(--glow); font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
-#installBtn { align-self: flex-start; }
+#installBtn { align-self: flex-start; margin-left: 0; }
 .tip-buttons { display: flex; gap: 10px; }
 .tip-button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 8px; border-radius: 12px; border: 1px solid; font-family: inherit; font-weight: 600; font-size: 14px; transition: background 0.15s; cursor: pointer; }
 .tip-paypal { background: #eaf4fb; border-color: #a7d3ef; color: #003087; }
@@ -212,7 +216,8 @@ button.amount { border: 0; font-family: inherit; cursor: pointer; }
 button.amount.pp { background: #0070ba; color: #fff; }
 button.amount.pp:hover { background: #003087; filter: none; }
 .modal-back { margin-top: 14px; padding: 8px 4px; background: none; border: 0; color: var(--ink-dim); font-size: 14px; text-decoration: underline; }
-#supButtonHost { min-height: 45px; }
+#supButtonHost { min-height: 45px; box-sizing: border-box; padding: 12px; background: #fff; border-radius: 12px; }
+#supButtonHost:empty { display: none; }
 .modal-note.err { color: #ffb4a8; opacity: 1; }
 .modal-note { margin: 12px 0 0; font-size: 12px; color: var(--ink-dim); opacity: 0.8; text-align: center; }
 #start:disabled { opacity: 0.65; cursor: progress; filter: none; }
@@ -410,9 +415,9 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
-  <button class="chip" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
+  <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.3</span>
+    <span class="ver" id="ver">ver 5.4</span>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>
       <span data-i18n="supportBtn">Soutenir le développement</span>
