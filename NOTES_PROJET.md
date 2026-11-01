@@ -116,4 +116,7 @@ Le service `lumora-web` lance maintenant `deploy/lumora-server.py` (copié dans 
 Nouvelles icônes : le papillon bleu seul (favicon, raccourcis, écran d'accueil), voir « Icônes » en haut de ce document. Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
 
 ## Version 5.7 (31 octobre 2026)
-Écran de fin : la ligne sous « Doucement, c'est l'heure. » devient « Une lueur douce se lève. » (clé `endText`, cinq langues) : à la fin la scène s'éclaircit vraiment, c'est l'éveil de la lumière. Pas encore fait, proposé au propriétaire : une ligne sur la page d'ouverture (après que le papillon se pose) et une fenêtre « Pourquoi Lumora ? » avec la citation complète sur le sens du nom. Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
+Écran de fin : la ligne sous « Doucement, c'est l'heure. » devient « Une lueur douce se lève. » (clé `endText`, cinq langues) : à la fin la scène s'éclaircit vraiment, c'est l'éveil de la lumière. Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
+
+## Version 5.8 (31 octobre 2026)
+Sens du nom : une ligne sous le mot sur la page d'ouverture (apparaît quand le papillon ralentit pour se poser, clé `welcomeLine`) et un lien « Pourquoi Lumora ? » dans le pied du panneau qui ouvre la citation complète (clés `aboutTitle`, `aboutP1`, `aboutP2`). Cinq langues. Panneau toujours sans défilement (testé 375×667). Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
