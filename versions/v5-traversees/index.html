@@ -205,7 +205,8 @@ legend {
 .amount:hover { filter: brightness(1.08); }
 button.amount { border: 0; font-family: inherit; cursor: pointer; }
 .tagline { margin: 0 0 8px; color: var(--glow); font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
-#installBtn { align-self: flex-start; margin-left: 0; }
+#installBtn { margin-left: 0; }
+.foot .support:last-child { margin-left: auto; }
 .tip-buttons { display: flex; gap: 10px; }
 .tip-button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 8px; border-radius: 12px; border: 1px solid; font-family: inherit; font-weight: 600; font-size: 14px; transition: background 0.15s; cursor: pointer; }
 .tip-paypal { background: #eaf4fb; border-color: #a7d3ef; color: #003087; }
@@ -323,6 +324,7 @@ body[data-phase="done"] #end { opacity: 1; visibility: visible; transition: opac
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 #setup, #hud, #end, #welcomeSkip { zoom: var(--ui, 1); }
+#setup { zoom: calc(var(--ui, 1) * var(--fit, 1)); gap: 14px; padding: 18px 22px 16px; }
 .welcome-mark { width: min(82vw, calc(680px * var(--ui, 1))); }
 </style>
 </head>
@@ -415,9 +417,9 @@ img { max-width: 100%; }
     <span id="soundState" aria-live="polite"></span>
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
-  <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.4</span>
+    <span class="ver" id="ver">ver 5.5</span>
+    <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>
       <span data-i18n="supportBtn">Soutenir le développement</span>
@@ -2373,13 +2375,28 @@ requestAnimationFrame(frame);
   }
 })();
 
+/* Aucun défilement : si le panneau est plus haut que l'écran, il se réduit juste ce qu'il faut. */
+(function () {
+  const s = document.getElementById('setup');
+  function fit() {
+    s.style.setProperty('--fit', '1');
+    let f = 1;
+    for (let i = 0; i < 16 && s.scrollHeight > s.clientHeight + 1 && f > 0.5; i++) { f -= 0.04; s.style.setProperty('--fit', f.toFixed(2)); }
+  }
+  window.fitSetup = fit;
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  setTimeout(fit, 0); setTimeout(fit, 600);
+})();
+
 /* Application installable : le bouton « Installer » apparaît seulement si le navigateur le permet et si la page n'est pas déjà en mode application. */
 (function () {
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
   const btn = document.getElementById('installBtn');
   let deferred = null;
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if (!standalone) btn.hidden = false; });
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; if (!standalone) { btn.hidden = false; if (window.fitSetup) window.fitSetup(); } });
   btn.addEventListener('click', async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; btn.hidden = true; });
   window.addEventListener('appinstalled', () => { btn.hidden = true; });
 })();

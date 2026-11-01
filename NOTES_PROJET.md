@@ -95,3 +95,6 @@ Version 5 : la page de démonstration privée est dans la liste des pages publi�
 
 ## Version 5.4 (31 octobre 2026)
 Corrections d'affichage : boutons PayPal sur un fond clair (plus de bande blanche dans la fenêtre sombre) ; pied du panneau (version, Installer, Soutenir) aligné sur le bouton Commencer, barre de défilement fine. Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
+
+## Version 5.5 (31 octobre 2026)
+Le panneau de départ ne défile plus : il est un peu plus compact, le bouton « Installer l'app » est dans la ligne du pied, et un petit script (`fitSetup`) réduit le panneau (variable CSS `--fit`, au plus à 50 %) quand l'écran est trop court. Testé à 640×420 et 375×667 : aucun défilement.
