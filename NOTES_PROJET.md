@@ -1,5 +1,30 @@
 # Lumora — notes de reprise du projet
 
+## REPRISE RAPIDE (état au 1er novembre 2026 : version 5.16 en ligne, commit `81be7b7`)
+**À lire en premier.** Les sections plus bas sont l'historique ; si elles se contredisent, ce qui est ici et dans les sections « Version 5.x » les plus récentes fait foi.
+
+**Où c'est** : https://lumora.pixeldrop.ca (même serveur Oracle que PixelDrop, tunnel Cloudflare existant, petit serveur local `deploy/lumora-server.py` sur 127.0.0.1:8791, service `lumora-web`). Dépôt : github.com/xcoder2088/Lumora (branche `main`). Dossier local : `~/Desktop/lumora`.
+
+**Façon de travailler (demandée par le propriétaire, à garder)**
+1. Une branche par version (`version-5.17`…), commits signés `Xcoder <103386958+xcoder2088@users.noreply.github.com>`, sans co-auteur, sans aucun nom d'outil ou d'assistant dans le dépôt.
+2. Numéro de version à changer à DEUX endroits à chaque révision : `ver x.y` (élément `#ver` de `index.html`) et `VERSION` dans `sw.js`. Après modification : recopier `index.html` vers `versions/v5-traversees/index.html` en remplaçant `./assets/` et `./audio/` par `../../assets/` et `../../audio/`.
+3. Toujours donner d'abord un LIEN D'ESSAI, sans toucher à la vraie page : copie de `index.html` déposée dans `/var/www/lumora/essai/index.html` du serveur (chemins `../assets/`, `../audio/`, liens d'icônes en `../`, enregistrement du service worker retiré, `noindex`, version affichée « · essai »). Lien : https://lumora.pixeldrop.ca/essai/ . Il disparaît au prochain déploiement.
+4. Publier seulement sur demande explicite : fusionner la branche dans `main` (`git fetch` avant : un autre outil d'illustration pousse parfois sur le dépôt), `git push origin HEAD:refs/heads/main`, puis sur le serveur `cd ~/lumora && git pull && bash deploy/installer-sur-serveur.sh`, puis vérifier la page, `sw.js`, le manifeste, une icône, un son et que https://pixeldrop.ca répond (ne jamais toucher au service PixelDrop).
+5. Accès serveur : par SSH, avec la clé du serveur de PixelDrop (la commande habituelle est dans `deploy.sh` du dépôt PixelDrop et dans `~/.ssh/config` de l'ordinateur du propriétaire). Les adresses et chemins de clés ne sont volontairement pas écrits ici (dépôt public). On a décidé de garder Lumora sur le serveur de PixelDrop plutôt que sur celui de QuickQuoteTool/QuickProof.
+6. Réponses au propriétaire : français simple, sans jargon, honnête sur ce qui est mesuré et ce qui ne l'est pas (jamais testé sur un vrai téléphone, un vrai tableau blanc, ni avec un vrai paiement).
+7. Les vidéos du propriétaire (`~/Videos/Screencasts/*.mp4`) se lisent avec GStreamer : `gst-launch-1.0 filesrc location=… ! decodebin ! videoconvert ! videorate ! video/x-raw,framerate=1/1 ! pngenc ! multifilesink location=f%03d.png`, puis une planche de vignettes avec Pillow.
+
+**Comment tester sans téléphone** : serveur `python3 -m http.server 8771` depuis la racine du dépôt, copie de test de `index.html` avec des crochets (exposer `live`, `S`, `build`, `resetStream`, `streamUpdate`, `updateJelly`, `updateButterfly`, `frame`, `W`, `H`, `T` juste avant `requestAnimationFrame(frame);` suivi de `})();`, à la fin du premier grand script), simulations accélérées dans le navigateur de l'outil (pas de temps 0,0167 à 0,1), mesures : collisions entre paires, répartition, orientation de la tête, départs, comptes par minute ; fin de minuteur de bout en bout avec `performance.now` simulé et `requestAnimationFrame` neutralisé. Pièges : la fenêtre de l'outil tombe à 3 images/s si elle n'est pas au premier plan (rien à faire en temps réel dans ce cas) ; les cloches ne se dessinent pas si on démarre avant la fin du chargement des images ; ne pas nommer une fonction `t` (conflit : la fonction de traduction s'appelle `txt`) ; `pkill -f` peut tuer le shell lui-même.
+
+**Ce que fait la 5.16** : minuteur de sieste à méduses ou papillons, une créature de moins à chaque minute (max 30), toutes à l'écran dès le départ et toujours les mêmes ; chaque minute la créature désignée vient près de la vitre (bien plus grande), puis sort en un ou deux battements ; la tête mène et les filaments traînent ; quatre à six plans de profondeur pour éviter les collisions ; pause qui fige tout ; temps personnalisé (1 à 180 min) ; langue et devise de l'appareil (fr, en, es, de, zh) ; application installable (manifeste, service worker, icônes papillon) ; « Pourquoi Lumora ? » ; soutien par lien PayPal.me `QuickquoteSupport` (montants 5/10/20 ou autre montant). Détail dans les sections « Version 5.x » ci-dessous.
+
+**Reste à faire / ouvert**
+- **Google Pay** : affiché « Bientôt ». Il ne fonctionne pas via PayPal (même constat dans QuickProof) ; il faut une autre technique (non choisie).
+- **Dons PayPal** : jamais testés avec un vrai paiement ; confirmer que `QuickquoteSupport` est bien le compte voulu pour Lumora ; Lumora ne voit plus si le paiement a été fait (pas de message de remerciement). Si la page PayPal pose encore problème dans l'application installée sur iPhone, demander ce qui s'affiche.
+- **Non vérifié sur de vrais appareils** : mouvement en temps réel (toutes les mesures viennent de simulations), iPhone, Android, tableau blanc 5 pi × 4 pi, service worker hors ligne.
+- **Cas rares connus** : une grosse méduse coincée entre ses voisines peut avoir la tête mal orientée un moment ; avec 30 méduses il reste quelques cloches qui se touchent (à des profondeurs différentes) ; sur un petit écran vertical une méduse déjà au bord peut rester partiellement hors cadre pendant son approche.
+- **Papillons** : encore un peu concentrés vers le centre (répartition par cinquième de largeur 9/22/32/26/11 %).
+
 ## Icônes — 31 octobre 2026
 
 Le propriétaire a choisi le **papillon bleu seul**, sans le mot miniature, pour l'onglet du navigateur et les raccourcis. Les fichiers `icons/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` et `apple-touch-icon.png` sont remplacés par ce dessin. Ajouts : `icons/icon.svg`, `favicon-16.png`, `favicon-32.png` et `favicon.ico` à la racine.
@@ -74,7 +99,7 @@ Déjà dans le dépôt (main) :
 - Texte de crédits retiré du panneau de départ (les crédits restent dans le README).
 - Fichiers de mise en ligne : `tools/build_site.py` (prépare `dist`), `deploy/installer-sur-serveur.sh`, `deploy/lumora-web.service` (serveur local 127.0.0.1:8791), `deploy/cloudflared-ingress.example.yml`, `_headers` (utile seulement pour Cloudflare Pages), procédure dans `DEPLOIEMENT.md`.
 
-## À FAIRE EN PRIORITÉ (session avec accès SSH à l'ordinateur du propriétaire)
+## (FAIT le 31 octobre 2026 : le site est en ligne) À FAIRE EN PRIORITÉ (session avec accès SSH à l'ordinateur du propriétaire)
 **1. Mettre Lumora en ligne sur lumora.pixeldrop.ca, sur le même serveur que PixelDrop.** Le propriétaire veut que l'assistant le fasse lui-même, comme pour ses autres sites (le dépôt PixelDrop contient `deploy.sh` : la commande SSH habituelle vise `ubuntu@148.116.71.199`, le service PixelDrop tourne sur le port 8123). La session dans le nuage n'avait ni SSH ni clés : rien n'a été déployé ni testé sur le serveur.
 Marche à suivre :
 - Se connecter au serveur de PixelDrop (Oracle, selon le propriétaire), vérifier que le port 8791 est libre (`ss -ltn | grep 8791`), puis : `git clone https://github.com/xcoder2088/lumora ~/lumora` (ou `git pull`) et `bash deploy/installer-sur-serveur.sh` (attendu : « Test local : HTTP 200 »).
