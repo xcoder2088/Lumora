@@ -202,11 +202,15 @@ legend {
 button.amount { border: 0; font-family: inherit; cursor: pointer; }
 .tagline { margin: 0 0 8px; color: var(--glow); font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
 #installBtn { align-self: flex-start; }
-.method { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 12px 16px; background: transparent; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); text-align: left; font-family: inherit; }
-button.method:hover { border-color: rgba(190, 235, 245, 0.5); }
-.method-name { font-weight: 500; font-size: 16px; }
-.method-sub { font-size: 12.5px; color: var(--ink-dim); }
-.method-off { opacity: 0.5; cursor: default; }
+.tip-buttons { display: flex; gap: 10px; }
+.tip-button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 8px; border-radius: 12px; border: 1px solid; font-family: inherit; font-weight: 600; font-size: 14px; transition: background 0.15s; cursor: pointer; }
+.tip-paypal { background: #eaf4fb; border-color: #a7d3ef; color: #003087; }
+.tip-paypal:hover { background: #d7e9f7; }
+.tip-gpay { background: #eaf1fe; border-color: #a9c6fb; color: #1a56c4; }
+.tip-off { opacity: 0.55; cursor: not-allowed; background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
+.tip-soon { font-size: 10.5px; font-weight: 500; color: #6b7280; }
+button.amount.pp { background: #0070ba; color: #fff; }
+button.amount.pp:hover { background: #003087; filter: none; }
 .modal-back { margin-top: 14px; padding: 8px 4px; background: none; border: 0; color: var(--ink-dim); font-size: 14px; text-decoration: underline; }
 #supButtonHost { min-height: 45px; }
 .modal-note.err { color: #ffb4a8; opacity: 1; }
@@ -424,8 +428,17 @@ img { max-width: 100%; }
     </div>
     <div id="supMethod">
       <p class="modal-text" data-i18n="supportText">Lumora est libre d'usage. Un petit café aide à continuer de le faire grandir. Merci!</p>
-      <button class="method" id="methodPaypal" type="button"><span class="method-name">PayPal</span><span class="method-sub" data-i18n="chooseAmount">Choisir un montant</span></button>
-      <div class="method method-off" aria-disabled="true"><span class="method-name">Google Pay</span><span class="method-sub" data-i18n="soon">Bientôt</span></div>
+      <div class="tip-buttons">
+        <button type="button" class="tip-button tip-paypal" id="methodPaypal">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="#003087" d="M8.5 3.5h6.7c2.9 0 4.6 1.6 4.1 4.4-.6 3.6-3.1 5.5-6.5 5.5H10l-.9 5.6H5.8L8.5 3.5z"/><path fill="#009cde" d="M11 6.3h6.3c1.7 0 2.7 1 2.4 2.8-.5 3-2.6 4.6-5.4 4.6h-2.5l1.2-7.4z"/></svg>
+          <span>PayPal</span>
+        </button>
+        <button type="button" class="tip-button tip-gpay tip-off" id="methodGpay" disabled>
+          <svg viewBox="0 0 118 120" width="26" height="26" aria-hidden="true"><path fill="#4285F4" d="M117.6,61.4c0-4.3-.4-8.3-1.1-12.3H60v23.2h32.3c-1.4,7.5-5.6,13.8-12,18.1v15.1h19.4c11.3-10.4,17.9-25.8,17.9-44.1Z"/><path fill="#34A853" d="M60,120c16.2,0,29.8-5.4,39.7-14.5l-19.4-15.1c-5.4,3.6-12.2,5.7-20.3,5.7-15.6,0-28.8-10.6-33.6-24.7H6.4v15.5C16.3,106.6,36.5,120,60,120Z"/><path fill="#FBBC05" d="M26.4,71.4c-1.2-3.6-1.9-7.4-1.9-11.4s.7-7.8,1.9-11.4v-15.5H6.4C2.3,41.2,0,50.3,0,60s2.3,18.8,6.4,26.9l20-15.5Z"/><path fill="#EA4335" d="M60,23.9c8.8,0,16.7,3,22.9,9l17.2-17.2C89.7,5.9,76.2,0,60,0,36.5,0,16.3,13.4,6.4,33.1l20,15.5c4.7-14.2,17.9-24.7,33.6-24.7Z"/></svg>
+          <span>Google Pay</span>
+          <span class="tip-soon" data-i18n="soon">Bientôt</span>
+        </button>
+      </div>
     </div>
     <div id="supAmount" hidden>
       <p class="modal-text" data-i18n="chooseAmount">Choisir un montant</p>
@@ -2333,7 +2346,7 @@ requestAnimationFrame(frame);
   const box = $('supAmounts');
   (PRESETS[CUR] || PRESETS.USD).forEach(n => {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'amount'; b.textContent = fmt(n);
+    b.type = 'button'; b.className = 'amount pp'; b.textContent = fmt(n);
     b.addEventListener('click', () => pay(n));
     box.appendChild(b);
   });
