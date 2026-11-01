@@ -437,7 +437,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.9</span>
+    <span class="ver" id="ver">ver 5.10</span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -1218,8 +1218,8 @@ function makeJelly(d) {
   const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
   const nThin = d.n > 12 && sz < 0.05 ? 8 : 16, nArm = 4;   // moins de filaments pour les petites quand elles sont très nombreuses
-  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
-  for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  for (let j = 0; j < nThin; j++) tents.push({ u: lerp(-0.92, 0.92, (j + 0.5) / nThin) + (rnd() - 0.5) * 0.05, len: lerp(1.4, 2.5, rnd()), arm: false, ph: rnd() * TAU, amp: lerp(0.05, 0.14, rnd()), kd: lerp(0.7, 1.3, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
+  for (let j = 0; j < nArm; j++) tents.push({ u: lerp(-0.3, 0.3, (j + 0.5) / nArm), len: lerp(1.3, 2.0, rnd()), arm: true, ph: rnd() * TAU, amp: 0.1, kd: lerp(0.7, 1.3, rnd()), pts: new Float32Array(2 * (KSEG + 1)), init: false });
   const ci = pickColorIdx();
   const cols = ci.map(i => i === JPAL.length ? JWHITE : JPAL[i]);
   const tq = rnd();
@@ -1295,18 +1295,23 @@ function newJellyPass(c, R, first) {
   c.x = c.ex = E[0]; c.y = c.ey = E[1];
   c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
   c.seen = !!first; c.passT = 0;
-  c.tilt = c.tiltT = c.ang; c.tw = 0;   // elle entre déjà la tête dans le sens du mouvement
+  c.tdx = c.dx; c.tdy = c.dy;
+  c.tilt = c.tiltT = TILT_MAX * Math.sin(c.ang); c.tw = 0;   // la cloche reste en haut : elle s'incline au plus de ±35° du côté où elle va
   for (const t of c.tents) t.init = false;
 }
 // Une méduse reste dans l'écran : avant d'atteindre un bord elle choisit un nouveau point de l'écran, loin des autres, et s'y dirige en tournant doucement.
+const TILT_MAX = 0.6;   // inclinaison maximale de la cloche (≈ 35°) : une méduse ne se retourne jamais
+const TURN_RATE = 0.16;   // le cap tourne de 9° par seconde au plus
 function jellyAheadOut(c, R, nx, ny) {
-  const lead = R * 1.6 + c.spd * 4 + Math.hypot(c.vx, c.vy) * 3, ax = c.x + nx * lead, ay = c.y + ny * lead;
+  const lead = R * 1.6 + c.spd * 2 + Math.hypot(c.vx, c.vy) * 9, ax = c.x + nx * lead, ay = c.y + ny * lead;   // le cap tourne doucement : on anticipe de loin
   return ax < R * 0.6 || ax > W - R * 0.6 || ay < R * 0.9 || ay > H - R * 1.2;
 }
 function turnJelly(c, R, el) {
   let best = null, bs = -1e9;
   for (let k = 0; k < 24; k++) {
-    const x = lerp(0.12, 0.88, Math.random()) * W, y = lerp(0.18, 0.82, Math.random()) * H;
+    // le nouveau but est de l'autre côté de l'écran en hauteur : une méduse du haut va vers le bas, une méduse du bas vers le haut (elles occupent tout l'écran)
+    const yl = c.y < H * 0.4 ? [0.45, 0.88] : c.y > H * 0.62 ? [0.14, 0.58] : [0.14, 0.88];
+    const x = lerp(0.12, 0.88, Math.random()) * W, y = lerp(yl[0], yl[1], Math.random()) * H;
     const d = Math.hypot(x - c.x, y - c.y);
     if (d < minWH() * 0.22) continue;
     const nx = (x - c.x) / d, ny = (y - c.y) / d;
@@ -1314,12 +1319,13 @@ function turnJelly(c, R, el) {
     let md = 1e9;
     for (const o of live) if (o !== c && o.kind === 'j' && o.x !== null) md = Math.min(md, Math.hypot(x - o.x, y - o.y));
     const turn = Math.abs(Math.atan2(nx * c.dy - ny * c.dx, nx * c.dx + ny * c.dy));   // angle de virage : on évite les demi-tours brusques
-    const sc = md - turn * minWH() * 0.16;
+    if (turn > 2.2) continue;   // pas de demi-tour
+    const sc = md - turn * minWH() * 0.35;
     if (sc > bs) { bs = sc; best = [nx, ny]; }
   }
   if (!best) { const d = Math.hypot(W / 2 - c.x, H / 2 - c.y) || 1; best = [(W / 2 - c.x) / d, (H / 2 - c.y) / d]; }
-  c.dx = best[0]; c.dy = best[1]; c.ang = Math.atan2(c.dx, -c.dy);
-  c.passT = 0; c.turnAt = el + 4;
+  c.tdx = best[0]; c.tdy = best[1];   // cap voulu : le cap réel tourne vers lui tout doucement
+  c.passT = 0; c.turnAt = el + 8;
 }
 function updateJelly(c, dt, el) {
   const R = c.R = c.rf * minWH();
@@ -1349,12 +1355,18 @@ function updateJelly(c, dt, el) {
       tx = lerp(c.xw, c.xe, u); ty = lerp(c.yw, c.ye, u);
       const u2 = Math.min(1, u + 0.12);
       stx = lerp(c.xw, c.xe, u2); sty = lerp(c.yw, c.ye, u2);
-      thrAng = Math.atan2(stx - c.x, c.y - sty);
+      thrAng = TILT_MAX * Math.sin(Math.atan2(stx - c.x, c.y - sty));
     } else {   // vol libre
+      if (c.tdx !== undefined) {   // le cap tourne doucement vers le cap voulu
+        const a0 = Math.atan2(c.dx, -c.dy);
+        let da = Math.atan2(c.tdx, -c.tdy) - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
+        const a1 = a0 + clamp(da, -TURN_RATE * dt, TURN_RATE * dt);
+        c.dx = Math.sin(a1); c.dy = -Math.cos(a1); c.ang = a1;
+      }
       c.arr = 1 - smooth(clamp((el - c.tin) / 22, 0, 1));   // à l'arrivée, elle va plus vite pour que l'écran se remplisse en une trentaine de secondes
       freeFlight = true;
-      c.vtx = c.dx * c.spd * (1 + 1.5 * c.arr); c.vty = c.dy * c.spd * (1 + 1.5 * c.arr);
-      u = 0; tx = c.x + c.dx * 300; ty = c.y + c.dy * 300; stx = tx; sty = ty; thrAng = c.ang;
+      c.vtx = c.dx * c.spd * (1 + 1.5 * c.arr); c.vty = c.dy * c.spd * (1 + 1.5 * c.arr) * (c.dy > 0 ? 0.8 : 1);   // elle descend en dérivant, un peu plus lentement qu'elle ne monte
+      u = 0; tx = c.x + c.dx * 300; ty = c.y + c.dy * 300; stx = tx; sty = ty; thrAng = TILT_MAX * Math.sin(c.ang);   // cloche droite quand elle monte ou descend, inclinée au plus de 35° quand elle va de côté
       if (c.x > -R && c.x < W + R && c.y > -R && c.y < H + R) c.seen = true;
       c.passT += dt;
       const outside = c.x < -R * 2.6 || c.x > W + R * 2.6 || c.y < -R * 3.4 || c.y > H + R * 2.6;
@@ -1480,7 +1492,7 @@ function updateJelly(c, dt, el) {
     // elle nage plus fort quand son but est loin, doucement quand il est proche, et se laisse couler si le but est plus bas
     const far = Math.hypot(tx - c.x, ty - c.y) / (minWH() * 0.3);
     const boost = c.giant ? clamp(1 + (c.side * (tx - c.x)) / (W * 0.4), 0.2, 2.2)
-      : freeFlight ? (1 + 1.3 * (c.arr || 0)) * Math.max(0.2, c.yieldF)
+      : freeFlight ? (1 + 1.3 * (c.arr || 0)) * Math.max(0.2, c.yieldF) * (0.2 + 0.8 * clamp(0.5 - 0.5 * c.dy, 0, 1))   // les battements poussent fort vers le haut, à moitié de côté et à peine quand elle descend
       : JELLY_AQUARIUM ? clamp(0.4 + far, 0.4, 2.2) * (ty - c.y > minWH() * 0.08 ? 0.3 : 1)
       : JELLY_MODE === 'loop' ? clamp(1 + ((tx - c.x) * c.dx + (ty - c.y) * c.dy) / (minWH() * 0.35), 0.2, 2.2)
       : clamp(1 + (c.y - ty) / (minWH() * 0.35), 0.2, 2.2);   // en traversée : plus fort si elle est en retard sur son trajet
@@ -1495,7 +1507,7 @@ function updateJelly(c, dt, el) {
   const guide = c.giant || !JELLY_AQUARIUM ? smooth((u - 0.8) / 0.2) : exitQ;
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
   const kx = lerp((c.giant ? 0.12 : JELLY_AQUARIUM ? 0.1 : 0.05) * (0.5 + 0.5 * loose) * (freeFlight ? 0 : 1), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose * (freeFlight ? 0 : 1), c.giant ? 0.06 : 2.5, guide);
-  const sink = c.giant ? 0 : minWH() * 0.005;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
+  const sink = c.giant ? 0 : minWH() * 0.011;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
   // l'eau freine surtout les glissements de côté : la méduse avance dans le sens de son corps et sa trajectoire tourne en douceur avec lui
   const axx = Math.sin(c.tilt), axy = -Math.cos(c.tilt), vpar = c.vx * axx + c.vy * axy;
   const kperp = c.giant || JELLY_MODE === 'loop' ? 0 : 2.6, drag = c.giant ? 0.5 : 0.8;
@@ -1524,7 +1536,7 @@ function updateJelly(c, dt, el) {
   if (JELLY_MODE === 'loop' && !c.giant) {   // la tête pointe dans le sens du trajet, avec une rotation douce (ressort amorti, vitesse de rotation limitée)
     let dh = thrAng + Math.sin(c.pp * TAU) * 0.05 + Math.sin(T * 0.6 + c.ph) * 0.04 - c.tilt;
     dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-    c.tw = clamp((c.tw || 0) + (dh * 3.0 - 2.4 * (c.tw || 0)) * dt, -0.7, 0.7);
+    c.tw = clamp((c.tw || 0) + (dh * 1.0 - 1.8 * (c.tw || 0)) * dt, -0.14, 0.14);   // rotation lente : au plus 8° par seconde
     c.tilt += c.tw * dt;
   }
   c.X = c.x; c.Y = c.y;
@@ -1546,12 +1558,12 @@ function updateJelly(c, dt, el) {
     q[0] = ax; q[1] = ay;
     const an = t.ang || (t.ang = new Float32Array(KSEG).fill(Math.PI / 2));
     const h = Math.min(dt, 0.05);
-    const trx = -clamp(c.vx * 0.02, -0.7, 0.7), try_ = -clamp(c.vy * 0.008, -0.4, 0.4);
+    const kd = t.kd || 1, trx = -clamp(c.vx * 0.006 * kd, -0.38, 0.38), try_ = -clamp(c.vy * 0.004 * kd, -0.25, 0.25);   // la traîne est proportionnelle à la vitesse (et propre à chaque filament)
     let prev = Math.atan2(ca, -sa);
     for (let k = 1; k <= KSEG; k++) {
-      const gk = Math.pow(k / KSEG, 1.2);                       // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout (pend sous la gravité)
+      const gk = Math.pow(k / KSEG, 0.7);                       // 0 à la racine (suit l'axe de l'ombrelle), 1 au bout : les filaments se mettent vite à pendre sous la cloche
       const ux = -sa * (1 - gk) + trx * gk, uy = ca * (1 - gk) + gk + try_ * gk;
-      const sway = Math.sin(T * 1.1 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.6 : 2.0);
+      const sway = (Math.sin(T * 1.1 - k * 0.55 + t.ph) * t.amp * (1 + k * 0.12) * (t.arm ? 1.2 : 1.5)) + Math.sin(T * 0.37 + t.ph * 2.3 - k * 0.2) * 0.07 * gk;   // ondulation douce, un peu différente pour chaque filament
       const target = Math.atan2(uy, ux) + sway;
       let d = target - an[k - 1]; d -= TAU * Math.round(d / TAU);
       an[k - 1] += d * (1 - Math.exp(-h * lerp(9, 3.5, k / KSEG)));       // chaque segment tourne doucement, le bout est plus lent
