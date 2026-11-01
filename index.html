@@ -194,6 +194,8 @@ legend {
 .tm-trace--glow { stroke-width: 8; opacity: 0.22; filter: url(#tm-glow); }
 #tmButterfly .tm-wing { fill: url(#tm-wing); stroke: #3a5a8a; stroke-opacity: 0.55; stroke-width: 0.025; }
 #tmButterfly .tm-low { fill: url(#tm-wing2); }
+.customrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--ink-dim); }
+.customrow input { width: 92px; min-height: 40px; box-sizing: border-box; padding: 0 14px; background: transparent; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); font: inherit; font-size: 16px; }
 .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-top: -6px; }
 #setup { scrollbar-width: thin; scrollbar-color: rgba(190, 235, 245, 0.3) transparent; }
 #setup::-webkit-scrollbar { width: 6px; }
@@ -419,6 +421,10 @@ img { max-width: 100%; }
   <fieldset>
     <legend data-i18n="legDur">Durée</legend>
     <div class="chips" id="chipDur"></div>
+    <div class="customrow" id="customRow" hidden>
+      <input type="number" id="customMin" min="1" max="180" step="1" inputmode="numeric" data-i18n-aria="custom" aria-label="Temps personnalisé">
+      <span data-i18n="minUnit">min</span>
+    </div>
   </fieldset>
   <label class="switch" for="soundBox">
     <input type="checkbox" id="soundBox">
@@ -431,7 +437,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.8</span>
+    <span class="ver" id="ver">ver 5.9</span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -512,7 +518,7 @@ img { max-width: 100%; }
 
 <script>
 /* Langue : celle de l'appareil (comme QuickProof). Français, anglais, espagnol, allemand, chinois ; sinon anglais. « ?lang=fr » force une langue. */
-const I18N = {"fr": {"welcomeAria": "Bienvenue dans Lumora", "skip": "Passer l’animation", "setupAria": "Réglages du minuteur", "tagline": "L'éveil de la lumière : une lueur douce, née de l'intérieur.", "lede": "Un minuteur pour les moments de calme. Des créatures nagent ou volent doucement sur l'écran : il y en a une de moins à chaque minute. La dernière s'en va exactement quand le temps tombe à zéro.", "legScene": "Décor", "legDur": "Durée", "jelly": "Méduses", "butterfly": "Papillons", "trial": "Essai 30 s", "minUnit": "min", "soundLabel": "Ambiance sonore du décor et carillon final", "soundTest": "Tester le son", "start": "Commencer", "install": "Installer l'app", "loading": "Chargement des illustrations…", "slow": "Illustrations lentes à charger : elles apparaîtront dès qu’elles sont prêtes.", "failed": "Illustrations non chargées : décor simplifié.", "soundErr": "Impossible de charger le son « {id} ».", "noAudio": "Ce navigateur ne permet pas de jouer du son.", "soundOk": "Son actif. Si vous n'entendez rien, vérifiez le volume, le mode silencieux et que l'onglet n'est pas en sourdine.", "soundBlocked": "Le navigateur bloque le son. Touchez « Tester le son ».", "pauseAria": "Mettre en pause", "pauseTitle": "Pause (barre d'espace)", "resume": "Reprendre", "restartAria": "Recommencer le minuteur", "restartTitle": "Recommencer", "remain": "Temps restant", "soundBtn": "Son", "soundOff": "Couper le son", "soundOn": "Activer le son", "fullBtn": "Plein écran", "backAria": "Retour aux réglages", "backTitle": "Réglages", "endTitle": "Doucement, c'est l'heure.", "endText": "Une lueur douce se lève.", "supportBtn": "Soutenir le développement", "supportTitle": "Soutenir le développement", "supportText": "Lumora est libre d'usage. Un petit café aide à continuer de le faire grandir. Merci!", "chooseAmount": "Choisir un montant", "soon": "Bientôt", "back": "Retour", "close": "Fermer", "payWith": "Payer avec PayPal", "thanks": "Merci pour votre soutien!", "error": "Le paiement n'a pas abouti. Réessayez.", "notConfigured": "Le paiement n'est pas disponible pour le moment.", "welcomeLine": "L'éveil de la lumière, un nouveau départ, un rayonnement intérieur.", "aboutTitle": "Pourquoi Lumora ?", "aboutP1": "L'éveil de la lumière, un nouveau départ ou un rayonnement intérieur.", "aboutP2": "Lumora évoque une lueur douce qui semble émaner de l'intérieur d'une personne, d'un lieu ou d'un objet."}, "en": {"welcomeAria": "Welcome to Lumora", "skip": "Skip the animation", "setupAria": "Timer settings", "tagline": "The awakening of light: a soft glow that rises from within.", "lede": "A timer for quiet moments. Creatures drift or flutter gently across the screen: one fewer every minute. The last one leaves exactly when the time reaches zero.", "legScene": "Scene", "legDur": "Duration", "jelly": "Jellyfish", "butterfly": "Butterflies", "trial": "30 s trial", "minUnit": "min", "soundLabel": "Scene ambience and final chime", "soundTest": "Test sound", "start": "Start", "install": "Install the app", "loading": "Loading illustrations…", "slow": "Illustrations are slow to load: they will appear as soon as they are ready.", "failed": "Illustrations not loaded: simplified scene.", "soundErr": "Unable to load sound “{id}”.", "noAudio": "This browser cannot play sound.", "soundOk": "Sound on. If you hear nothing, check the volume, silent mode and that the tab is not muted.", "soundBlocked": "The browser is blocking sound. Tap “Test sound”.", "pauseAria": "Pause", "pauseTitle": "Pause (space bar)", "resume": "Resume", "restartAria": "Restart the timer", "restartTitle": "Restart", "remain": "Time remaining", "soundBtn": "Sound", "soundOff": "Mute", "soundOn": "Turn sound on", "fullBtn": "Full screen", "backAria": "Back to settings", "backTitle": "Settings", "endTitle": "Gently, it's time.", "endText": "A soft glow is rising.", "supportBtn": "Support the development", "supportTitle": "Support the development", "supportText": "Lumora is free to use. A small coffee helps it keep growing. Thank you!", "chooseAmount": "Choose an amount", "soon": "Coming soon", "back": "Back", "close": "Close", "payWith": "Pay with PayPal", "thanks": "Thank you for your support!", "error": "The payment did not go through. Please try again.", "notConfigured": "Payment is not available right now.", "welcomeLine": "The awakening of light, a new beginning, an inner radiance.", "aboutTitle": "Why Lumora?", "aboutP1": "The awakening of light, a new beginning or an inner radiance.", "aboutP2": "Lumora evokes a soft glow that seems to come from within a person, a place or an object."}, "es": {"welcomeAria": "Bienvenido a Lumora", "skip": "Omitir la animación", "setupAria": "Ajustes del temporizador", "tagline": "El despertar de la luz: un suave resplandor que nace desde dentro.", "lede": "Un temporizador para los momentos de calma. Criaturas que nadan o vuelan suavemente por la pantalla: una menos cada minuto. La última se va justo cuando el tiempo llega a cero.", "legScene": "Escena", "legDur": "Duración", "jelly": "Medusas", "butterfly": "Mariposas", "trial": "Prueba 30 s", "minUnit": "min", "soundLabel": "Sonido ambiental y campanada final", "soundTest": "Probar el sonido", "start": "Comenzar", "install": "Instalar la app", "loading": "Cargando ilustraciones…", "slow": "Las ilustraciones tardan en cargar: aparecerán en cuanto estén listas.", "failed": "Ilustraciones no cargadas: escena simplificada.", "soundErr": "No se pudo cargar el sonido «{id}».", "noAudio": "Este navegador no puede reproducir sonido.", "soundOk": "Sonido activo. Si no oye nada, compruebe el volumen, el modo silencio y que la pestaña no esté silenciada.", "soundBlocked": "El navegador bloquea el sonido. Toque «Probar el sonido».", "pauseAria": "Pausar", "pauseTitle": "Pausa (barra espaciadora)", "resume": "Reanudar", "restartAria": "Reiniciar el temporizador", "restartTitle": "Reiniciar", "remain": "Tiempo restante", "soundBtn": "Sonido", "soundOff": "Silenciar", "soundOn": "Activar el sonido", "fullBtn": "Pantalla completa", "backAria": "Volver a los ajustes", "backTitle": "Ajustes", "endTitle": "Con calma, es la hora.", "endText": "Un suave resplandor se levanta.", "supportBtn": "Apoyar el desarrollo", "supportTitle": "Apoyar el desarrollo", "supportText": "Lumora es de uso libre. Un pequeño café ayuda a seguir haciéndolo crecer. ¡Gracias!", "chooseAmount": "Elige un monto", "soon": "Próximamente", "back": "Volver", "close": "Cerrar", "payWith": "Pagar con PayPal", "thanks": "¡Gracias por su apoyo!", "error": "El pago no se completó. Inténtelo de nuevo.", "notConfigured": "El pago no está disponible por ahora.", "welcomeLine": "El despertar de la luz, un nuevo comienzo, un resplandor interior.", "aboutTitle": "¿Por qué Lumora?", "aboutP1": "El despertar de la luz, un nuevo comienzo o un resplandor interior.", "aboutP2": "Lumora evoca una luz suave que parece emanar del interior de una persona, de un lugar o de un objeto."}, "de": {"welcomeAria": "Willkommen bei Lumora", "skip": "Animation überspringen", "setupAria": "Timer-Einstellungen", "tagline": "Das Erwachen des Lichts: ein sanfter Schein, der von innen kommt.", "lede": "Ein Timer für ruhige Momente. Kreaturen schwimmen oder fliegen sanft über den Bildschirm: jede Minute eine weniger. Die letzte verschwindet genau, wenn die Zeit null erreicht.", "legScene": "Szene", "legDur": "Dauer", "jelly": "Quallen", "butterfly": "Schmetterlinge", "trial": "Test 30 s", "minUnit": "Min.", "soundLabel": "Klangkulisse und Abschlussklang", "soundTest": "Ton testen", "start": "Starten", "install": "App installieren", "loading": "Illustrationen werden geladen …", "slow": "Die Illustrationen laden langsam: sie erscheinen, sobald sie bereit sind.", "failed": "Illustrationen nicht geladen: vereinfachte Szene.", "soundErr": "Ton „{id}“ konnte nicht geladen werden.", "noAudio": "Dieser Browser kann keinen Ton abspielen.", "soundOk": "Ton an. Wenn Sie nichts hören, prüfen Sie Lautstärke, Stummschaltung und ob der Tab nicht stummgeschaltet ist.", "soundBlocked": "Der Browser blockiert den Ton. Tippen Sie auf „Ton testen“.", "pauseAria": "Pausieren", "pauseTitle": "Pause (Leertaste)", "resume": "Fortsetzen", "restartAria": "Timer neu starten", "restartTitle": "Neu starten", "remain": "Verbleibende Zeit", "soundBtn": "Ton", "soundOff": "Ton aus", "soundOn": "Ton an", "fullBtn": "Vollbild", "backAria": "Zurück zu den Einstellungen", "backTitle": "Einstellungen", "endTitle": "Sanft, es ist so weit.", "endText": "Ein sanfter Schein geht auf.", "supportBtn": "Entwicklung unterstützen", "supportTitle": "Entwicklung unterstützen", "supportText": "Lumora ist frei nutzbar. Ein kleiner Kaffee hilft, es weiterzuentwickeln. Danke!", "chooseAmount": "Betrag wählen", "soon": "Demnächst", "back": "Zurück", "close": "Schließen", "payWith": "Mit PayPal zahlen", "thanks": "Danke für Ihre Unterstützung!", "error": "Die Zahlung ist fehlgeschlagen. Bitte erneut versuchen.", "notConfigured": "Die Zahlung ist derzeit nicht verfügbar.", "welcomeLine": "Das Erwachen des Lichts, ein Neuanfang, ein inneres Strahlen.", "aboutTitle": "Warum Lumora?", "aboutP1": "Das Erwachen des Lichts, ein Neuanfang oder ein inneres Strahlen.", "aboutP2": "Lumora erinnert an einen sanften Schein, der aus dem Inneren eines Menschen, eines Ortes oder eines Gegenstands zu kommen scheint."}, "zh": {"welcomeAria": "欢迎来到 Lumora", "skip": "跳过动画", "setupAria": "计时器设置", "tagline": "光的苏醒：一束从内心升起的柔和光芒。", "lede": "一个用于宁静时刻的计时器。生物在屏幕上轻柔地游动或飞舞：每过一分钟就少一只。最后一只会在时间归零时准确离开。", "legScene": "场景", "legDur": "时长", "jelly": "水母", "butterfly": "蝴蝶", "trial": "试用 30 秒", "minUnit": "分钟", "soundLabel": "场景环境音与结束钟声", "soundTest": "测试声音", "start": "开始", "install": "安装应用", "loading": "正在加载插图…", "slow": "插图加载较慢：准备好后会立即显示。", "failed": "插图未能加载：已使用简化场景。", "soundErr": "无法加载声音“{id}”。", "noAudio": "此浏览器无法播放声音。", "soundOk": "声音已开启。如果听不到，请检查音量、静音模式以及标签页是否被静音。", "soundBlocked": "浏览器阻止了声音。请点按“测试声音”。", "pauseAria": "暂停", "pauseTitle": "暂停（空格键）", "resume": "继续", "restartAria": "重新开始计时", "restartTitle": "重新开始", "remain": "剩余时间", "soundBtn": "声音", "soundOff": "关闭声音", "soundOn": "开启声音", "fullBtn": "全屏", "backAria": "返回设置", "backTitle": "设置", "endTitle": "轻轻地，时间到了。", "endText": "一束柔和的光正在升起。", "supportBtn": "支持开发", "supportTitle": "支持开发", "supportText": "Lumora 可免费使用。一杯小小的咖啡能帮助它继续成长。谢谢！", "chooseAmount": "选择金额", "soon": "即将推出", "back": "返回", "close": "关闭", "payWith": "使用 PayPal 支付", "thanks": "感谢您的支持！", "error": "支付未成功，请重试。", "notConfigured": "目前无法使用支付功能。", "welcomeLine": "光的苏醒，一个新的开始，一种内在的光辉。", "aboutTitle": "为什么叫 Lumora？", "aboutP1": "光的苏醒，一个新的开始，或一种内在的光辉。", "aboutP2": "Lumora 唤起一束柔和的光，仿佛从一个人、一个地方或一件物品的内部散发出来。"}};
+const I18N = {"fr": {"welcomeAria": "Bienvenue dans Lumora", "skip": "Passer l’animation", "setupAria": "Réglages du minuteur", "tagline": "L'éveil de la lumière : une lueur douce, née de l'intérieur.", "lede": "Un minuteur pour les moments de calme. Des créatures nagent ou volent doucement sur l'écran : il y en a une de moins à chaque minute. La dernière s'en va exactement quand le temps tombe à zéro.", "legScene": "Décor", "legDur": "Durée", "jelly": "Méduses", "butterfly": "Papillons", "trial": "Essai 30 s", "minUnit": "min", "soundLabel": "Ambiance sonore du décor et carillon final", "soundTest": "Tester le son", "start": "Commencer", "install": "Installer l'app", "loading": "Chargement des illustrations…", "slow": "Illustrations lentes à charger : elles apparaîtront dès qu’elles sont prêtes.", "failed": "Illustrations non chargées : décor simplifié.", "soundErr": "Impossible de charger le son « {id} ».", "noAudio": "Ce navigateur ne permet pas de jouer du son.", "soundOk": "Son actif. Si vous n'entendez rien, vérifiez le volume, le mode silencieux et que l'onglet n'est pas en sourdine.", "soundBlocked": "Le navigateur bloque le son. Touchez « Tester le son ».", "pauseAria": "Mettre en pause", "pauseTitle": "Pause (barre d'espace)", "resume": "Reprendre", "restartAria": "Recommencer le minuteur", "restartTitle": "Recommencer", "remain": "Temps restant", "soundBtn": "Son", "soundOff": "Couper le son", "soundOn": "Activer le son", "fullBtn": "Plein écran", "backAria": "Retour aux réglages", "backTitle": "Réglages", "endTitle": "Doucement, c'est l'heure.", "endText": "Une lueur douce se lève.", "supportBtn": "Soutenir le développement", "supportTitle": "Soutenir le développement", "supportText": "Lumora est libre d'usage. Un petit café aide à continuer de le faire grandir. Merci!", "chooseAmount": "Choisir un montant", "soon": "Bientôt", "back": "Retour", "close": "Fermer", "payWith": "Payer avec PayPal", "thanks": "Merci pour votre soutien!", "error": "Le paiement n'a pas abouti. Réessayez.", "notConfigured": "Le paiement n'est pas disponible pour le moment.", "welcomeLine": "L'éveil de la lumière, un nouveau départ, un rayonnement intérieur.", "aboutTitle": "Pourquoi Lumora ?", "aboutP1": "L'éveil de la lumière, un nouveau départ ou un rayonnement intérieur.", "aboutP2": "Lumora évoque une lueur douce qui semble émaner de l'intérieur d'une personne, d'un lieu ou d'un objet.", "custom": "Temps personnalisé"}, "en": {"welcomeAria": "Welcome to Lumora", "skip": "Skip the animation", "setupAria": "Timer settings", "tagline": "The awakening of light: a soft glow that rises from within.", "lede": "A timer for quiet moments. Creatures drift or flutter gently across the screen: one fewer every minute. The last one leaves exactly when the time reaches zero.", "legScene": "Scene", "legDur": "Duration", "jelly": "Jellyfish", "butterfly": "Butterflies", "trial": "30 s trial", "minUnit": "min", "soundLabel": "Scene ambience and final chime", "soundTest": "Test sound", "start": "Start", "install": "Install the app", "loading": "Loading illustrations…", "slow": "Illustrations are slow to load: they will appear as soon as they are ready.", "failed": "Illustrations not loaded: simplified scene.", "soundErr": "Unable to load sound “{id}”.", "noAudio": "This browser cannot play sound.", "soundOk": "Sound on. If you hear nothing, check the volume, silent mode and that the tab is not muted.", "soundBlocked": "The browser is blocking sound. Tap “Test sound”.", "pauseAria": "Pause", "pauseTitle": "Pause (space bar)", "resume": "Resume", "restartAria": "Restart the timer", "restartTitle": "Restart", "remain": "Time remaining", "soundBtn": "Sound", "soundOff": "Mute", "soundOn": "Turn sound on", "fullBtn": "Full screen", "backAria": "Back to settings", "backTitle": "Settings", "endTitle": "Gently, it's time.", "endText": "A soft glow is rising.", "supportBtn": "Support the development", "supportTitle": "Support the development", "supportText": "Lumora is free to use. A small coffee helps it keep growing. Thank you!", "chooseAmount": "Choose an amount", "soon": "Coming soon", "back": "Back", "close": "Close", "payWith": "Pay with PayPal", "thanks": "Thank you for your support!", "error": "The payment did not go through. Please try again.", "notConfigured": "Payment is not available right now.", "welcomeLine": "The awakening of light, a new beginning, an inner radiance.", "aboutTitle": "Why Lumora?", "aboutP1": "The awakening of light, a new beginning or an inner radiance.", "aboutP2": "Lumora evokes a soft glow that seems to come from within a person, a place or an object.", "custom": "Custom time"}, "es": {"welcomeAria": "Bienvenido a Lumora", "skip": "Omitir la animación", "setupAria": "Ajustes del temporizador", "tagline": "El despertar de la luz: un suave resplandor que nace desde dentro.", "lede": "Un temporizador para los momentos de calma. Criaturas que nadan o vuelan suavemente por la pantalla: una menos cada minuto. La última se va justo cuando el tiempo llega a cero.", "legScene": "Escena", "legDur": "Duración", "jelly": "Medusas", "butterfly": "Mariposas", "trial": "Prueba 30 s", "minUnit": "min", "soundLabel": "Sonido ambiental y campanada final", "soundTest": "Probar el sonido", "start": "Comenzar", "install": "Instalar la app", "loading": "Cargando ilustraciones…", "slow": "Las ilustraciones tardan en cargar: aparecerán en cuanto estén listas.", "failed": "Ilustraciones no cargadas: escena simplificada.", "soundErr": "No se pudo cargar el sonido «{id}».", "noAudio": "Este navegador no puede reproducir sonido.", "soundOk": "Sonido activo. Si no oye nada, compruebe el volumen, el modo silencio y que la pestaña no esté silenciada.", "soundBlocked": "El navegador bloquea el sonido. Toque «Probar el sonido».", "pauseAria": "Pausar", "pauseTitle": "Pausa (barra espaciadora)", "resume": "Reanudar", "restartAria": "Reiniciar el temporizador", "restartTitle": "Reiniciar", "remain": "Tiempo restante", "soundBtn": "Sonido", "soundOff": "Silenciar", "soundOn": "Activar el sonido", "fullBtn": "Pantalla completa", "backAria": "Volver a los ajustes", "backTitle": "Ajustes", "endTitle": "Con calma, es la hora.", "endText": "Un suave resplandor se levanta.", "supportBtn": "Apoyar el desarrollo", "supportTitle": "Apoyar el desarrollo", "supportText": "Lumora es de uso libre. Un pequeño café ayuda a seguir haciéndolo crecer. ¡Gracias!", "chooseAmount": "Elige un monto", "soon": "Próximamente", "back": "Volver", "close": "Cerrar", "payWith": "Pagar con PayPal", "thanks": "¡Gracias por su apoyo!", "error": "El pago no se completó. Inténtelo de nuevo.", "notConfigured": "El pago no está disponible por ahora.", "welcomeLine": "El despertar de la luz, un nuevo comienzo, un resplandor interior.", "aboutTitle": "¿Por qué Lumora?", "aboutP1": "El despertar de la luz, un nuevo comienzo o un resplandor interior.", "aboutP2": "Lumora evoca una luz suave que parece emanar del interior de una persona, de un lugar o de un objeto.", "custom": "Tiempo personalizado"}, "de": {"welcomeAria": "Willkommen bei Lumora", "skip": "Animation überspringen", "setupAria": "Timer-Einstellungen", "tagline": "Das Erwachen des Lichts: ein sanfter Schein, der von innen kommt.", "lede": "Ein Timer für ruhige Momente. Kreaturen schwimmen oder fliegen sanft über den Bildschirm: jede Minute eine weniger. Die letzte verschwindet genau, wenn die Zeit null erreicht.", "legScene": "Szene", "legDur": "Dauer", "jelly": "Quallen", "butterfly": "Schmetterlinge", "trial": "Test 30 s", "minUnit": "Min.", "soundLabel": "Klangkulisse und Abschlussklang", "soundTest": "Ton testen", "start": "Starten", "install": "App installieren", "loading": "Illustrationen werden geladen …", "slow": "Die Illustrationen laden langsam: sie erscheinen, sobald sie bereit sind.", "failed": "Illustrationen nicht geladen: vereinfachte Szene.", "soundErr": "Ton „{id}“ konnte nicht geladen werden.", "noAudio": "Dieser Browser kann keinen Ton abspielen.", "soundOk": "Ton an. Wenn Sie nichts hören, prüfen Sie Lautstärke, Stummschaltung und ob der Tab nicht stummgeschaltet ist.", "soundBlocked": "Der Browser blockiert den Ton. Tippen Sie auf „Ton testen“.", "pauseAria": "Pausieren", "pauseTitle": "Pause (Leertaste)", "resume": "Fortsetzen", "restartAria": "Timer neu starten", "restartTitle": "Neu starten", "remain": "Verbleibende Zeit", "soundBtn": "Ton", "soundOff": "Ton aus", "soundOn": "Ton an", "fullBtn": "Vollbild", "backAria": "Zurück zu den Einstellungen", "backTitle": "Einstellungen", "endTitle": "Sanft, es ist so weit.", "endText": "Ein sanfter Schein geht auf.", "supportBtn": "Entwicklung unterstützen", "supportTitle": "Entwicklung unterstützen", "supportText": "Lumora ist frei nutzbar. Ein kleiner Kaffee hilft, es weiterzuentwickeln. Danke!", "chooseAmount": "Betrag wählen", "soon": "Demnächst", "back": "Zurück", "close": "Schließen", "payWith": "Mit PayPal zahlen", "thanks": "Danke für Ihre Unterstützung!", "error": "Die Zahlung ist fehlgeschlagen. Bitte erneut versuchen.", "notConfigured": "Die Zahlung ist derzeit nicht verfügbar.", "welcomeLine": "Das Erwachen des Lichts, ein Neuanfang, ein inneres Strahlen.", "aboutTitle": "Warum Lumora?", "aboutP1": "Das Erwachen des Lichts, ein Neuanfang oder ein inneres Strahlen.", "aboutP2": "Lumora erinnert an einen sanften Schein, der aus dem Inneren eines Menschen, eines Ortes oder eines Gegenstands zu kommen scheint.", "custom": "Eigene Zeit"}, "zh": {"welcomeAria": "欢迎来到 Lumora", "skip": "跳过动画", "setupAria": "计时器设置", "tagline": "光的苏醒：一束从内心升起的柔和光芒。", "lede": "一个用于宁静时刻的计时器。生物在屏幕上轻柔地游动或飞舞：每过一分钟就少一只。最后一只会在时间归零时准确离开。", "legScene": "场景", "legDur": "时长", "jelly": "水母", "butterfly": "蝴蝶", "trial": "试用 30 秒", "minUnit": "分钟", "soundLabel": "场景环境音与结束钟声", "soundTest": "测试声音", "start": "开始", "install": "安装应用", "loading": "正在加载插图…", "slow": "插图加载较慢：准备好后会立即显示。", "failed": "插图未能加载：已使用简化场景。", "soundErr": "无法加载声音“{id}”。", "noAudio": "此浏览器无法播放声音。", "soundOk": "声音已开启。如果听不到，请检查音量、静音模式以及标签页是否被静音。", "soundBlocked": "浏览器阻止了声音。请点按“测试声音”。", "pauseAria": "暂停", "pauseTitle": "暂停（空格键）", "resume": "继续", "restartAria": "重新开始计时", "restartTitle": "重新开始", "remain": "剩余时间", "soundBtn": "声音", "soundOff": "关闭声音", "soundOn": "开启声音", "fullBtn": "全屏", "backAria": "返回设置", "backTitle": "设置", "endTitle": "轻轻地，时间到了。", "endText": "一束柔和的光正在升起。", "supportBtn": "支持开发", "supportTitle": "支持开发", "supportText": "Lumora 可免费使用。一杯小小的咖啡能帮助它继续成长。谢谢！", "chooseAmount": "选择金额", "soon": "即将推出", "back": "返回", "close": "关闭", "payWith": "使用 PayPal 支付", "thanks": "感谢您的支持！", "error": "支付未成功，请重试。", "notConfigured": "目前无法使用支付功能。", "welcomeLine": "光的苏醒，一个新的开始，一种内在的光辉。", "aboutTitle": "为什么叫 Lumora？", "aboutP1": "光的苏醒，一个新的开始，或一种内在的光辉。", "aboutP2": "Lumora 唤起一束柔和的光，仿佛从一个人、一个地方或一件物品的内部散发出来。", "custom": "自定义时间"}};
 const LANG = (function () {
   const forced = new URLSearchParams(location.search).get('lang');
   if (forced && I18N[forced.toLowerCase()]) return forced.toLowerCase();
@@ -700,17 +706,18 @@ const fmtClock = s => {
 };
 
 /* ================= État ================= */
-const DURS = [30, 300, 600, 900, 1200, 1800, 2700];
+const DURS = [300, 600, 900, 1200, 1800, 2700];
 const SCENES = [['jelly', txt('jelly')], ['butterfly', txt('butterfly')]];
-const S = { scene: 'jelly', dur: 1200, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
+const S = { scene: 'jelly', dur: 1200, custom: false, customMin: 25, sound: false, phase: 'setup', accum: 0, startTs: 0, doneAt: 0 };
 try {
   const saved = JSON.parse(localStorage.getItem('lumora.v2') || 'null');
   if (saved) {
     if (SCENES.some(s => s[0] === saved.scene)) S.scene = saved.scene;
-    if (DURS.includes(saved.dur)) S.dur = saved.dur;
+    if (saved.custom && Number.isInteger(saved.customMin) && saved.customMin >= 1 && saved.customMin <= 180) { S.custom = true; S.customMin = saved.customMin; S.dur = saved.customMin * 60; }
+    else if (DURS.includes(saved.dur)) S.dur = saved.dur;
   }
 } catch (e) {}
-const persist = () => { try { localStorage.setItem('lumora.v2', JSON.stringify({ scene: S.scene, dur: S.dur })); } catch (e) {} };
+const persist = () => { try { localStorage.setItem('lumora.v2', JSON.stringify({ scene: S.scene, dur: S.dur, custom: S.custom, customMin: S.customMin })); } catch (e) {} };
 
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MOT = reduceMotion ? 0.5 : 1;
@@ -1275,9 +1282,18 @@ function newJellyPass(c, R, first) {
   }
   c.dx = dx; c.dy = dy; c.ang = Math.atan2(dx, -dy);
   c.spd = Math.max(minWH() * 0.026, 9) * lerp(0.85, 1.2, Math.random());
+  if (first) {   // au départ elle est déjà dans l'écran, loin des autres méduses
+    let bs = -1e9;
+    for (let k = 0; k < 16; k++) {
+      const x = lerp(0.1, 0.9, Math.random()) * W, y = lerp(0.12, 0.88, Math.random()) * H;
+      let md = 1e9;
+      for (const o of live) if (o !== c && o.kind === 'j' && o.x !== null) md = Math.min(md, Math.hypot(x - o.x, y - o.y));
+      if (md > bs) { bs = md; E = [x, y]; }
+    }
+  }
   c.x = c.ex = E[0]; c.y = c.ey = E[1];
   c.vx = c.dx * c.spd * 0.5; c.vy = c.dy * c.spd * 0.5;
-  c.seen = false; c.passT = 0;
+  c.seen = !!first; c.passT = 0;
   c.tilt = c.tiltT = c.ang; c.tw = 0;   // elle entre déjà la tête dans le sens du mouvement
   for (const t of c.tents) t.init = false;
 }
@@ -1646,13 +1662,8 @@ function pickSpecies() {
   return SPECIES[0];
 }
 
-// instant d'arrivée de chaque créature : étalé sur les 30 premières secondes, la première dans la seconde qui suit le départ (les cinq premières en moins de 6 s)
-function arrivalTime(d) {
-  const N = d.n || 1, f = j => frac(j * 0.618034 + 0.3), fk = f(d.k);
-  let r = 0;
-  for (let j = 0; j < N; j++) if (f(j) < fk) r++;
-  return Math.min(1 + (Math.min(30, S.dur * 0.4) - 1) * r / Math.max(1, N - 1), d.e * 0.5);
-}
+// Toutes les créatures sont déjà à l'écran quand le minuteur démarre : il n'y a plus d'arrivée progressive.
+function arrivalTime(d) { return -1000; }
 const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
 function makeButterfly(d) {
   const sp = pickSpecies();
@@ -1964,16 +1975,17 @@ function build() {
   }
   if (S.scene !== 'jelly' && BFLY_LOOP) {
     // Papillons : autant que de minutes choisies (au plus 30), tous présents dès le départ ; un seul s'en va chaque minute, et le dernier à zéro.
-    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);
+    const P = 60, N = clamp(Math.floor(D / 60), 1, 30);
     for (let k = 0; k < N; k++) {
-      const e = D - k * P, tin = arrivalTime({ k, n: N, e }), m = Math.max(1, Math.round((e - tin) / lerp(34, 52, r())));
-      sched.push({ k, seed: runSeed + k, e, T: (e - tin) / m, s: -60, n: N, loop: true, x0: 0.5, x1: 0.5 });   // T : durée d'un passage, choisie pour qu'un passage commence pile à l'arrivée
+      // le papillon est déjà au milieu d'un passage au départ (ph) : les passages durent environ 34 à 52 s et le dernier se termine exactement à l'instant e
+      const e = D - k * P, ph = lerp(0.3, 0.7, r()), m = Math.max(1, Math.round(e / lerp(34, 52, r()) + ph));
+      sched.push({ k, seed: runSeed + k, e, T: e / (m - ph), s: -60, n: N, loop: true, x0: 0.5, x1: 0.5 });   // T : durée d'un passage, choisie pour qu'un passage commence pile à l'arrivée
     }
   }
   if (S.scene === 'jelly' && JELLY_MODE !== 'stream') {
     // Autant de méduses que de minutes choisies. Aquarium ou boucle : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
     // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
-    const P = clamp(D / 4, 8, 60), N = clamp(Math.round(D / P), 3, 30);   // autant de méduses que de minutes choisies (au plus 30)
+    const P = 60, N = clamp(Math.floor(D / 60), 1, 30);   // autant de méduses que de minutes choisies (au plus 30)
     for (let k = 0; k < N; k++) {
       const e = D - k * P;
       sched.push({ k, seed: runSeed + k, e, T: JELLY_AQUARIUM ? e + 30 : lerp(75, 120, r()), s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });   // en boucle, T = durée d'un passage
@@ -2015,7 +2027,8 @@ function frame(now) {
   if (document.body.classList.contains('welcome-active')) { last = now; return; }   // le minuteur attend la fin de l'accueil
   const rdt = Math.min(0.05, Math.max(0, (now - last) / 1000));
   last = now;
-  const dt = rdt * MOT;
+  const paused = S.phase === 'paused';
+  const dt = paused ? 0 : rdt * MOT;   // en pause : le temps de la scène s'arrête (créatures, herbes, lucioles) comme le décompte
   T += dt;
   updateSnow(dt);
   fade = Math.min(1, fade + rdt / 0.9);
@@ -2027,7 +2040,7 @@ function frame(now) {
   const w = wakeAmount();
 
   streamUpdate(el);
-  for (const c of live) {
+  if (!paused) for (const c of live) {
     if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
     else updateButterfly(c, Math.max(dt, 1e-4), el);
   }
@@ -2118,7 +2131,16 @@ function buildChips(host, items, isOn, onPick) {
 }
 function refreshSetup() {
   buildChips($('chipScene'), SCENES, v => v === S.scene, v => { if (v !== S.scene) { S.scene = v; build(); audioSync(); ensureScene(); } persist(); });
-  buildChips($('chipDur'), DURS.map(d => [d, d === 30 ? txt('trial') : (d / 60) + ' ' + txt('minUnit')]), v => v === S.dur, v => { if (v !== S.dur) { S.dur = v; build(); } persist(); });
+  buildChips($('chipDur'), DURS.map(d => [d, (d / 60) + ' ' + txt('minUnit')]).concat([['custom', txt('custom')]]),
+    v => v === 'custom' ? S.custom : (!S.custom && v === S.dur),
+    v => {
+      if (v === 'custom') { if (!S.custom) { S.custom = true; S.dur = S.customMin * 60; build(); } }
+      else if (S.custom || v !== S.dur) { S.custom = false; S.dur = v; build(); }
+      persist();
+    });
+  $('customRow').hidden = !S.custom;
+  if (document.activeElement !== $('customMin')) $('customMin').value = S.customMin;
+  if (window.fitSetup) window.fitSetup();
 }
 
 /* ================= Son ================= */
@@ -2280,6 +2302,12 @@ function poke() {
 }
 
 /* ================= Branchements ================= */
+$('customMin').addEventListener('input', e => {   // temps personnalisé : de 1 à 180 minutes
+  const n = parseInt(e.target.value, 10);
+  if (n >= 1 && n <= 180 && S.custom) { S.customMin = n; S.dur = n * 60; build(); persist(); }
+});
+$('customMin').addEventListener('change', e => { e.target.value = S.customMin; });
+$('customMin').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
 $('start').addEventListener('click', start);
 $('btnPause').addEventListener('click', togglePause);
 $('btnRestart').addEventListener('click', start);

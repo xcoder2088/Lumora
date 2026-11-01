@@ -120,3 +120,10 @@ Nouvelles icônes : le papillon bleu seul (favicon, raccourcis, écran d'accueil
 
 ## Version 5.8 (31 octobre 2026)
 Sens du nom : une ligne sous le mot sur la page d'ouverture (apparaît quand le papillon ralentit pour se poser, clé `welcomeLine`) et un lien « Pourquoi Lumora ? » dans le pied du panneau qui ouvre la citation complète (clés `aboutTitle`, `aboutP1`, `aboutP2`). Cinq langues. Panneau toujours sans défilement (testé 375×667). Numéro changé dans `#ver` et dans `VERSION` de `sw.js`.
+
+## Version 5.9 (1er novembre 2026, branche `version-5.9`, pas encore publiée)
+Demandes des éducatrices :
+1. Toutes les créatures sont déjà à l'écran au départ (plus d'arrivée progressive) : autant que de minutes choisies (au plus 30, donc 30 jusqu'à la 30e minute restante pour 45 min), une de moins à chaque minute, la dernière à zéro. Une minute = 60 s fixes (`P = 60`). Méduses : le premier passage commence dans l'écran, loin des autres (`newJellyPass`, option `first`). Papillons : chacun démarre au milieu d'un passage (`ph`, durée de passage `T = e / (m - ph)`). `arrivalTime()` renvoie `-1000`.
+2. La pause fige tout : décompte, créatures, herbes, lucioles (`dt = 0` et plus de mise à jour des créatures quand `S.phase === 'paused'`). Le son d'ambiance continue.
+3. « Essai 30 s » retiré ; « Temps personnalisé » à la place (ligne avec un champ en minutes, de 1 à 180, mémorisée). Un ancien réglage à 30 s est ignoré.
+Mesuré (essai local, durée 5 min) : méduses et papillons 5 au départ, puis 4, 3, 2, 1 à chaque minute ; pause : positions et horloge figées. Numéro `ver 5.9` dans `#ver` et `VERSION` de `sw.js`.
