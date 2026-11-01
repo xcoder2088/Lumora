@@ -9,6 +9,7 @@ Principe : Lumora est un site statique (une page, des images, des sons). Il tour
 - `tools/build_site.py` : prépare le dossier `dist` (la page, les sons, les images .webp : ≈ 18,5 Mo).
 - `deploy/installer-sur-serveur.sh` : prépare le site, le copie dans `/var/www/lumora` (garde l'ancienne version dans `/var/www/lumora.old`), installe et démarre le service.
 - `deploy/lumora-web.service` : le petit serveur local (127.0.0.1:8791, jamais exposé directement).
+- `deploy/lumora-server.py` : le programme de ce serveur local ; il sert le site avec des en-têtes de cache (la page, `sw.js` et le manifeste sont toujours revérifiés, les images et sons sont gardés une journée), pour que les mises à jour arrivent seules.
 - `deploy/cloudflared-ingress.example.yml` : la ligne à ajouter au tunnel.
 
 ## 1. Sur le serveur : installer le site

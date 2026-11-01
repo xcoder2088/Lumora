@@ -98,3 +98,6 @@ Corrections d'affichage : boutons PayPal sur un fond clair (plus de bande blanch
 
 ## Version 5.5 (31 octobre 2026)
 Le panneau de départ ne défile plus : il est un peu plus compact, le bouton « Installer l'app » est dans la ligne du pied, et un petit script (`fitSetup`) réduit le panneau (variable CSS `--fit`, au plus à 50 %) quand l'écran est trop court. Testé à 640×420 et 375×667 : aucun défilement.
+
+## Serveur (31 octobre 2026)
+Le service `lumora-web` lance maintenant `deploy/lumora-server.py` (copié dans `/usr/local/share/lumora/` par `installer-sur-serveur.sh`) au lieu de `python3 -m http.server`. Il envoie `Cache-Control: public, max-age=0, must-revalidate` pour la page, `sw.js` et le manifeste, et `max-age=86400` pour `assets/`, `audio/` et `icons/`. Cloudflare avait gardé l'ancien `sw.js` : une purge unique (Caching > Purge Everything) est nécessaire après ce changement.

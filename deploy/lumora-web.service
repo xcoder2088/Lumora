@@ -7,7 +7,7 @@ After=network-online.target
 [Service]
 Type=simple
 DynamicUser=yes
-ExecStart=/usr/bin/python3 -m http.server 8791 --bind 127.0.0.1 --directory /var/www/lumora
+ExecStart=/usr/bin/python3 /usr/local/share/lumora/lumora-server.py 8791 /var/www/lumora
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true

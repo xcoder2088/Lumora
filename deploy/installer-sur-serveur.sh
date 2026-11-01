@@ -12,6 +12,8 @@ sudo chmod -R a+rX /var/www/lumora.new
 sudo rm -rf /var/www/lumora.old
 [ -d /var/www/lumora ] && sudo mv /var/www/lumora /var/www/lumora.old
 sudo mv /var/www/lumora.new /var/www/lumora
+sudo install -d -o root -g root -m 755 /usr/local/share/lumora
+sudo install -o root -g root -m 644 deploy/lumora-server.py /usr/local/share/lumora/lumora-server.py
 sudo install -o root -g root -m 644 deploy/lumora-web.service /etc/systemd/system/lumora-web.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now lumora-web
