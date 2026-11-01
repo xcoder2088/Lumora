@@ -1237,6 +1237,7 @@ function makeJelly(d) {
 
 // Mode d'affichage des méduses : false = elles traversent l'écran du bas vers le haut, de moins en moins nombreuses avec le temps ;
 // true = « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin).
+const JELLY_LANES = 4;   // plans de profondeur : 0 = devant, 3 = tout au fond
 const JELLY_MODE = 'loop';   // 'loop' : elles montent sans cesse, sortent par le haut et reviennent par le bas, une de moins chaque minute ; 'aquarium' ; 'stream'
 const JELLY_AQUARIUM = JELLY_MODE === 'aquarium';
 function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
@@ -1395,7 +1396,7 @@ function updateJelly(c, dt, el) {
   // priorités : une méduse laisse passer celles qui ont la priorité au lieu de les bousculer. Elle ralentit jusqu'à ce que le chemin soit libre, puis reprend sa route.
   // (une méduse en dernier passage passe toujours en premier ; sinon la priorité va à la plus ancienne : aucun blocage possible)
   if (c.yieldF === undefined) c.yieldF = 1;
-  if (c.back === undefined) { c.back = 0; c.laneT = 0; c.laneHold = 0; }
+  if (c.back === undefined) { c.back = c.laneT = c.giant ? 0 : c.k % JELLY_LANES; c.laneHold = 0; }   // les méduses démarrent à des profondeurs différentes
   c.laneHold -= dt;
   if (!c.giant) {
     let wantYield = false;
@@ -1415,17 +1416,32 @@ function updateJelly(c, dt, el) {
         }
         return false;
       };
+      // une autre méduse du même plan est déjà sur elle (cloches qui se recouvrent) : celle qui a la priorité la plus faible passe dans un autre plan, loin de toute autre
+      const crowded = lane => {
+        for (const o of live) {
+          if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || (o.laneT || 0) !== lane) continue;
+          if (Math.hypot(o.x - c.x, o.y - c.y) < (R + o.R) * 1.3) return true;
+        }
+        return false;
+      };
+      const onTop = live.some(o => o !== c && o.kind === 'j' && o.x !== null && !o.giant && o.alpha >= 0.15 && (o.laneT || 0) === c.laneT && prio(o) < prio(c) && Math.hypot(o.x - c.x, o.y - c.y) < (R + o.R) * 1.3);
+      const order = [c.laneT + 1, c.laneT - 1, c.laneT + 2, c.laneT - 2, c.laneT + 3, c.laneT - 3];
+      if (onTop && c.laneHold <= 0) {
+        let l = order.find(l => l >= 0 && l < JELLY_LANES && !crowded(l) && !meets(l, false));
+        if (l === undefined) l = order.find(l => l >= 0 && l < JELLY_LANES && !crowded(l));
+        if (l !== undefined) { c.laneT = l; c.laneHold = 6; }
+      }
       if (meets(c.laneT, true)) {
-        // rencontre : elle change de profondeur si un autre plan est libre (d'abord vers le fond), sinon elle attend comme avant
+        // rencontre prévue : elle change de profondeur si un autre plan est libre (d'abord vers le fond), sinon elle attend comme avant
         let moved = false;
         if (c.laneHold <= 0) {
-          for (const l of [c.laneT + 1, c.laneT - 1, c.laneT + 2, c.laneT - 2]) {
-            if (l < 0 || l > 2 || meets(l, false)) continue;
+          for (const l of order) {
+            if (l < 0 || l >= JELLY_LANES || crowded(l) || meets(l, false)) continue;
             c.laneT = l; c.laneHold = 6; moved = true; break;
           }
         }
         if (!moved) wantYield = true;
-      } else if (c.laneT > 0 && c.laneHold <= 0 && !meets(c.laneT - 1, false)) { c.laneT -= 1; c.laneHold = 6; }   // le chemin du plan de devant est libre : elle revient d'un cran
+      } else if (c.laneT > 0 && c.laneHold <= 0 && !crowded(c.laneT - 1) && !meets(c.laneT - 1, false)) { c.laneT -= 1; c.laneHold = 6; }   // le chemin du plan de devant est libre : elle revient d'un cran
     }
     c.back += clamp(c.laneT - c.back, -dt * 0.6, dt * 0.6);   // changement de profondeur lent (≈ 1,7 s par plan)
     // si elle attend depuis trop longtemps, elle repart un moment quand même (jamais de longue attente)
@@ -1487,8 +1503,10 @@ function updateJelly(c, dt, el) {
   if (!c.giant) {   // elles s'écartent doucement les unes des autres
     for (const o of live) {
       if (o === c || o.kind !== 'j' || o.x === null || o.alpha < 0.15) continue;
-      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * 0.95;
-      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.05 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
+      const dl = Math.abs((o.back || 0) - (c.back || 0));
+      if (dl >= 2) continue;   // deux plans d'écart : l'une est loin derrière l'autre, elles peuvent se croiser sans se gêner
+      const dx = c.x - o.x, dy = c.y - o.y, d = Math.hypot(dx, dy) || 1, mn = (R + o.R) * (dl < 0.75 ? 1.45 : 1.1);   // espace personnel : plus large dans le même plan
+      if (d < mn) { const f = (mn - d) * 2.2 * dt; c.vx += dx / d * f; c.vy += dy / d * f * (JELLY_MODE === 'loop' ? 0.3 : 0.8); }   // en boucle, elles s'écartent sur le côté : jamais coincées les unes sous les autres
     }
   }
   if ((JELLY_AQUARIUM ? exitQ < 0.02 : JELLY_MODE === 'loop' && !c.finalPass) && !c.giant) {   // les parois de l'écran : une méduse y rebondit tout doucement au lieu d'en sortir (sauf pendant son dernier passage)
@@ -1601,12 +1619,13 @@ function drawKelp(layer, w) {
   }
 }
 function drawJelly(c) {
-  const bs = smooth((c.back || 0) / 2);   // 0 = premier plan, 1 = tout au fond (3 plans de profondeur : 0, 1, 2)
-  const a = c.alpha * lerp(0.7, 1, c.z) * (1 - 0.32 * bs);
+  const bs = clamp((c.back || 0) / (JELLY_LANES - 1), 0, 1);   // 0 = premier plan, 1 = tout au fond (plans de profondeur : 0 à 3)
+  const a = c.alpha * lerp(0.7, 1, c.z) * (1 - 0.45 * bs);
   if (a <= 0.003) return;
-  const R = c.R, X = c.X, Y = c.Y, col = c.col, b = c.b;
+  const R = c.R, X = c.X, Y = c.Y, b = c.b;
+  const col = bs > 0.001 && c.col && c.col.length >= 3 ? [lerp(c.col[0], 40, 0.4 * bs), lerp(c.col[1], 90, 0.4 * bs), lerp(c.col[2], 150, 0.4 * bs)] : c.col;   // au fond, les couleurs se noient dans le bleu de l'eau (perspective atmosphérique)
   ctx.save();
-  if (bs > 0.001) { const k = 1 - 0.2 * bs; ctx.translate(X, Y); ctx.scale(k, k); ctx.translate(-X, -Y); }
+  if (bs > 0.001) { const k = 1 - 0.3 * bs; ctx.translate(X, Y); ctx.scale(k, k); ctx.translate(-X, -Y); }
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = a;
   // halo
