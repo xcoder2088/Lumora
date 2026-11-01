@@ -1300,6 +1300,7 @@ function newJellyPass(c, R, first) {
   for (const t of c.tents) t.init = false;
 }
 // Une méduse reste dans l'écran : avant d'atteindre un bord elle choisit un nouveau point de l'écran, loin des autres, et s'y dirige en tournant doucement.
+const JELLY_EXIT_T = 8;   // durée du départ d'une méduse (s) : elle quitte l'écran vite, après avoir nagé librement
 const TILT_MAX = 0.6;   // inclinaison maximale de la cloche (≈ 35°) : une méduse ne se retourne jamais
 const TURN_RATE = 0.16;   // le cap tourne de 9° par seconde au plus
 function jellyAheadOut(c, R, nx, ny) {
@@ -1341,15 +1342,19 @@ function updateJelly(c, dt, el) {
     ty = lerp(c.y0f, c.y1f, u) * H;
   } else if (JELLY_MODE === 'loop') {
     // elle nage librement et traverse l'écran dans une direction au hasard (par le bas, par un côté, en diagonale), sort d'un côté puis revient d'un autre.
-    // Seul son dernier passage est guidé, pour qu'elle sorte exactement à son instant c.e.
-    const Tw = Math.min(55, Math.max(5, c.e * 0.9)), tw = c.e - Tw;
+    // Elle nage librement jusqu'à 8 s avant son instant de sortie c.e, puis elle quitte l'écran vite, en ligne droite, par le bord le plus proche.
+    const Tw = Math.min(JELLY_EXIT_T, Math.max(4, c.e * 0.5)), tw = c.e - Tw;
     if (c.x === null) newJellyPass(c, R, true);
     if (el >= tw) {   // dernier passage : de là où elle est jusqu'au bord de l'écran, dans sa direction
       c.finalPass = true;
       if (c.yw === undefined) {
         c.xw = c.x; c.yw = c.y;
-        const sx = distToOutside(c.x, c.y, c.dx, c.dy, R * 2.8, R * 3.6);
-        c.xe = c.x + c.dx * sx; c.ye = c.y + c.dy * sx;
+        // bord le plus proche : les côtés ou le haut (le bas seulement s'il est bien plus proche : une méduse monte plus volontiers qu'elle ne descend)
+        const mx = R * 2.8, my = R * 3.6;
+        const opts = [[c.x + mx, -1, 0, c.x + mx], [W - c.x + mx, 1, 0, W - c.x + mx], [c.y + my, 0, -1, c.y + my], [(H - c.y + my) * 2.2, 0, 1, H - c.y + my]].sort((a, b) => a[0] - b[0]);
+        const o = opts[0];
+        c.dx = o[1]; c.dy = o[2]; c.ang = Math.atan2(c.dx, -c.dy);
+        c.xe = c.x + c.dx * o[3]; c.ye = c.y + c.dy * o[3];
       }
       u = clamp((el - tw) / Tw, 0, 1);
       tx = lerp(c.xw, c.xe, u); ty = lerp(c.yw, c.ye, u);
@@ -1370,6 +1375,13 @@ function updateJelly(c, dt, el) {
       if (c.x > -R && c.x < W + R && c.y > -R && c.y < H + R) c.seen = true;
       c.passT += dt;
       const outside = c.x < -R * 2.6 || c.x > W + R * 2.6 || c.y < -R * 3.4 || c.y > H + R * 2.6;
+      // sécurité : une méduse dont le centre est resté plus de 2 s hors de l'écran avant son départ est ramenée vers le centre
+      c.outT = (c.x < 0 || c.x > W || c.y < 0 || c.y > H) ? (c.outT || 0) + dt : 0;
+      if (c.outT > 2) {
+        const d = Math.hypot(W / 2 - c.x, H / 2 - c.y) || 1;
+        c.tdx = (W / 2 - c.x) / d; c.tdy = (H / 2 - c.y) / d;
+        c.vx += c.tdx * minWH() * 0.05 * dt; c.vy += c.tdy * minWH() * 0.05 * dt;
+      }
       if (el >= (c.turnAt || 0) && (outside || c.passT > 90 || jellyAheadOut(c, R, c.dx, c.dy))) turnJelly(c, R, el);   // elle reste dans l'écran : demi-tour doux avant le bord
     }
   } else if (!JELLY_AQUARIUM) {
@@ -1504,7 +1516,7 @@ function updateJelly(c, dt, el) {
   // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
   const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
-  const guide = c.giant || !JELLY_AQUARIUM ? smooth((u - 0.8) / 0.2) : exitQ;
+  const guide = c.giant || !JELLY_AQUARIUM ? smooth(c.finalPass ? u / 0.12 : (u - 0.8) / 0.2) : exitQ;   // pendant son départ, la méduse suit fermement sa trajectoire de sortie
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
   const kx = lerp((c.giant ? 0.12 : JELLY_AQUARIUM ? 0.1 : 0.05) * (0.5 + 0.5 * loose) * (freeFlight ? 0 : 1), c.giant ? 1.0 : 2.2, guide), ky = lerp((c.giant ? 0.06 : 0.12) * loose * (freeFlight ? 0 : 1), c.giant ? 0.06 : 2.5, guide);
   const sink = c.giant ? 0 : minWH() * 0.011;   // la géante flotte : elle ne coule pas   // elle coule doucement quand elle ne pousse pas
@@ -1721,6 +1733,7 @@ function pickSpecies() {
 // Toutes les créatures sont déjà à l'écran quand le minuteur démarre : il n'y a plus d'arrivée progressive.
 function arrivalTime(d) { return -1000; }
 let BFLY_LANES = 3;   // plans de profondeur des papillons : 0 = devant, BFLY_LANES - 1 = au fond
+const BFLY_EXIT_T = 6.5;   // durée du départ d'un papillon (s) : il quitte l'écran vite, par le bord le plus proche, après avoir volé librement
 const BFLY_STAY = true;   // les papillons restent dans l'écran (aucun ne sort puis revient) ; seul le dernier passage de chacun le mène hors de l'écran, à son minute de départ
 const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
 function makeButterfly(d) {
@@ -1753,13 +1766,13 @@ function updateButterfly(c, dt, el) {
       const e1 = edge(h(2)), e2 = (e1 + 1 + Math.floor(h(4) * 3)) % 4;   // sortie par n'importe quel autre bord
       const pt = (e, f) => e === 0 ? [-mgp, lerp(0.12, 0.85, f) * H] : e === 1 ? [W + mgp, lerp(0.12, 0.85, f) * H] : e === 2 ? [lerp(0.08, 0.92, f) * W, H + mgp] : [lerp(0.08, 0.92, f) * W, -mgp];
       c.P1 = pt(e1, h(5)); c.P2 = pt(e2, h(6));
-      c.stay = BFLY_STAY; c.final = n === -1;
+      c.stay = BFLY_STAY;
       if (BFLY_STAY) {   // repères dans l'écran, toujours bien espacés (suite de Weyl), le même repère termine un passage et commence le suivant
         const a0 = hash1(c.k * 3.1 + 0.4), a1 = hash1(c.k * 7.7 + 0.9), fr = v => ((v % 1) + 1) % 1;
         const wpt = j => [lerp(0.1, 0.9, fr(a0 + j * 0.618034)) * W, lerp(0.14, 0.8, fr(a1 + j * 0.754878)) * H];
         c.far = false;
         c.P1 = wpt(n);
-        c.P2 = c.final ? pt(e2, h(6)) : wpt(n + 1);
+        c.P2 = wpt(n + 1);
       }
       c.farY = lerp(0.5, 0.62, h(8)); c.x0 = h(6) * 1.1 - 0.05; c.x1 = clamp(c.x0 + (h(7) - 0.5) * 0.3, -0.08, 1.08);
     }
@@ -1767,7 +1780,7 @@ function updateButterfly(c, dt, el) {
   // certains papillons s'éloignent au lointain : ils rapetissent vers l'horizon et s'effacent, au lieu de monter vers le ciel
   c.S = c.far ? Sz * lerp(1, 0.16, smooth(u)) : Sz;
   c.fade = (c.far ? 1 - smooth((u - 0.8) / 0.2) : 1) * smooth(clamp((el - c.tin) / 0.8, 0, 1));   // invisible avant son arrivée (caché derrière les herbes)
-  const calm = c.stay && !c.final ? 1 : 1 - smooth((u - 0.85) / 0.15);   // les ailes se calment seulement en sortant
+  const calm = c.stay ? 1 : 1 - smooth((u - 0.85) / 0.15);
   const wx = (Math.sin(T * c.fx + c.ph) * c.ax + Math.sin(T * c.fx * 2.3 + c.ph * 2) * c.ax * 0.35) * calm;
   const wy = (Math.sin(T * c.fy * 1.3 + c.ph * 1.4) * c.ay + Math.cos(T * c.fy * 0.7 + c.ph) * c.ay * 0.5) * calm;
   const cross = !c.far;   // trajet en ligne : entre un bord et un autre
@@ -1801,6 +1814,20 @@ function updateButterfly(c, dt, el) {
       Xp = lerp(Xp, hp[0], wL); Yp = lerp(Yp, hp[1], wL);
       c.S = lerp(c.S, 0.83 * daisyHeadW(L.flower) * c.sp.size, wL);   // à la taille de la fleur : un papillon posé fait environ deux fois la largeur de la fleur
     }
+  }
+  // Départ : 6,5 s avant son instant de sortie, le papillon quitte l'écran en ligne droite par le bord le plus proche (même s'il est posé sur une fleur).
+  if (c.loop && c.e - el < BFLY_EXIT_T) {
+    if (!c.out) {
+      const mg = Sz * 3, side = Math.random() < 0.5 ? -1 : 1;
+      const opts = [[Xp + mg, -1, 0], [W - Xp + mg, 1, 0], [Yp + mg, 0, -1], [(H - Yp + mg) * 1.8, 0, 1]].sort((a, b) => a[0] - b[0]);
+      const o = opts[0];
+      c.out = { x: Xp, y: Yp, ex: o[1] ? (o[1] < 0 ? -mg : W + mg) : Xp + side * W * 0.12, ey: o[2] ? (o[2] < 0 ? -mg : H + mg) : Yp - H * 0.06 };
+      c.land = null;
+    }
+    const uo = clamp(1 - (c.e - el) / BFLY_EXIT_T, 0, 1), eo = uo * uo * (3 - 2 * uo);
+    Xp = lerp(c.out.x, c.out.ex, eo) + Math.sin(T * 2.3 + c.ph) * Sz * 0.3 * (1 - eo);
+    Yp = lerp(c.out.y, c.out.ey, eo) + Math.sin(T * 1.7 + c.ph * 2) * Sz * 0.3 * (1 - eo);
+    wL = 0;
   }
   c.wL = wL;
   // jamais de chevauchement : deux papillons qui se croisent se détournent l'un de l'autre (écart qui s'efface ensuite)
