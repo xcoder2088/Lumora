@@ -437,7 +437,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.10</span>
+    <span class="ver" id="ver">ver 5.11</span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -1382,7 +1382,7 @@ function updateJelly(c, dt, el) {
         c.tdx = (W / 2 - c.x) / d; c.tdy = (H / 2 - c.y) / d;
         c.vx += c.tdx * minWH() * 0.05 * dt; c.vy += c.tdy * minWH() * 0.05 * dt;
       }
-      if (el >= (c.turnAt || 0) && (outside || c.passT > 90 || jellyAheadOut(c, R, c.dx, c.dy))) turnJelly(c, R, el);   // elle reste dans l'écran : demi-tour doux avant le bord
+      if (el >= (c.turnAt || 0) && (outside || c.passT > 40 || jellyAheadOut(c, R, c.dx, c.dy))) turnJelly(c, R, el);   // elle reste dans l'écran : demi-tour doux avant le bord
     }
   } else if (!JELLY_AQUARIUM) {
     tx = lerp(c.x0, c.x1, u) * W;
@@ -1514,7 +1514,7 @@ function updateJelly(c, dt, el) {
     c.vy -= Math.cos(thr) * f;
   }
   // Courant marin partagé : emporte dans le même sens les méduses à la même profondeur, et les fait s'entremêler.
-  const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + 0.7) * 0.6 + Math.sin(T * 0.023 + c.y / H * 4.3) * 0.4) * minWH() * 0.03;
+  const cur = (Math.sin(T * 0.05 + c.y / H * 2.1 + c.ph) * 0.6 + Math.sin(T * 0.023 + c.x / W * 4.3 + c.ph * 2) * 0.4) * minWH() * 0.012;   // petit courant propre à chaque endroit et à chaque méduse : elles ne dérivent plus toutes du même côté
   // Le trajet ne les guide que mollement, puis fermement en fin de parcours pour qu'elles sortent à l'heure.
   const guide = c.giant || !JELLY_AQUARIUM ? smooth(c.finalPass ? u / 0.12 : (u - 0.8) / 0.2) : exitQ;   // pendant son départ, la méduse suit fermement sa trajectoire de sortie
   const loose = c.pulsing ? 1 : 0.35;   // quand elle plane, le trajet ne la retient presque plus
@@ -2099,7 +2099,7 @@ function build() {
     BFLY_LANES = N > 12 ? 4 : 3;
     for (let k = 0; k < N; k++) {
       // le papillon est déjà au milieu d'un passage au départ (ph) : les passages durent environ 34 à 52 s et le dernier se termine exactement à l'instant e
-      const e = D - k * P, ph = lerp(0.04, 0.96, r()), Tn = lerp(34, 52, r());
+      const e = D - k * P + BFLY_EXIT_T, ph = lerp(0.04, 0.96, r()), Tn = lerp(34, 52, r());   // e = fin de son départ : il commence à la minute
       let m = Math.max(1, Math.round(e / Tn + ph)); if (m - ph < 0.45) m++;   // départ à un endroit quelconque de son passage : les papillons sont bien répartis dans l'écran
       sched.push({ k, seed: runSeed + k, e, T: e / (m - ph), s: -60, n: N, loop: true, x0: 0.5, x1: 0.5 });   // T : durée d'un passage, choisie pour qu'un passage commence pile à l'arrivée
     }
@@ -2110,7 +2110,7 @@ function build() {
     const P = 60, N = clamp(Math.floor(D / 60), 1, 30);
     JELLY_LANES = N > 20 ? 6 : N > 10 ? 5 : 4;   // autant de méduses que de minutes choisies (au plus 30)
     for (let k = 0; k < N; k++) {
-      const e = D - k * P;
+      const e = D - k * P + JELLY_EXIT_T;   // e = fin de son départ : il commence à la minute (D - k * 60) et dure JELLY_EXIT_T secondes
       sched.push({ k, seed: runSeed + k, e, T: JELLY_AQUARIUM ? e + 30 : lerp(75, 120, r()), s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });   // en boucle, T = durée d'un passage
     }
   }
@@ -2158,7 +2158,7 @@ function frame(now) {
 
   const D = S.dur;
   let el = elapsed();
-  if (S.phase === 'running' && el >= D) finish();
+  if (S.phase === 'running' && el >= D + 12) finish();   // filet de sécurité : la dernière créature a 8 s après zéro pour partir
   el = S.phase === 'done' ? D : el;
   const w = wakeAmount();
 
@@ -2167,8 +2167,8 @@ function frame(now) {
     if (c.kind === 'j') updateJelly(c, Math.max(dt, 1e-4), el);
     else updateButterfly(c, Math.max(dt, 1e-4), el);
   }
-  // Fin : dès que la dernière créature a quitté l'écran (un peu avant zéro), le message apparaît et le carillon joue.
-  if (S.phase === 'running' && el >= D - 8 && hi >= sched.length && live.length &&
+  // Fin : le décompte arrive à zéro, la dernière créature part vite (comme chaque minute), puis le message apparaît et le carillon joue.
+  if (S.phase === 'running' && el >= D && hi >= sched.length &&
       live.every(c => { const m = c.kind === 'j' ? (c.R || 60) * 3.2 : (c.S || 50) * 1.4; return c.X < -m || c.X > W + m || c.Y < -m || c.Y > H + m; })) {
     clearSince = clearSince || now;
     if (now - clearSince > 400) finish();
