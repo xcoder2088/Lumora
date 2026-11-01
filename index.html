@@ -1213,7 +1213,7 @@ function makeJelly(d) {
   // trois familles de tailles : petites, moyennes, grandes (les petites sont plus loin, donc plus pâles)
   const q = rnd();
   // tailles réparties de façon continue, des très petites (0,02) aux grandes (0,12), les petites étant un peu plus nombreuses
-  const szf = d.n > 20 ? 0.75 : d.n > 12 ? 0.85 : 1;
+  const szf = d.n > 24 ? 0.65 : d.n > 20 ? 0.75 : d.n > 12 ? 0.85 : 1;
   const sz = szf * (d.giant ? lerp(0.18, 0.26, rnd()) : d.big ? lerp(0.085, 0.115, rnd()) : 0.027 * Math.pow(4.5, rnd()));
   const z = d.giant || d.big ? 0.9 : clamp(0.35 + sz * 5 + (rnd() - 0.5) * 0.3, 0.4, 1);
   const tents = [];
@@ -1237,7 +1237,7 @@ function makeJelly(d) {
 
 // Mode d'affichage des méduses : false = elles traversent l'écran du bas vers le haut, de moins en moins nombreuses avec le temps ;
 // true = « aquarium » (elles restent dans l'écran et ne sortent qu'à la fin).
-const JELLY_LANES = 4;   // plans de profondeur : 0 = devant, 3 = tout au fond
+let JELLY_LANES = 4;   // plans de profondeur : 0 = devant, JELLY_LANES - 1 = tout au fond ; plus il y a de méduses, plus il y a de plans (voir build)
 const JELLY_MODE = 'loop';   // 'loop' : elles montent sans cesse, sortent par le haut et reviennent par le bas, une de moins chaque minute ; 'aquarium' ; 'stream'
 const JELLY_AQUARIUM = JELLY_MODE === 'aquarium';
 function pickWaypoint(c) {   // un but dans la partie la plus libre de l'aquarium, plutôt proche de la méduse
@@ -1416,34 +1416,35 @@ function updateJelly(c, dt, el) {
         }
         return false;
       };
-      // une autre méduse du même plan est déjà sur elle (cloches qui se recouvrent) : celle qui a la priorité la plus faible passe dans un autre plan, loin de toute autre
-      const crowded = lane => {
+      // Profondeur de champ : une méduse qui prévoit de croiser (ou qui touche déjà) une méduse plus ancienne, dans le même plan ou un plan voisin, change de plan.
+      // Deux plans d'écart suffisent : l'une passe bien derrière l'autre. On regarde les 6 prochaines secondes, avec la vitesse réelle de chacune.
+      const conflicts = (lane, horizon) => {
+        let n = 0;
         for (const o of live) {
-          if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || (o.laneT || 0) !== lane) continue;
-          if (Math.hypot(o.x - c.x, o.y - c.y) < (R + o.R) * 1.3) return true;
+          if (o === c || o.kind !== 'j' || o.x === null || o.giant || o.alpha < 0.15 || !(prio(o) < prio(c))) continue;
+          if (Math.abs((o.laneT || 0) - lane) >= 2) continue;
+          const dx = o.x - c.x, dy = o.y - c.y, wx = o.vx - c.vx, wy = o.vy - c.vy, ww = wx * wx + wy * wy;
+          const ts = ww > 1e-6 ? clamp(-(dx * wx + dy * wy) / ww, 0, horizon) : 0;
+          if (Math.hypot(dx + wx * ts, dy + wy * ts) < (R + o.R) * 1.25) n++;
         }
-        return false;
+        return n;
       };
-      const onTop = live.some(o => o !== c && o.kind === 'j' && o.x !== null && !o.giant && o.alpha >= 0.15 && (o.laneT || 0) === c.laneT && prio(o) < prio(c) && Math.hypot(o.x - c.x, o.y - c.y) < (R + o.R) * 1.3);
-      const order = [c.laneT + 1, c.laneT - 1, c.laneT + 2, c.laneT - 2, c.laneT + 3, c.laneT - 3];
-      if (onTop && c.laneHold <= 0) {
-        let l = order.find(l => l >= 0 && l < JELLY_LANES && !crowded(l) && !meets(l, false));
-        if (l === undefined) l = order.find(l => l >= 0 && l < JELLY_LANES && !crowded(l));
-        if (l !== undefined) { c.laneT = l; c.laneHold = 6; }
-      }
-      if (meets(c.laneT, true)) {
-        // rencontre prévue : elle change de profondeur si un autre plan est libre (d'abord vers le fond), sinon elle attend comme avant
-        let moved = false;
-        if (c.laneHold <= 0) {
-          for (const l of order) {
-            if (l < 0 || l >= JELLY_LANES || crowded(l) || meets(l, false)) continue;
-            c.laneT = l; c.laneHold = 6; moved = true; break;
+      if (c.laneHold <= 0) {
+        const here = conflicts(c.laneT, 8);
+        if (here > 0) {
+          const pop = new Array(JELLY_LANES).fill(0);
+          for (const o of live) if (o.kind === 'j' && !o.giant && o.x !== null) pop[Math.min(JELLY_LANES - 1, o.laneT || 0)]++;
+          let bl = c.laneT, bc = here * 10 + pop[c.laneT] * 0.4;
+          for (let l = 0; l < JELLY_LANES; l++) {
+            const cost = conflicts(l, 8) * 10 + pop[l] * 0.4 + Math.abs(l - c.laneT) * 0.5;
+            if (cost < bc) { bc = cost; bl = l; }
           }
-        }
-        if (!moved) wantYield = true;
-      } else if (c.laneT > 0 && c.laneHold <= 0 && !crowded(c.laneT - 1) && !meets(c.laneT - 1, false)) { c.laneT -= 1; c.laneHold = 6; }   // le chemin du plan de devant est libre : elle revient d'un cran
+          if (bl !== c.laneT) { c.laneT = bl; c.laneHold = 5; }
+        } else if (c.laneT > 0 && conflicts(c.laneT - 1, 8) === 0) { c.laneT -= 1; c.laneHold = 8; }   // la voie est libre : elle revient d'un plan vers l'avant
+      }
+      if (meets(c.laneT, true)) wantYield = true;   // aucun plan libre : elle ralentit un moment, comme avant   // le chemin du plan de devant est libre : elle revient d'un cran
     }
-    c.back += clamp(c.laneT - c.back, -dt * 0.6, dt * 0.6);   // changement de profondeur lent (≈ 1,7 s par plan)
+    c.back += clamp(c.laneT - c.back, -dt * 0.9, dt * 0.9);   // changement de profondeur doux (≈ 1,1 s par plan)
     // si elle attend depuis trop longtemps, elle repart un moment quand même (jamais de longue attente)
     if (c.noYield > 0) { c.noYield -= dt; wantYield = false; }
     else if (wantYield) { c.waitT = (c.waitT || 0) + dt; if (c.waitT > 7) { c.noYield = 6; c.waitT = 0; wantYield = false; } }
@@ -1620,12 +1621,12 @@ function drawKelp(layer, w) {
 }
 function drawJelly(c) {
   const bs = clamp((c.back || 0) / (JELLY_LANES - 1), 0, 1);   // 0 = premier plan, 1 = tout au fond (plans de profondeur : 0 à 3)
-  const a = c.alpha * lerp(0.7, 1, c.z) * (1 - 0.45 * bs);
+  const a = c.alpha * lerp(0.7, 1, c.z) * (1 - 0.5 * bs);
   if (a <= 0.003) return;
   const R = c.R, X = c.X, Y = c.Y, b = c.b;
-  const col = bs > 0.001 && c.col && c.col.length >= 3 ? [lerp(c.col[0], 40, 0.4 * bs), lerp(c.col[1], 90, 0.4 * bs), lerp(c.col[2], 150, 0.4 * bs)] : c.col;   // au fond, les couleurs se noient dans le bleu de l'eau (perspective atmosphérique)
+  const col = bs > 0.001 && c.col && c.col.length >= 3 ? [lerp(c.col[0], 40, 0.45 * bs), lerp(c.col[1], 90, 0.45 * bs), lerp(c.col[2], 150, 0.45 * bs)] : c.col;   // au fond, les couleurs se noient dans le bleu de l'eau (perspective atmosphérique)
   ctx.save();
-  if (bs > 0.001) { const k = 1 - 0.3 * bs; ctx.translate(X, Y); ctx.scale(k, k); ctx.translate(-X, -Y); }
+  if (bs > 0.001) { const k = 1 - 0.38 * bs; ctx.translate(X, Y); ctx.scale(k, k); ctx.translate(-X, -Y); }
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = a;
   // halo
@@ -1707,6 +1708,7 @@ function pickSpecies() {
 
 // Toutes les créatures sont déjà à l'écran quand le minuteur démarre : il n'y a plus d'arrivée progressive.
 function arrivalTime(d) { return -1000; }
+let BFLY_LANES = 3;   // plans de profondeur des papillons : 0 = devant, BFLY_LANES - 1 = au fond
 const BFLY_STAY = true;   // les papillons restent dans l'écran (aucun ne sort puis revient) ; seul le dernier passage de chacun le mène hors de l'écran, à son minute de départ
 const BFLY_LOOP = true;   // papillons : autant que de minutes choisies, ils volent sans cesse (sortent d'un côté, reviennent de l'autre) ; un seul part définitivement chaque minute
 function makeButterfly(d) {
@@ -1808,6 +1810,33 @@ function updateButterfly(c, dt, el) {
   if (!c.init) { c.px = Xp; c.py = Yp; c.init = true; }
   const vx = (Xp - c.px) / Math.max(dt, 1e-3), vy = (Yp - c.py) / Math.max(dt, 1e-3);
   c.px = Xp; c.py = Yp;
+  c.svx = lerp(c.svx === undefined ? vx : c.svx, vx, Math.min(1, dt * 1.2)); c.svy = lerp(c.svy === undefined ? vy : c.svy, vy, Math.min(1, dt * 1.2));   // vitesse lissée (sans les petits zigzags du vol)
+  // Profondeur de champ : un papillon qui prévoit de croiser (ou qui touche) un papillon plus ancien, dans le même plan ou un plan voisin, change de plan ;
+  // un papillon posé sur une fleur est toujours au premier plan. Deux plans d'écart : l'un passe bien derrière l'autre.
+  if (c.lane === undefined) { c.lane = c.laneT = c.k % BFLY_LANES; c.depth = c.lane; c.laneHold = 0; }
+  c.laneHold -= dt;
+  if (wL > 0.3) c.laneT = 0;
+  else if (c.laneHold <= 0) {
+    const conf = lane => {
+      let n = 0;
+      for (const o of live) {
+        if (o === c || o.kind !== 'b' || !o.init || o.fade < 0.2 || !(o.wL > 0.3 || o.k < c.k)) continue;
+        if (Math.abs((o.wL > 0.3 ? 0 : (o.laneT || 0)) - lane) >= 2) continue;
+        const dx = o.X - c.X, dy = o.Y - c.Y, wx = (o.svx || 0) - c.svx, wy = (o.svy || 0) - c.svy, ww = wx * wx + wy * wy;
+        const ts = ww > 1e-6 ? clamp(-(dx * wx + dy * wy) / ww, 0, 5) : 0;
+        if (Math.hypot(dx + wx * ts, dy + wy * ts) < 1.4 * (c.S + o.S)) n++;
+      }
+      return n;
+    };
+    const here = conf(c.laneT);
+    if (here > 0) {
+      let bl = c.laneT, bc = here * 10;
+      for (let l = 0; l < BFLY_LANES; l++) { const cost = conf(l) * 10 + Math.abs(l - c.laneT) * 0.5; if (cost < bc) { bc = cost; bl = l; } }
+      if (bl !== c.laneT) { c.laneT = bl; c.laneHold = 4; }
+    } else if (c.laneT > 0 && conf(c.laneT - 1) === 0) { c.laneT -= 1; c.laneHold = 6; }
+  }
+  c.depth += clamp(c.laneT - c.depth, -dt * 0.8, dt * 0.8); c.back = c.depth;
+  c.S *= 1 - 0.28 * (c.depth / (BFLY_LANES - 1));   // au fond, plus petit et plus pâle
   const hw = smooth(clamp((wL - 0.92) / 0.08, 0, 1));   // il garde le nez dans le sens du vol pendant l'approche, et ne se tourne qu'une fois presque posé
   if (hw > 0.01) {   // il se pose : il se tourne tête en haut, progressivement (jamais à reculons)
     let d = -c.head; d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -1901,7 +1930,7 @@ function drawButterfly(c, w) {
   const sp = c.sp, S = c.S, fn = 'papillon-' + BFILE[sp.id] + '-';
   const wf = SPR[fn + 'aile-avant'], wh = SPR[fn + 'aile-arriere'], bd = SPR[fn + 'corps'];
   if (!wf || !wh || !bd) return;
-  const a = lerp(0.65, 1, c.z) * (c.fade === undefined ? 1 : c.fade), k = (1.2 * S) / 914;   // pixels d'origine -> écran
+  const a = lerp(0.65, 1, c.z) * (c.fade === undefined ? 1 : c.fade) * (1 - 0.4 * (c.depth || 0) / (BFLY_LANES - 1)), k = (1.2 * S) / 914;   // pixels d'origine -> écran
   ctx.save();
   ctx.translate(c.X, c.Y);
   ctx.rotate(c.head + 0.07 * Math.sin(c.fp || 0));   // léger roulis à chaque battement
@@ -2028,6 +2057,7 @@ function build() {
   if (S.scene !== 'jelly' && BFLY_LOOP) {
     // Papillons : autant que de minutes choisies (au plus 30), tous présents dès le départ ; un seul s'en va chaque minute, et le dernier à zéro.
     const P = 60, N = clamp(Math.floor(D / 60), 1, 30);
+    BFLY_LANES = N > 12 ? 4 : 3;
     for (let k = 0; k < N; k++) {
       // le papillon est déjà au milieu d'un passage au départ (ph) : les passages durent environ 34 à 52 s et le dernier se termine exactement à l'instant e
       const e = D - k * P, ph = lerp(0.04, 0.96, r()), Tn = lerp(34, 52, r());
@@ -2038,7 +2068,8 @@ function build() {
   if (S.scene === 'jelly' && JELLY_MODE !== 'stream') {
     // Autant de méduses que de minutes choisies. Aquarium ou boucle : les méduses restent dans l'écran. Une seule en sort par minute, pendant les dernières minutes (une toutes les P secondes
     // pour les durées très courtes), et la dernière sort à l'instant D : à zéro, il n'en reste plus.
-    const P = 60, N = clamp(Math.floor(D / 60), 1, 30);   // autant de méduses que de minutes choisies (au plus 30)
+    const P = 60, N = clamp(Math.floor(D / 60), 1, 30);
+    JELLY_LANES = N > 20 ? 6 : N > 10 ? 5 : 4;   // autant de méduses que de minutes choisies (au plus 30)
     for (let k = 0; k < N; k++) {
       const e = D - k * P;
       sched.push({ k, seed: runSeed + k, e, T: JELLY_AQUARIUM ? e + 30 : lerp(75, 120, r()), s: -30, n: N, big: k > 0 && r() < 0.1, x0: 0.5, x1: 0.5 });   // en boucle, T = durée d'un passage
