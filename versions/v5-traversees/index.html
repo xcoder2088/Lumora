@@ -445,7 +445,7 @@ img { max-width: 100%; }
   </div>
   <button id="start" type="button" data-i18n="start">Commencer</button>
   <div class="foot">
-    <span class="ver" id="ver">ver 5.18</span><span class="ver" id="offState" aria-live="polite"></span>
+    <span class="ver" id="ver">ver 5.19</span><span class="ver" id="offState" aria-live="polite"></span>
     <button class="about" id="aboutOpen" type="button" aria-haspopup="dialog" data-i18n="aboutTitle">Pourquoi Lumora ?</button>
     <button class="support" id="installBtn" type="button" data-i18n="install" hidden>Installer l'app</button>
     <button class="support" id="supportOpen" type="button" aria-haspopup="dialog">
@@ -2355,6 +2355,20 @@ const LAYERS = {
     { id: 'musique-nuit', url: AUDIO_BASE + 'musique-nuit.mp3', gain: 0.17 }
   ]
 };
+/* Niveau sonore. Les enregistrements sont très faibles (mesuré : baleines ≈ −39 dB, profondeurs ≈ −23 dB, nuit des papillons ≈ −58 dB, musique ≈ −34 dB ;
+   une musique ordinaire est vers −14 dB) : même avec le volume du téléphone au maximum, on entendait à peine le décor. Chaque scène est donc relevée
+   (SCENE_BOOST, en multiplicateur : méduses ≈ +14 dB, papillons ≈ +29 dB), puis le son passe par une chaîne pensée pour les petits haut-parleurs de téléphone :
+   filtre des graves que le haut-parleur ne reproduit pas, un peu de présence dans les médiums, compression douce (le son devient plus régulier, donc plus
+   audible dans le bruit) et limiteur (aucune saturation). */
+const SCENE_BOOST = { jelly: 5, butterfly: 28 };
+function buildOutputChain(ctx, dest) {
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 110; hp.Q.value = 0.7;
+  const pk = ctx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 1200; pk.Q.value = 0.6; pk.gain.value = 4;
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -28; comp.knee.value = 18; comp.ratio.value = 3; comp.attack.value = 0.03; comp.release.value = 0.4;
+  const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.003; lim.release.value = 0.12;
+  hp.connect(pk); pk.connect(comp); comp.connect(lim); lim.connect(dest);
+  return hp;
+}
 function audioInit() {
   if (ac) return;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -2362,7 +2376,7 @@ function audioInit() {
   try {
     ac = new AC();
     master = ac.createGain(); master.gain.value = 0.9;
-    master.connect(ac.destination);
+    master.connect(buildOutputChain(ac, ac.destination));
   } catch (e) { ac = null; }
 }
 function loadLayer(def) {
@@ -2394,7 +2408,7 @@ function audioSync() {
       const want = live && scene === S.scene;
       if (want && !layers[def.id]) loadLayer(def);
       const L = layers[def.id];
-      if (L) L.g.gain.setTargetAtTime(want ? def.gain : 0, t, want ? 1.2 : (S.phase === 'done' ? 4 : 0.8));
+      if (L) L.g.gain.setTargetAtTime(want ? def.gain * (SCENE_BOOST[scene] || 1) : 0, t, want ? 1.2 : (S.phase === 'done' ? 4 : 0.8));
     }
   }
   if (S.sound && ac.state === 'suspended') ac.resume();
@@ -2409,17 +2423,20 @@ function previewAmbience(ms) {
    Quatre notes graves et arrondies entrent l'une après l'autre, puis s'éteignent doucement (environ 15 s). */
 function chime() {
   if (!ac || !S.sound) return;
-  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
-  lp.connect(ac.destination);
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+  lp.connect(master);   // même chaîne que le décor (graves filtrés, présence, limiteur) : audible sur un haut-parleur de téléphone
   const t0 = ac.currentTime + 0.3;
-  [[220, 0.016, 0], [329.63, 0.014, 1.5], [440, 0.009, 3], [554.37, 0.005, 4.5]].forEach(([f, vol, delay]) => {
-    const o = ac.createOscillator(), g = ac.createGain(), t = t0 + delay;
-    o.type = 'sine'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 6;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + 4);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 11);
-    o.connect(g); g.connect(lp);
-    o.start(t); o.stop(t + 11.2);
+  // chaque note est accompagnée de son octave : les notes graves seules (220 à 554 Hz) sortent très mal d'un petit haut-parleur
+  [[220, 0.13, 0], [329.63, 0.11, 1.5], [440, 0.07, 3], [554.37, 0.04, 4.5]].forEach(([f, vol, delay]) => {
+    [[1, 1], [2, 0.5], [3, 0.18]].forEach(([mult, amp]) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t = t0 + delay;
+      o.type = 'sine'; o.frequency.value = f * mult; o.detune.value = (Math.random() - 0.5) * 6;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol * amp, t + 4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 11);
+      o.connect(g); g.connect(lp);
+      o.start(t); o.stop(t + 11.2);
+    });
   });
 }
 /* Sur iPhone/iPad, le mode silencieux coupe le son des pages web, sauf si la page joue un média.

@@ -1,7 +1,7 @@
 /* Lumora : service worker. Garde la page, les icônes, les polices, toutes les illustrations et tous les sons
    (liste dans precache.json, produite par tools/build_site.py) pour utiliser l'application sans réseau.
    Changer le numéro de version ci-dessous à chaque version ou révision pour que les appareils se mettent à jour. */
-const VERSION = '5.18';
+const VERSION = '5.19';
 const CACHE = 'lumora-' + VERSION;
 const COQUILLE = ['./', './index.html', './manifest.webmanifest?v=2', './favicon.ico?v=2', './icons/icon.svg?v=2', './icons/favicon-32.png?v=2', './icons/icon-192.png?v=2', './icons/icon-512.png?v=2', './icons/icon-maskable-512.png?v=2', './icons/apple-touch-icon.png?v=2'];
 

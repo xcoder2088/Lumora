@@ -1,6 +1,6 @@
 # Lumora — notes de reprise du projet
 
-## REPRISE RAPIDE (état au 1er novembre 2026 : version 5.17 en ligne ; 5.18 prête en essai, branche `version-5.18`)
+## REPRISE RAPIDE (état au 2 novembre 2026 : version 5.19 en ligne ; voir aussi les sections 5.17 et 5.18 plus bas)
 **À lire en premier.** Les sections plus bas sont l'historique ; si elles se contredisent, ce qui est ici et dans les sections « Version 5.x » les plus récentes fait foi.
 
 **Où c'est** : https://lumora.pixeldrop.ca (même serveur Oracle que PixelDrop, tunnel Cloudflare existant, petit serveur local `deploy/lumora-server.py` sur 127.0.0.1:8791, service `lumora-web`). Dépôt : github.com/xcoder2088/Lumora (branche `main`). Dossier local : `~/Desktop/lumora`.
@@ -218,3 +218,14 @@ Besoin : que les éducatrices puissent continuer d'utiliser l'application sans c
 - `tools/build_site.py` écrit `dist/precache.json` (73 fichiers : images, sons, polices) ; `sw.js` garde tout au premier lancement (par lots de 6), puis pose un témoin ; la page affiche « Prêt hors ligne ✓ » (cinq langues, clés `offReady` et `offLoading`) à côté du numéro de version.
 - `deploy/lumora-server.py` : `/precache.json` sans cache, `/fonts/` gardé un jour.
 Mesuré (Chromium réel, serveur local sur `dist`) : 84 entrées gardées, témoin posé, message affiché ; serveur éteint puis page rechargée : la page s'ouvre, les polices se chargent, les 73 fichiers répondent. Non mesuré : vrai iPhone/Android, mode avion réel, effacement des données par Safari après longue inactivité (l'application doit être rouverte avec internet de temps en temps). Le navigateur intégré à l'outil de test n'accepte pas les service workers : tester avec un vrai Chromium (`/snap/bin/chromium --headless=new --remote-debugging-port=…`, piloté par le protocole de débogage avec le `WebSocket` de Node).
+
+## Version 5.19 (2 novembre 2026, branche `version-5.19`) : son beaucoup plus fort
+Retour d'utilisateurs Android : « même avec le volume de l'appareil au maximum, le son reste plutôt faible dans un environnement bruyant ».
+Mesure (rendu hors ligne dans le navigateur) : les enregistrements sont très faibles. Niveau moyen (RMS, en dB sous le maximum) : baleines1 −39,5 ; baleines2 −38,5 ; profondeurs −23,4 ; nuit −58,4 (crêtes à −35) ; musique-nuit −33,6 ; brise −51 (non utilisée). Une musique ordinaire est vers −14. Le mélange de la scène des méduses sortait à −38 dB, celui des papillons à −53 dB (presque inaudible). Le carillon de fin était à −44 dB et très grave (220 à 554 Hz, sans harmoniques, filtre à 900 Hz) donc inaudible sur un petit haut-parleur.
+Correction (`index.html`, section « Niveau sonore ») :
+- `SCENE_BOOST = { jelly: 5, butterfly: 28 }` multiplie les gains des calques de chaque scène (les proportions entre calques sont conservées) ;
+- `buildOutputChain(ctx, dest)` : filtre passe-haut 110 Hz (les petits haut-parleurs ne reproduisent pas les graves), un peu de présence (+4 dB à 1,2 kHz), compresseur doux (seuil −28 dB, rapport 3) puis limiteur (seuil −4 dB, rapport 20) : plus régulier donc plus audible dans le bruit, aucune saturation ;
+- carillon : amplitudes ×8, chaque note accompagnée de son octave et de sa quinte à l'octave (×2 et ×3), filtre à 2,4 kHz, et il passe par la même chaîne (`master`) ;
+- le volume de l'appareil reste le seul réglage de l'utilisateur (pas de curseur).
+Mesure après (rendu hors ligne, mêmes fichiers) : méduses −38,3 → −16,7 dB (crête −5,2) ; papillons −53,3 → −17,3 dB (crête −3,5) ; avec un filtre qui imite un petit haut-parleur (coupure à 350 Hz) c'est pareil (−16,8 et −17,5) ; carillon −44 → environ −17 dB (crête sous −4 dB). Les crêtes restent sous 0 dB : pas de saturation.
+Non vérifié : l'écoute réelle (je ne peux pas entendre), sur un vrai téléphone Android, dans un vrai local bruyant, ni le confort d'écoute dans une pièce calme (le niveau est maintenant celui d'une musique ordinaire quand le volume est au maximum ; l'éducatrice règle le volume de l'appareil). Si c'est trop fort dans une pièce calme, baisser `SCENE_BOOST` (par exemple 3,5 et 20 pour environ −3 dB).
